@@ -166,6 +166,13 @@ handles.exit = uicontrol('units', 'normalized', ...
     'callback', ['matchmaker(''exit_Callback'',gcbo,[],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', ... 
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 
+handles.undo = uicontrol('units', 'normalized',...
+    'position', [18*x0+x1+3*dx 0*y0 1.6*x0 eh], 'string', 'UNDO', 'style', 'pushbutton',...
+    'callback', ['matchmaker(''undo_Callback'',gcbo,[],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center',...
+    'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
+handles.N_undo=1000; % how many moves are saved in memory
+handles.lastmoves=cell(handles.N_undo,1);
+
 for i = 1:N
     
     
@@ -448,6 +455,35 @@ if get(handles.mark, 'Value') == 1
     
     mp = handles.mp{no1};
     mp = [mp; pos mptype];
+    
+    %updating Undo memory
+    
+    try % see if memory is already allocated
+        saved_moves=handles.saved_moves;
+    catch
+        saved_moves=0; %initialize saved_moves
+        handles.saved_moves=saved_moves;
+    end
+    
+    if saved_moves<handles.N_undo % if not reached max limit of saved moves
+        
+        saved_moves+1;
+        handles.saved_moves=saved_moves+1; %increase number of saved moves
+        
+    else % delete one move from the beginning
+        
+        handles.lastmove(1:handles.N_undo-1,:)=handles.lastmove(2:handles.N_undo,:);
+        handles.saved_moves=handles.N_undo;
+    end
+    % add new entry:
+    
+    handles.lastmove{handles.saved_moves,1}=pos; % mp position in data units
+    handles.lastmove{handles.saved_moves,2}='added'; % this mp was added
+    handles.lastmove{handles.saved_moves,3}=no1; % this mp was clicked on the icecore no1
+    handles.lastmove{handles.saved_moves,4}=mptype; % this mp has type mptype
+    
+    %
+    
     handles.mp{no1} = sortrows(mp);
     handles = plotmp(handles, no1);
     set(handles.save, 'enable', 'on');
@@ -460,6 +496,31 @@ function mpclick_Callback(hObject, handles, no1);
 if get(handles.mark, 'Value') == 1
     pos = get(hObject, 'xdata');
     pos = pos(1);
+    
+    % --- Undo update memory---
+    try %try if any memory is available
+        saved_moves=handles.saved_moves;
+    catch e
+        saved_moves=0;
+        handles.saved_moves=saved_moves;
+    end
+    
+    % undo update:
+    if saved_moves<handles.N_undo %if not yet reached max saved moves
+        saved_moves+1;
+        handles.saved_moves=saved_moves+1;
+    else %delete from beginning
+        handles.lastmove(1:handles.N_undo-1,:)=handles.lastmove(2:handles.N_undo,:);
+        handles.saved_moves=handles.N_undo;
+    end
+    
+    % add new UNDO entry:
+    handles.lastmove{ handles.saved_moves,1}=pos(1,1); % pos of mp
+    handles.lastmove{ handles.saved_moves,2}='removed'; %removed mp: because the mp_callback was activated by removing an existing mp
+    handles.lastmove{ handles.saved_moves,3}=no1; %which icecore
+    handles.lastmove{ handles.saved_moves,4}=3; %assign type 3
+    
+    
     mp = handles.mp{no1};
     delindx = find(mp(:,1)==pos);
     if length(delindx)>1 && get(handles.othermarks, 'Value') == 1
@@ -656,7 +717,9 @@ if ~isempty(key)
                 'O  = Toggle "Other ?" button on/off'
                 'S  = Save matchpoint files'
                 'X  = eXit'
-                '2  = Toggle "2nd order" button on/off'});
+                '2  = Toggle "2nd order" button on/off'
+                'U  = Undo'});
+
     end;
 end;
 
@@ -854,3 +917,82 @@ if isfield(handles, 'evaluatefigurehandle')
 end;
 delete(handles.fig)
 warning('on', 'MATLAB:Axes:NegativeDataInLogAxis');
+
+%---
+
+function handles=undo_Callback(hObject, handles);
+
+try
+    saved_moves= handles.saved_moves;
+catch e
+    disp(e);
+    saved_moves=0;
+end
+
+if saved_moves<1
+    disp('Undo : no move in memory');
+end
+
+if and(~isnan(saved_moves),saved_moves>0)
+    
+    no1=handles.lastmove{saved_moves,3}; %retrieve ice core
+    
+    if get(handles.mark, 'Value') == 1
+        if strcmp(handles.lastmove{saved_moves,2},'added') % an added mp will be removed
+            if handles.lastmove{saved_moves,4}<10
+                idx = find(handles.mp{no1}(:,1)==handles.lastmove{saved_moves,1});
+                if isempty(idx)
+                    idx=check_mp_click_inches_conversion(handles.mp{no1},handles.lastmove{saved_moves,1},handles.bigax(no1));%giulia: see this function description
+                end
+                handles.mp{no1}(idx,:)=[];
+                handles = plotmp(handles, no1);
+                set(handles.save, 'enable', 'on');
+                handles.lastmove(saved_moves,:)=[];
+                handles.saved_moves=handles.saved_moves-1;
+                guidata(hObject, handles);
+                
+            else
+                idx_2 = find(handles.mp_2{no1}(:,1)==handles.lastmove{saved_moves,1});
+                if isempty(idx_2)
+                    idx_2=check_mp_click_inches_conversion(handles.mp_2{no1},handles.lastmove{saved_moves,1},handles.bigax(no1)); %giulia: see this function description
+                end
+                handles.mp_2{no1}(idx_2,:)=[];
+                handles = plotmp(handles, no1);
+                set(handles.save, 'enable', 'on');
+                handles.lastmove(saved_moves,:)=[];
+                handles.saved_moves=handles.saved_moves-1;
+                guidata(hObject, handles);
+            end
+            
+        elseif strcmp(handles.lastmove{saved_moves,2},'removed') % a removed mp will be re-added
+            
+            if handles.lastmove{saved_moves,4}<10
+                
+                removed_mp=[handles.lastmove{saved_moves,1} handles.lastmove{saved_moves,4}];
+                handles.mp{no1}=[handles.mp{no1};removed_mp];
+                handles.mp{no1} = sortrows(handles.mp{no1});
+                handles = plotmp(handles, no1);
+                set(handles.save, 'enable', 'on');
+                %undo-ed moves are deleted, double-undo is avoided
+                handles.lastmove(saved_moves,:)=[];
+                handles.saved_moves=handles.saved_moves-1;
+                
+                guidata(hObject, handles);
+            else
+                removed_mp=[handles.lastmove{saved_moves,1} handles.lastmove{saved_moves,4}-10];
+                handles.mp_2{no1}=[handles.mp_2{no1};removed_mp];
+                handles.mp_2{no1} = sortrows(handles.mp_2{no1});
+                handles = plotmp(handles, no1);
+                set(handles.save, 'enable', 'on');
+                handles.lastmove(saved_moves,:)=[];
+                handles.saved_moves=handles.saved_moves-1;
+                
+                guidata(hObject, handles);
+            end
+        else
+            disp('error');
+        end
+    end
+    
+end
+
