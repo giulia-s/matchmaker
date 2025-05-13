@@ -17,7 +17,6 @@ function matchmaker(varargin)
 %    delete(gcf)
 %    set(0, 'showhiddenhandles', 'off')
 
-%try
 switch nargin
     case {0 1 2} % Only for development purposes
         delete(gcf);
@@ -31,11 +30,6 @@ switch nargin
     otherwise
         disp('Wrong number of arguments when calling matchmaker.m');
 end;
-%catch
-%    disp(lasterr)
-%    dummy = input('ERROR : Log the error and press enter to continue');
-%    disp(' ');
-%end;
 
 %---
 
@@ -105,14 +99,6 @@ for i = 1:N
         end;
     end;
     
-    %       if max(sett.specs{fileno(i)}) > NN(i) CHANGED 22/4 2007 to solve
-    %       problem that resets specis to 1:5 all the time
-    
-    %       Version replaced 22/4 2010 to solve problem when switching to a
-    %       core with less available species
-    %       if max(sett.specs{fileno(i)}) > length(depth_no)
-    %           handles.selectedspecs{i} = 1:NN(i); disp('bing'); disp(sett.specs{fileno(i)}); disp(NN(i));
-    %       end;
     handles.selectedspecs{i} = min(handles.selectedspecs{i}, length(depth_no));
     
 end;
@@ -138,7 +124,6 @@ dh = 0.002*710/hgt;
 
 dummyax = axes('position', [0 0 1 1], 'xlim', [0 1], 'ylim', [0 1], 'visible', 'off',...
     'nextplot', 'add');
-% ADDED AUG. 8 2011: Keyboard callbacks added to buttons to enable keyboard shortcuts after pressing a button
 handles.title = text(dx, 0.4*y0, 'MATCHMAKER', 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'Fontsize', font2, 'fontweight', 'bold', 'parent', dummyax);
 
 
@@ -458,27 +443,7 @@ if get(handles.mark, 'Value') == 1
     else
         return;
     end
-    % OLD VERSION
-    %     if strcmp(but, 'normal')
-    %         if dummy
-    %             mptype = 4;
-    %         else
-    %             mptype = 1;
-    %         end;
-    %     elseif strcmp(but, 'alt')
-    %         if dummy
-    %             mptype = 5;
-    %         else
-    %             mptype = 2;
-    %         end;
-    %         if get(handles.plotmp2, 'value') == 0
-    %             return
-    %         end;
-    %     elseif strcmp(but, 'extend')
-    %         mptype = 3;
-    %     else
-    %         return;
-    %     end
+    
     mp = handles.mp{no1};
     mp = [mp; pos mptype];
     handles.mp{no1} = sortrows(mp);
@@ -547,7 +512,6 @@ for j = no2
     set([handles.spec{no1, j} handles.offset{no1, j} handles.autoy{no1, j} handles.logy{no1, j} handles.miny{no1, j} handles.maxy{no1, j}], 'Backgroundcolor', 'w', 'Foregroundcolor', handles.colours{no1}(handles.selectedspecs{no1}(j),:));
     set(handles.tickax{no1, j}, 'ycolor', handles.colours{no1}(handles.selectedspecs{no1}(j),:));
 end;
-%guidata(handles.fig, handles); % MAYBE THIS SHOULD BE INCLUDED ????
 
 %---
 
@@ -768,7 +732,6 @@ elseif strcmp(identify, 'closing_evaluate')
 else
     disp(['Error in MATCHMAKER.m, evaluate_Callback : ' identify]);
 end;
-%mp = handles.mp; core = handles.core; mp1 = handles.mp1_idx{masterno}; save('testevaldata.mat', 'mp', 'core', 'masterno', 'mp1');
 
 %---
 
