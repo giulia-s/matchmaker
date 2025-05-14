@@ -173,6 +173,14 @@ handles.undo = uicontrol('units', 'normalized',...
 handles.N_undo=1000; % how many moves are saved in memory
 handles.lastmoves=cell(handles.N_undo,1);
 
+% Save Figure button
+handles.save_fig = uicontrol('units', 'normalized',...
+    'position', [4*x0+x1+3*dx 0*y0 1.6*x0 eh],...
+    'string', 'SaveFig', 'style', 'pushbutton',...
+    'callback', ['matchmaker(''save_fig_Callback'',gcbo,[],guidata(gcbo))'],...
+    'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'enable', 'on',...
+    'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
+
 for i = 1:N
     
     
@@ -994,5 +1002,16 @@ if and(~isnan(saved_moves),saved_moves>0)
         end
     end
     
+end
+
+%---
+
+function save_fig_Callback(hObject, handles)
+state=get(handles.save_fig,'Enable');
+if strcmp(state,'on')
+    matchmaker_savefig('open_save_fig',handles)
+    set(handles.save_fig,'Enable','on');
+else
+    set(handles.save_fig,'Enable','on');
 end
 
