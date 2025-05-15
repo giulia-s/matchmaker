@@ -276,7 +276,7 @@ end
 
 function offset_Callback(hObject, handles, no1, no2)
 value = str2double(get(handles.offset{no1, no2}, 'string')); % get input
-if ~isreal(value) | length(value) ~= 1 % check if input is valid
+if ~isreal(value) || length(value) ~= 1 % check if input is valid
     set(handles.offset{no1, no2}, 'string', '0');
 end
 plotcurve(handles, no1, no2);
@@ -301,7 +301,7 @@ end
 
 function masterno_Callback(hObject, handles)
 value = str2double(get(handles.masterno, 'string')); % get input
-if ~isreal(value) | length(value) ~= 1 | mod(value,1)~=0 | value>handles.N | value<1% check if input is valid
+if ~isreal(value) || length(value) ~= 1 || mod(value,1)~=0 || value>handles.N || value<1% check if input is valid
     set(handles.masterno, 'string', '1');
     value = 1;
 end
@@ -316,7 +316,7 @@ end
 
 function incx_Callback(hObject, handles, no) % Depth increment edit-box callback. The validity of the input is checked, the actual value is used elsewhere
 value = str2double(get(handles.incx(no), 'string')); % get input
-if ~isreal(value) | length(value) ~= 1 % check if input is valid
+if ~isreal(value) || length(value) ~= 1 % check if input is valid
     set(handles.incx(no), 'string', '1');
 end
 if value <= 0
@@ -343,7 +343,7 @@ else
     numvalue = str2double(value);
 end
 Xlim = get(handles.bigax(no), 'xlim'); % Get old limits
-if ~isreal(numvalue) | length(numvalue) ~= 1 % If input is not a valid number ...
+if ~isreal(numvalue) || length(numvalue) ~= 1 % If input is not a valid number ...
     set(handles.minx(no), 'string', num2str(Xlim(1))); % ... use old lower limit
     set(handles.maxx(no), 'string', num2str(Xlim(2))); % ... use old upper limit
     return
@@ -379,7 +379,7 @@ else
     value = str2double(get(handles.maxy{no1, no2}, 'string')); % Get input
 end
 Ylim = get(handles.tickax{no1, no2}, 'ylim'); % Get old limits
-if ~isreal(value) | length(value) ~= 1 % If input is not a valid number ...
+if ~isreal(value) || length(value) ~= 1 % If input is not a valid number ...
     set(handles.miny{no1, no2}, 'string', num2str(Ylim(1))); % ... use old lower limit
     set(handles.maxy{no1, no2}, 'string', num2str(Ylim(2))); % ... use old upper limit
     return
@@ -659,7 +659,7 @@ else
     mp1 = mp(find(mp(:,2)==1),1);
     mp3 = mp(find(mp(:,2)==3),1);
     mp4 = mp(find(mp(:,2)==4),1);
-    mp134 = mp(find(mp(:,2)==1 | mp(:,2)==3| mp(:,2)==4),1);
+    mp134 = mp(find(mp(:,2)==1 || mp(:,2)==3| mp(:,2)==4),1);
     if ~isempty([mp1' mp3' mp4'])
         idx1 = find(mp1>=xlim(1) & mp1<=xlim(2));
         idx3 = find(mp3>=xlim(1) & mp3<=xlim(2));
@@ -694,7 +694,7 @@ else
         mp11 = mp(find(mp(:,2)==11),1);
         mp13 = mp(find(mp(:,2)==13),1);
         mp14 = mp(find(mp(:,2)==14),1);
-        mp111314 = mp(find(mp(:,2)==11 | mp(:,2)==13| mp(:,2)==14),1);
+        mp111314 = mp(find(mp(:,2)==11 || mp(:,2)==13| mp(:,2)==14),1);
         if ~isempty([mp11' mp13' mp14'])
             idx11 = find(mp11>=xlim(1) & mp11<=xlim(2));
             idx13 = find(mp13>=xlim(1) & mp13<=xlim(2));
@@ -713,10 +713,10 @@ else
         end
         idx12 = find(mp(:,2)==12 & mp(:,1)>=xlim(1) & mp(:,1)<=xlim(2));
         idx15 = find(mp(:,2)==15 & mp(:,1)>=xlim(1) & mp(:,1)<=xlim(2));
-        if ~isempty(idx12) & get(handles.plotmp2, 'Value') == 1
+        if ~isempty(idx12) && get(handles.plotmp2, 'Value') == 1
             plot((mp(idx12,1)*[1 1])', repmat([0.12 0.49]', 1, length(idx12)), 'linewidth', 4, 'color', greytone10, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
         end
-        if ~isempty(idx15) & get(handles.plotmp2, 'Value') == 1
+        if ~isempty(idx15) && get(handles.plotmp2, 'Value') == 1
             plot((mp(idx15,1)*[1 1])', repmat([0.12 0.49]', 1, length(idx15)), 'linewidth', 4, 'color', bluetone10, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
         end
     end
@@ -812,7 +812,7 @@ if length(mastermp) == 1
     for i = setdiff(1:handles.N, masterno)
         mpi = handles.mp{i};
         if length(mpi)>=max(mastermp)
-            mpi134 = mpi(find(mpi(:,2)==1 | mpi(:,2)==3 | mpi(:,2)==4),1);
+            mpi134 = mpi(find(mpi(:,2)==1 || mpi(:,2)==3 || mpi(:,2)==4),1);
             newxlim = round(1000*(mpi134(mastermp)+[-frac(1) (1-frac(1))]*(xlim(2)-xlim(1))))/1000;
             set([handles.bigax(i) handles.bigax2(i) handles.plotax{i,:} handles.tickax{i,:}], 'xlim', newxlim);
             plotcurve(handles, i, 0);
@@ -825,7 +825,7 @@ else
     for i = setdiff(1:handles.N, masterno)
         mpi = handles.mp{i};
         if length(mpi)>=max(mastermp)
-            mpi134 = mpi(find(mpi(:,2)==1 | mpi(:,2)==3 | mpi(:,2)==4),1);
+            mpi134 = mpi(find(mpi(:,2)==1 || mpi(:,2)==3 || mpi(:,2)==4),1);
             mpi134_depth = mpi134(mastermp([1 end]));
             newwidth = diff(mpi134_depth)/(frac(2)-frac(1));
             newxlim = round(100*(mpi134_depth(1)-frac(1)*newwidth + [0 newwidth]))/100;
@@ -876,8 +876,8 @@ disp(' ');
 for i = 1:handles.N
     mpi = handles.mp{i};
     mpi1 = mpi(find(mpi(:,2)==1),1);
-    mpi25 = mpi(find(mpi(:,2)==2 | mpi(:,2)==5),1);
-    mpi134 = mpi(find(mpi(:,2)==1 | mpi(:,2)==3 | mpi(:,2)==4),1);
+    mpi25 = mpi(find(mpi(:,2)==2 || mpi(:,2)==5),1);
+    mpi134 = mpi(find(mpi(:,2)==1 || mpi(:,2)==3 || mpi(:,2)==4),1);
     Nmp1(i) = length(mpi1);
     Nmp134(i) = length(mpi134);
     for j = 1:Nmp134(i)-1
@@ -1095,9 +1095,9 @@ function delindx = check_mp_click_inches_conversion(mp,P,x_axis)
                 LW=1;
             elseif t==6
                 LW=2;
-            elseif t==2 | t==5
+            elseif t==2 || t==5
                 LW=4;
-            elseif t==1 | t==3 | t==4
+            elseif t==1 || t==3 || t==4
                 LW=6;
             else
                 LW=NaN; % no mp was clicked
