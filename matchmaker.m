@@ -259,7 +259,7 @@ warning('off', 'MATLAB:Axes:NegativeDataInLogAxis');
 %-----------------------
 
 function varargout = move_Callback(hObject, handles, no, direc)
-incX = str2num(get(handles.incx(no), 'string')); % Get increment value. Validity check is done elsewhere
+incX = str2double(get(handles.incx(no), 'string')); % Get increment value. Validity check is done elsewhere
 oldlimX = get(handles.bigax(no), 'xlim'); % Get depth limits
 set([handles.bigax(no) handles.bigax2(no) handles.plotax{no,:} handles.tickax{no,:}], 'xlim', oldlimX+direc*incX); % Add/Subtract increment value ...
 set(handles.minx(no), 'String', num2str(oldlimX(1)+direc*incX)); % and update the edit-boxes
@@ -275,7 +275,7 @@ end
 %---
 
 function offset_Callback(hObject, handles, no1, no2)
-value = str2num(get(handles.offset{no1, no2}, 'string')); % get input
+value = str2double(get(handles.offset{no1, no2}, 'string')); % get input
 if ~isreal(value) | length(value) ~= 1 % check if input is valid
     set(handles.offset{no1, no2}, 'string', '0');
 end
@@ -300,7 +300,7 @@ end
 %---
 
 function masterno_Callback(hObject, handles)
-value = str2num(get(handles.masterno, 'string')); % get input
+value = str2double(get(handles.masterno, 'string')); % get input
 if ~isreal(value) | length(value) ~= 1 | mod(value,1)~=0 | value>handles.N | value<1% check if input is valid
     set(handles.masterno, 'string', '1');
     value = 1;
@@ -315,7 +315,7 @@ end
 %---
 
 function incx_Callback(hObject, handles, no) % Depth increment edit-box callback. The validity of the input is checked, the actual value is used elsewhere
-value = str2num(get(handles.incx(no), 'string')); % get input
+value = str2double(get(handles.incx(no), 'string')); % get input
 if ~isreal(value) | length(value) ~= 1 % check if input is valid
     set(handles.incx(no), 'string', '1');
 end
@@ -333,14 +333,14 @@ else
 end
 if length(value)>0 && value(1) == 'b'
     if limit == 1
-        numvalue = (str2num(value(2:end))-1)*0.55;
+        numvalue = (str2double(value(2:end))-1)*0.55;
         set(handles.minx(no), 'string', num2str(numvalue)); % ... use old lower limit
     else
-        numvalue = str2num(value(2:end))*0.55;
+        numvalue = str2double(value(2:end))*0.55;
         set(handles.maxx(no), 'string', num2str(numvalue)); % ... use old upper limit
     end
 else
-    numvalue = str2num(value);
+    numvalue = str2double(value);
 end
 Xlim = get(handles.bigax(no), 'xlim'); % Get old limits
 if ~isreal(numvalue) | length(numvalue) ~= 1 % If input is not a valid number ...
@@ -374,9 +374,9 @@ guidata(handles.fig, handles)
 
 function yscale_Callback(hObject, handles, no1, no2, limit) % Y-scaling edit-boxes callback
 if limit == 1
-    value = str2num(get(handles.miny{no1, no2}, 'string')); % Get input
+    value = str2double(get(handles.miny{no1, no2}, 'string')); % Get input
 else
-    value = str2num(get(handles.maxy{no1, no2}, 'string')); % Get input
+    value = str2double(get(handles.maxy{no1, no2}, 'string')); % Get input
 end
 Ylim = get(handles.tickax{no1, no2}, 'ylim'); % Get old limits
 if ~isreal(value) | length(value) ~= 1 % If input is not a valid number ...
@@ -619,7 +619,7 @@ if no2 == 0
 end
 xlim = get(handles.bigax(no1), 'xlim');
 for j = no2
-    offset = str2num(get(handles.offset{no1, j}, 'String'));
+    offset = str2double(get(handles.offset{no1, j}, 'String'));
     offsetxlim = xlim - offset;
     depth = handles.depth{no1}{handles.depth_no{no1}(handles.selectedspecs{no1}(j))};
     data = handles.data{no1}{handles.selectedspecs{no1}(j)};
@@ -723,7 +723,7 @@ else
     % END OF NEW SECTION
 end
 
-if length(handles.mp1_idx{str2num(get(handles.masterno, 'string'))})<2
+if length(handles.mp1_idx{str2double(get(handles.masterno, 'string'))})<2
     set(handles.evaluate, 'Enable', 'off');
 else
     set(handles.evaluate, 'Enable', 'on');
@@ -736,10 +736,10 @@ key = double(get(handles.fig, 'currentcharacter'));
 if ~isempty(key)
     switch key
         case 28   %<-
-            handles = move_Callback(hObject, handles, str2num(get(handles.masterno, 'string')), -1);
+            handles = move_Callback(hObject, handles, str2double(get(handles.masterno, 'string')), -1);
             accordianize_Callback(hObject, handles);
         case 29  %->
-            handles = move_Callback(hObject, handles, str2num(get(handles.masterno, 'string')), 1);
+            handles = move_Callback(hObject, handles, str2double(get(handles.masterno, 'string')), 1);
             accordianize_Callback(hObject, handles);
         case {80, 112}   %p, P
             set(handles.fig, 'InvertHardcopy', 'on', 'paperunits', 'centimeters', 'paperorientation', 'landscape', 'papertype', 'A4', 'paperposition', [1 1 27.7 19], 'renderer', 'painters');
@@ -800,7 +800,7 @@ end
 %---
 
 function accordianize_Callback(hObject, handles)
-masterno = str2num(get(handles.masterno, 'string'));
+masterno = str2double(get(handles.masterno, 'string'));
 mastermp = handles.mp1_idx{masterno};
 if isempty(mastermp)
     return
@@ -843,7 +843,7 @@ guidata(handles.fig, handles); % Is it OK to have it outside the loop ???
 
 function evaluate_Callback(hObject, handles, identify)
 if strcmp(identify, 'button')
-    masterno = str2num(get(handles.masterno, 'string'));
+    masterno = str2double(get(handles.masterno, 'string'));
     if isfield(handles, 'evaluatefigurehandle')
         matchmaker_evaluate('evalreuse', handles.evaluatefigurehandle, [], handles.mp, handles.core, masterno, handles.mp1_idx{masterno});
     else
@@ -1074,7 +1074,7 @@ end
 
 %---
 
-function delindx=check_mp_click_inches_conversion(mp,P,x_axis)
+function delindx = check_mp_click_inches_conversion(mp,P,x_axis)
 % this function checks whether a point clicked is close enough to an existing mp to delete it.
 % it works by converting the linewidth of the mp bar from inches to data units, 
 % and setting this as a tolerance distance for the deletion of the mp.
