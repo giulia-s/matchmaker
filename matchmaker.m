@@ -1131,7 +1131,10 @@ if strcmp(get(handles.save,'enable'),'off') %if button is off
     color_activated_save = 1;
 end
 
-color=uisetcolor(handles.colours{no1}(handles.selectedspecs{no1}(no2),:),['Select a color for:' handles.species{no1}{handles.selectedspecs{no1}(no2)}]);
+%color selector:
+color=uisetcolor(handles.colours{no1}(handles.selectedspecs{no1}(no2),:),...
+    ['Select a color for: ' handles.species{no1}{handles.selectedspecs{no1}(no2)}]);
+%update color
 handles.colours{no1}(handles.selectedspecs{no1}(no2),:)=color;
 
 guidata(hObject, handles);
@@ -1150,6 +1153,6 @@ eval(handles.datafiles); %load file names of icecores to be able to access the d
 save(['data' filesep files.datafile{handles.fileno(no1)}],'colours','-append'); %save new colors in datafile
 
 if color_activated_save==1 %if save was activated only by the color button
-    set(handles.save, 'enable', 'off'); %set if off again
+    set(handles.save, 'enable', 'off'); %put if off again
 end
 
