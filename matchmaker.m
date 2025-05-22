@@ -941,6 +941,28 @@ figure(handles.fig);
 %---
 
 function save_Callback(hObject, handles)
+
+% Setting up the back-up folder
+datafile=handles.datafiles;
+
+if ~exist(['matchfiles/matchfiles_backup/' datafile '/' ],'dir')
+    mkdir(['matchfiles/matchfiles_backup/' datafile '/' ]); % create backup folder with datafile name
+end
+backup_dir=['matchfiles/matchfiles_backup/' datafile '/' ];
+%generate a counter file
+if exist( [backup_dir '/runID.mat'],'file')
+    load( [backup_dir '/runID.mat']); % increment a counter
+    runID = runID+1;
+else
+    runID = 1;
+end
+save([backup_dir '/runID.mat'],'runID');
+%generate the backup forlder for this run
+output_dir = [backup_dir '#' num2str(runID)]; % create a sub folder 
+if ~exist(output_dir,'dir')
+    mkdir(output_dir);
+end
+
 for i = 1:handles.N
     status = copyfile(['matchfiles' filesep handles.matchfile{i}], ['matchfiles' filesep handles.matchfile{i} '.backup']);
     if status == 0
@@ -948,9 +970,14 @@ for i = 1:handles.N
         disp('   (this error does not influence the saving procedure itself)');
     end
     mp = handles.mp{i};
+    % Over-write mp files
     save(['matchfiles' filesep handles.matchfile{i}], 'mp', '-MAT');
-    
+    %Back-up mp files
+    copyfile(['matchfiles/' handles.matchfile{i}], output_dir); 
+
 end
+copyfile([datafile '.m'], output_dir); % save datafiles in backup folder
+disp(['Output directory: ','/',output_dir]);
 set(handles.save, 'enable', 'off');
 
 %---
