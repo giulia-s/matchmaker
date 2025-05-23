@@ -86,16 +86,18 @@ for i = 1:N
         disp(['Loading matchfiles' filesep files.matchfile{fileno(i)},' ...']);
         load(['matchfiles' filesep files.matchfile{fileno(i)}]);
     catch
-        disp(['Matchpoint file ' files.matchfile{fileno(i)} ' not found']);
+        disp(['Matchfile of ' files.core{fileno(i)} ' not found. Either it was not specified or it is not existing.']);
         files.matchfile{fileno(i)}=[ files.core{fileno(i)} '.mat'];
-        if ~exist([files.core{fileno(i)} '.mat'])
-            disp([' Creating a new primary matchfile ' files.core{fileno(i)} ' contanining empty mp=[].']);
+        if ~exist(['matchfiles/' files.matchfile{fileno(i)}])
+            disp(['Creating a new matchfile for ' files.core{fileno(i)} ' contanining empty mp=[].']);
             mp=[];
             save(['matchfiles',filesep,files.matchfile{fileno(i)}],'mp');
+            disp(['Loading matchfiles' filesep files.matchfile{fileno(i)},' ...']);
        else
-            disp([' Loading existing file ' files.core{fileno(i)} ' as primary matchfile.']);    
+            disp(['The existing file ' 'matchfiles/' files.matchfile{fileno(i)} ' is loaded as as matchfile instead.']);    
        end
        load(['matchfiles' filesep files.matchfile{fileno(i)}]);
+       
     end
     handles.matchfile{i} = files.matchfile{fileno(i)};
     handles.core{i} = files.core{fileno(i)};
