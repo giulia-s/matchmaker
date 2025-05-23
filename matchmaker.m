@@ -33,7 +33,7 @@ end
 
 %--- Opens GUI and set the appearance of buttons, axes, etc:
 
-function open_request(datafiles, fileno, NN)
+function open_request(datafiles, fileno, N_species)
 try
     eval(datafiles);
 catch
@@ -41,18 +41,16 @@ catch
     return;
 end
 load matchmaker_sett
-if size(fileno) ~= size(NN)
+if size(fileno) ~= size(N_species)
     disp('ERROR in Matchmaker : 2nd and 3rd argument must have same dimension.');
     return;
 end
-scrsize = get(0, 'screensize');
-h_screen = scrsize(4);
 
 handles.datafiles=datafiles;
 
 % GUI window
 handles.fig = figure('units','normalized',...
-    'outerposition', [0.025 0.075 0.85 0.85], ...
+    'outerposition', [0.025 0.075 0.85 0.85], ...%initial dimensions upon opening
     'name', ['Matchmaker - ',datafiles],...
     'CloseRequestFcn', 'matchmaker(''exit_Callback'',gcbo,[],guidata(gcbo))',...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))',...
@@ -64,7 +62,7 @@ handles.fig = figure('units','normalized',...
 N = length(fileno);
 handles.fileno = fileno;
 handles.N = N;
-handles.NN = NN;
+handles.N_species = N_species;
 h_wait = waitbar(0.05, 'Please be patient ... loading'); % Wait window is launched
 for i = 1:N
     waitbar(0.2*i, h_wait,...
@@ -95,13 +93,13 @@ for i = 1:N
     handles.matchfile{i} = files.matchfile{fileno(i)};
     handles.core{i} = files.core{fileno(i)};
     handles.mp{i} = mp;
-    if length(sett.specs{fileno(i)}) == NN(i)
+    if length(sett.specs{fileno(i)}) == N_species(i)
         handles.selectedspecs{i} = sett.specs{fileno(i)};
     else
-        if length(sett.specs{fileno(i)}) < NN(i)
-            handles.selectedspecs{i} = [sett.specs{fileno(i)} (length(sett.specs{fileno(i)})+1):NN(i)];
+        if length(sett.specs{fileno(i)}) < N_species(i)
+            handles.selectedspecs{i} = [sett.specs{fileno(i)} (length(sett.specs{fileno(i)})+1):N_species(i)];
         else
-            handles.selectedspecs{i} = sett.specs{fileno(i)}(1:NN(i));
+            handles.selectedspecs{i} = sett.specs{fileno(i)}(1:N_species(i));
         end
     end
     
@@ -114,17 +112,17 @@ close(h_wait)
 font1 = 8;
 font2 = 10;
 
-%vertical dimensions
+%vertical dimensions (normalized)
 bottom_edge_pos = 0.001;
-axes_xlabel_H = 0.02;
-axes_vert_spacing = 0.015;
-axes_H = (1-bottom_edge_pos-(N+2)*axes_vert_spacing)/N;
-yoverlap = 0.45; % fraction
-yhsub = (axes_H-axes_xlabel_H)./(NN-(NN-1)*yoverlap);
-button_H = 21/h_screen;
-button_y_spacing = 1.42/h_screen;
+ax_xlabel_H = 0.03;
+ax_vert_spacing = 0.015;
+ax_H = (1-bottom_edge_pos-(N+2)*ax_vert_spacing)/N;
+species_overlap_H = 0.45; % fraction
+ax_species_H = (ax_H-ax_xlabel_H)./(N_species-(N_species-1)*species_overlap_H);
+button_H = 0.025;
+button_y_spacing = 0.0016;
 
-%horizontal dimensions
+%horizontal dimensions (normalized)
 buttons_left_edge_pos = 0.005;
 axes_left_edge_pos = 0.1;
 ax_width = 0.835;
@@ -208,40 +206,40 @@ handles.lastmoves=cell(handles.N_undo,1);
 
 for i = 1:N
     
-    handles.bigax(i) = axes('position', [axes_left_edge_pos bottom_edge_pos+2*axes_vert_spacing+axes_xlabel_H+(i-1)*(axes_H+axes_vert_spacing) ax_width axes_H-axes_xlabel_H],...
+    handles.bigax(i) = axes('position', [axes_left_edge_pos bottom_edge_pos+2*ax_vert_spacing+ax_xlabel_H+(i-1)*(ax_H+ax_vert_spacing) ax_width ax_H-ax_xlabel_H],...
         'nextplot', 'add', 'ylim', [0 1], 'ytick', [], 'box', 'off', 'fontsize', font1, 'ycolor', 'w', 'xcolor', 'w',...
         'ButtonDownFcn', ['matchmaker(''axesclick_Callback'',gcbo,[],guidata(gcbo),' num2str(i) ')'],...
         'hittest','on');
-    handles.bigax2(i) = axes('position', [axes_left_edge_pos bottom_edge_pos+2*axes_vert_spacing+axes_xlabel_H+(i-1)*(axes_H+axes_vert_spacing) ax_width axes_H-axes_xlabel_H], 'nextplot', 'add', 'visible', 'off', 'hittest', 'off', 'clipping', 'on', 'ylim', [0 1]);
-    handles.name(i) = text(buttons_left_edge_pos, bottom_edge_pos+axes_vert_spacing+i*(axes_H+axes_vert_spacing),...
+    handles.bigax2(i) = axes('position', [axes_left_edge_pos bottom_edge_pos+2*ax_vert_spacing+ax_xlabel_H+(i-1)*(ax_H+ax_vert_spacing) ax_width ax_H-ax_xlabel_H], 'nextplot', 'add', 'visible', 'off', 'hittest', 'off', 'clipping', 'on', 'ylim', [0 1]);
+    handles.name(i) = text(buttons_left_edge_pos, bottom_edge_pos+ax_vert_spacing+i*(ax_H+ax_vert_spacing),...
         files.core{fileno(i)}, 'VerticalAlignment', 'top', 'HorizontalAlignment', 'left', 'Fontsize', font2, 'fontweight', 'bold', 'parent', dummyax);
     handles.minx(i) = uicontrol('units', 'normalized', ...
-        'position', [buttons_left_edge_pos bottom_edge_pos+axes_vert_spacing+i*(axes_H+axes_vert_spacing)-2*(button_H+button_y_spacing) small_button_L button_H], 'string', '0', 'style', 'edit', ...
+        'position', [buttons_left_edge_pos bottom_edge_pos+ax_vert_spacing+i*(ax_H+ax_vert_spacing)-2*(button_H+button_y_spacing) small_button_L button_H], 'string', '0', 'style', 'edit', ...
         'callback', ['matchmaker(''xscale_Callback'',gcbo,[],guidata(gcbo),' num2str(i) ', 1)'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'normal', 'horizontalalignment', 'right');
     handles.maxx(i) = uicontrol('units', 'normalized', ...
-        'position', [buttons_left_edge_pos bottom_edge_pos+axes_vert_spacing+i*(axes_H+axes_vert_spacing)-3*(button_H+button_y_spacing) small_button_L button_H], 'string', '1', 'style', 'edit', ...
+        'position', [buttons_left_edge_pos bottom_edge_pos+ax_vert_spacing+i*(ax_H+ax_vert_spacing)-3*(button_H+button_y_spacing) small_button_L button_H], 'string', '1', 'style', 'edit', ...
         'callback', ['matchmaker(''xscale_Callback'',gcbo,[],guidata(gcbo),' num2str(i) ', 2)'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'normal', 'horizontalalignment', 'right');
     handles.back(i) = uicontrol('units', 'normalized', ...
-        'position', [buttons_left_edge_pos bottom_edge_pos+axes_vert_spacing+i*(axes_H+axes_vert_spacing)-5*(button_H+button_y_spacing) small_button_L button_H], 'string', '<--', 'style', 'pushbutton', ...
+        'position', [buttons_left_edge_pos bottom_edge_pos+ax_vert_spacing+i*(ax_H+ax_vert_spacing)-5*(button_H+button_y_spacing) small_button_L button_H], 'string', '<--', 'style', 'pushbutton', ...
         'callback', ['matchmaker(''move_Callback'',gcbo,[],guidata(gcbo),' num2str(i) ', -1)'], 'fontname', 'default', 'fontsize', font2, 'fontweight', 'bold', 'horizontalalignment', 'center', 'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
     handles.fwd(i) = uicontrol('units', 'normalized', ...
-        'position', [buttons_left_edge_pos bottom_edge_pos+axes_vert_spacing+i*(axes_H+axes_vert_spacing)-6*(button_H+button_y_spacing) small_button_L button_H], 'string', '-->', 'style', 'pushbutton', ...
+        'position', [buttons_left_edge_pos bottom_edge_pos+ax_vert_spacing+i*(ax_H+ax_vert_spacing)-6*(button_H+button_y_spacing) small_button_L button_H], 'string', '-->', 'style', 'pushbutton', ...
         'callback', ['matchmaker(''move_Callback'',gcbo,[],guidata(gcbo),' num2str(i) ', 1)'], 'fontname', 'default', 'fontsize', font2, 'fontweight', 'bold', 'horizontalalignment', 'center', 'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
     handles.incx(i) = uicontrol('units', 'normalized', ...
-        'position', [buttons_left_edge_pos bottom_edge_pos+axes_vert_spacing+i*(axes_H+axes_vert_spacing)-7*(button_H+button_y_spacing) small_button_L button_H], 'string', '1', 'style', 'edit', ...
+        'position', [buttons_left_edge_pos bottom_edge_pos+ax_vert_spacing+i*(ax_H+ax_vert_spacing)-7*(button_H+button_y_spacing) small_button_L button_H], 'string', '1', 'style', 'edit', ...
         'callback', ['matchmaker(''incx_Callback'',gcbo,[],guidata(gcbo),' num2str(i) ')'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'normal', 'horizontalalignment', 'right');
 end
 sides = [{'right'} {'left'}];
 for i = 1:N
     
-    handles.tickax{i,1} = axes('position', [axes_left_edge_pos bottom_edge_pos+2*axes_vert_spacing+axes_xlabel_H+(i-1)*(axes_H+axes_vert_spacing) ax_width yhsub(i)], 'nextplot', 'add', 'color', 'none', 'xcolor', 'k', 'ylim', [0 1], 'box', 'off', 'fontsize', font1, 'yaxislocation', 'left', 'xaxislocation', 'bottom', 'hittest', 'off', 'fontweight', 'bold');
-    handles.plotax{i,1} = axes('position', [axes_left_edge_pos bottom_edge_pos+2*axes_vert_spacing+axes_xlabel_H+(i-1)*(axes_H+axes_vert_spacing) ax_width yhsub(i)], 'nextplot', 'replacechildren', 'visible', 'off', 'hittest', 'off');
-    for j = 1:NN(i)
-        species_yax_ypos=bottom_edge_pos+2*axes_vert_spacing+axes_xlabel_H+(i-1)*(axes_H+axes_vert_spacing)+(j-1)*(1-yoverlap)*yhsub(i);
+    handles.tickax{i,1} = axes('position', [axes_left_edge_pos bottom_edge_pos+2*ax_vert_spacing+ax_xlabel_H+(i-1)*(ax_H+ax_vert_spacing) ax_width ax_species_H(i)], 'nextplot', 'add', 'color', 'none', 'xcolor', 'k', 'ylim', [0 1], 'box', 'off', 'fontsize', font1, 'yaxislocation', 'left', 'xaxislocation', 'bottom', 'hittest', 'off', 'fontweight', 'bold');
+    handles.plotax{i,1} = axes('position', [axes_left_edge_pos bottom_edge_pos+2*ax_vert_spacing+ax_xlabel_H+(i-1)*(ax_H+ax_vert_spacing) ax_width ax_species_H(i)], 'nextplot', 'replacechildren', 'visible', 'off', 'hittest', 'off');
+    for j = 1:N_species(i)
+        species_yax_ypos=bottom_edge_pos+2*ax_vert_spacing+ax_xlabel_H+(i-1)*(ax_H+ax_vert_spacing)+(j-1)*(1-species_overlap_H)*ax_species_H(i);
         if j > 1
             
-            handles.tickax{i,j} = axes('position', [axes_left_edge_pos species_yax_ypos ax_width yhsub(i)], 'nextplot', 'add', 'ycolor', handles.colours{i}(handles.selectedspecs{i}(j),:), 'color', 'none', 'xcolor', 'w', 'xtick', [], 'ylim', [0 1], 'box', 'off', 'fontsize', font1, 'yaxislocation', sides{mod(j,2)+1}, 'xaxislocation', 'top', 'hittest', 'off', 'fontweight', 'bold');
-            handles.plotax{i,j} = axes('position', [axes_left_edge_pos species_yax_ypos ax_width yhsub(i)], 'nextplot', 'replacechildren', 'visible', 'off', 'hittest', 'off');
+            handles.tickax{i,j} = axes('position', [axes_left_edge_pos species_yax_ypos ax_width ax_species_H(i)], 'nextplot', 'add', 'ycolor', handles.colours{i}(handles.selectedspecs{i}(j),:), 'color', 'none', 'xcolor', 'w', 'xtick', [], 'ylim', [0 1], 'box', 'off', 'fontsize', font1, 'yaxislocation', sides{mod(j,2)+1}, 'xaxislocation', 'top', 'hittest', 'off', 'fontweight', 'bold');
+            handles.plotax{i,j} = axes('position', [axes_left_edge_pos species_yax_ypos ax_width ax_species_H(i)], 'nextplot', 'replacechildren', 'visible', 'off', 'hittest', 'off');
         end
         %position of species-button column can be left or right depending on mod(n,2)
         secondary_button_column_xpos = (mod(j,2)==1)*(buttons_left_edge_pos+3*button_x_spacing+small_button_L)...%left
@@ -289,7 +287,7 @@ end
 handles.storeidx = [];
 guidata(handles.fig, handles);
 for i = 1:N
-    for j = 1:NN(i)
+    for j = 1:N_species(i)
         axes(handles.plotax{i,j});
         plotcurve(handles, i, j);
     end
@@ -648,7 +646,7 @@ end
 
 function update_yminmax(hObject, handles, no1, no2) % Updates the minY and maxY edit-boxes with the current Y-axis limits. Is called whenever the view changes.
 if no2 == 0
-    no2 = 1:handles.NN(no1);
+    no2 = 1:handles.N_species(no1);
 end
 for j = 1:length(no2)
     limY = get(handles.plotax{no1, no2(j)}, 'ylim');
@@ -661,7 +659,7 @@ end
 
 function curve = plotcurve(handles, no1, no2)
 if no2 == 0
-    no2 = 1:handles.NN(no1);
+    no2 = 1:handles.N_species(no1);
 end
 xlim = get(handles.bigax(no1), 'xlim');
 for j = no2
