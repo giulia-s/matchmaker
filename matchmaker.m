@@ -97,11 +97,28 @@ for i = 1:N
             disp(['The existing file ' 'matchfiles/' files.matchfile{fileno(i)} ' is loaded as as matchfile instead.']);    
        end
        load(['matchfiles' filesep files.matchfile{fileno(i)}]);
-       
     end
     handles.matchfile{i} = files.matchfile{fileno(i)};
     handles.core{i} = files.core{fileno(i)};
     handles.mp{i} = mp;
+    
+    % try finding a secondary set of mps (if specified in init_file)
+    try
+        try %in the init_file it may be called matchfile_bis or matchfile_others
+            files.matchfile_others{fileno(i)}=files.matchfile_bis{fileno(i)};
+        end
+        mp_2=load(['matchfiles' filesep files.matchfile_others{fileno(i)}]);
+        disp(['Loading secondary(others): matchfiles' filesep files.matchfile_others{fileno(i)},' ...']);
+
+        mp_2=mp_2.mp;
+        handles.mp_2{i}=mp_2;
+        handles.matchfile_others{i} = files.matchfile_others{fileno(i)};
+    catch
+        disp(['Matchfile_others file for ' files.core{fileno(i)} ' not found. Program will continue without.']);
+        mp_2=zeros(1,2);
+        handles.mp_2{i}=zeros(1,2);
+    end
+    
     if length(sett.specs{fileno(i)}) == N_species(i)
         handles.selectedspecs{i} = sett.specs{fileno(i)};
     else
@@ -544,7 +561,11 @@ if get(handles.mark, 'Value') == 1
         
         temp_object.XData=pos;
         temp_object.Type=type;
-        
+        if get(handles.othermarks, 'Value')==0
+            mp = handles.mp{no1}; %delete mp of this ice core
+        else
+            mp = handles.mp_2{no1}; %delete mp_2 of this ice core    
+        end
         del_idx=check_mp_click_inches_conversion(mp,pos(1,1),handles.bigax(no1));
         
         if ~isempty(del_idx)
@@ -559,7 +580,8 @@ if get(handles.mark, 'Value') == 1
     pos = 0.001*round(1000*pos(1,1)); %convert normalized units to data units
     but = get(handles.fig, 'selectiontype');
     dummy = get(handles.dummymark, 'Value');
-    % NEW TYPE OF MARKS APPENDED JULY 27 2011: TYPE 11/12/13/14/15
+    
+    % Listing all types of mark-bars
     other = get(handles.othermarks, 'Value')*(ypos<0.5);
     if strcmp(but, 'normal')
         if dummy
@@ -583,7 +605,14 @@ if get(handles.mark, 'Value') == 1
     end
     
     mp = handles.mp{no1};
-    mp = [mp; pos mptype];
+    %plotting matchfile_others
+    mp_2 = handles.mp_2{no1};
+    %handling others if they have tpe >10
+    if mptype<10
+        mp = [mp; pos mptype];% amplitudes];
+    else
+        mp_2=[mp_2;pos mptype-10];
+    end
     
     %updating Undo memory
     
@@ -613,6 +642,8 @@ if get(handles.mark, 'Value') == 1
     %
     
     handles.mp{no1} = sortrows(mp);
+    handles.mp_2{no1} = sortrows(mp_2);
+    
     handles = plotmp(handles, no1);
     set(handles.save, 'enable', 'on');
     guidata(hObject, handles);
@@ -660,11 +691,14 @@ if get(handles.mark, 'Value') == 1
     
     
     mp = handles.mp{no1};
+    mp_2=handles.mp_2{no1};
     
     if get(handles.othermarks, 'Value')==0 || (ypos_true>=0.5 && get(handles.othermarks, 'Value')==1)
         delindx=check_mp_click_inches_conversion(mp,pos(1,1),handles.bigax(no1));
+        delindx_2=[];
     elseif get(handles.othermarks, 'Value')==1 && ypos_true<0.5
         delindx=[];
+        delindx_2=check_mp_click_inches_conversion(mp_2,pos(1,1),handles.bigax(no1));
     end
     
     
@@ -676,10 +710,25 @@ if get(handles.mark, 'Value') == 1
         else
             delindx = delindx(order(2));
         end
+    elseif length(delindx_2)>1 && get(handles.othermarks, 'Value') == 1
+        [~, order] = sort(mp_2(delindx_2,2));
+        
+        pos = get(handles.bigax(no1), 'currentpoint');
+        ypos=get(gcf, 'CurrentPoint')
+        ypos=ypos(1,2);
+        
+        if ypos>0.5;
+            delindx_2 = delindx_2(order(1));
+        else
+            delindx_2 = delindx_2(order(2));
+        end
     end
     
     mp = mp(setdiff(1:length(mp(:,1)), delindx),:);
+    mp_2 = mp_2(setdiff(1:length(mp_2(:,1)), delindx_2),:);
+
     handles.mp{no1} = mp;
+    handles.mp_2{no1} = mp_2;
     
     handles = plotmp(handles, no1);
     
@@ -740,7 +789,12 @@ bluetone = 0.85*[0 0 1];
 greytone10 = 0.9*[1 1 1];
 redtone10 = 0.85*[1 0.5 0.5];
 bluetone10 = 0.85*[0.5 0.5 1];
+
 mp = handles.mp{no1};
+if isfield(handles,'mp_2')
+    mp_2=handles.mp_2{no1};
+end
+
 xlim = get(handles.bigax(no1), 'xlim');
 if isempty(mp)
     return
@@ -752,19 +806,20 @@ else
     mp134 = mp(find(mp(:,2)==1 | mp(:,2)==3 | mp(:,2)==4),1);
     if ~isempty([mp1' mp3' mp4'])
         idx1 = find(mp1>=xlim(1) & mp1<=xlim(2));
-        idx3 = find(mp3>=xlim(1) & mp3<=xlim(2));
-        idx4 = find(mp4>=xlim(1) & mp4<=xlim(2));
-        idx134 = find(mp134>=xlim(1) & mp134<=xlim(2));
         if ~isempty(idx1)
             plot((mp1(idx1)*[1 1])', repmat([0.01+othermarks*0.5 0.93]', 1, length(idx1)), 'linewidth', 6, 'color', greytone, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ');']);
         end
+        idx3 = find(mp3>=xlim(1) & mp3<=xlim(2));
         if ~isempty(idx3)
             plot((mp3(idx3)*[1 1])', repmat([0.01+othermarks*0.5 0.93]', 1, length(idx3)), 'linewidth', 6, 'color', redtone, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
         end
+        idx4 = find(mp4>=xlim(1) & mp4<=xlim(2));
         if ~isempty(idx4)
             plot((mp4(idx4)*[1 1])', repmat([0.01+othermarks*0.5 0.93]', 1, length(idx4)), 'linewidth', 6, 'color', bluetone, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
         end
+        idx134 = find(mp134>=xlim(1) & mp134<=xlim(2));
         text(mp134(idx134), 0.93*ones(length(idx134),1), num2str(idx134), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', 'k');
+        
         handles.mp1_idx{no1} = idx134;
         handles.mp1_depth{no1} = mp134(idx134);
     else
@@ -784,7 +839,7 @@ else
         mp11 = mp(find(mp(:,2)==11),1);
         mp13 = mp(find(mp(:,2)==13),1);
         mp14 = mp(find(mp(:,2)==14),1);
-        mp111314 = mp(find(mp(:,2)==11 || mp(:,2)==13| mp(:,2)==14),1);
+        mp111314 = mp(find(mp(:,2)==11 | mp(:,2)==13 | mp(:,2)==14),1);
         if ~isempty([mp11' mp13' mp14'])
             idx11 = find(mp11>=xlim(1) & mp11<=xlim(2));
             idx13 = find(mp13>=xlim(1) & mp13<=xlim(2));
@@ -801,6 +856,7 @@ else
             end
             text(mp111314(idx111314), 0.07*ones(length(idx111314),1), num2str(idx111314), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
         end
+        
         idx12 = find(mp(:,2)==12 & mp(:,1)>=xlim(1) & mp(:,1)<=xlim(2));
         idx15 = find(mp(:,2)==15 & mp(:,1)>=xlim(1) & mp(:,1)<=xlim(2));
         if ~isempty(idx12) && get(handles.plotmp2, 'Value') == 1
@@ -809,8 +865,40 @@ else
         if ~isempty(idx15) && get(handles.plotmp2, 'Value') == 1
             plot((mp(idx15,1)*[1 1])', repmat([0.12 0.49]', 1, length(idx15)), 'linewidth', 4, 'color', bluetone10, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
         end
+        if ~isempty(mp_2)
+            mp_2_1 = mp_2(mp_2(:,2)==1,1);
+            mp_2_3 = mp_2((mp_2(:,2)==3),1);
+            mp_2_4 = mp_2((mp_2(:,2)==4),1);
+            mp_2_134 = mp_2((mp_2(:,2)==1 | mp_2(:,2)==3| mp_2(:,2)==4),1);
+            
+            if ~isempty([mp_2_1' mp_2_3' mp_2_4'])
+                indx_2_1 = find(mp_2_1>=xlim(1) & mp_2_1<=xlim(2));
+                if ~isempty(indx_2_1)
+                    plot((mp_2_1(indx_2_1)*[1 1])', repmat([0.07 0.49]', 1, length(indx_2_1)), 'linewidth', 6, 'color', greytone10, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
+                end
+                idx_2_3 = find(mp_2_3>=xlim(1) & mp_2_3<=xlim(2));
+                if ~isempty(idx_2_3)
+                    plot((mp_2_3(idx_2_3)*[1 1])', repmat([0.07 0.49]', 1, length(idx_2_3)), 'linewidth', 6, 'color', redtone10, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
+                end
+                idx_2_4 = find(mp_2_4>=xlim(1) & mp_2_4<=xlim(2));
+                if ~isempty(idx_2_4)
+                    plot((mp_2_4(idx_2_4)*[1 1])', repmat([0.07 0.49]', 1, length(idx_2_4)), 'linewidth', 6, 'color', light_bluetone10, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
+                end
+                idx_2_134 = find(mp_2_134>=xlim(1) & mp_2_134<=xlim(2));
+                text(mp_2_134(idx_2_134), 0.07*ones(length(idx_2_134),1), num2str(idx_2_134), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
+            end
+            
+            idx_2_2 = find(mp_2(:,2)==2 & mp_2(:,1)>=xlim(1) & mp_2(:,1)<=xlim(2));
+            if ~isempty(idx_2_2) && get(handles.plotmp2, 'Value') == 1
+                plot((mp_2(idx_2_2,1)*[1 1])', repmat([0.12 0.49]', 1, length(idx_2_2)), 'linewidth', 4, 'color', greytone10, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
+            end
+            idx1_2_5 = find(mp_2(:,2)==5 & mp_2(:,1)>=xlim(1) & mp_2(:,1)<=xlim(2));
+            if ~isempty(idx1_2_5) & get(handles.plotmp2, 'Value') == 1
+                plot((mp_2(idx1_2_5,1)*[1 1])', repmat([0.12 0.49]', 1, length(idx1_2_5)), 'linewidth', 4, 'color', light_bluetone10, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
+            end
+        end
     end
-    % END OF NEW SECTION
+ 
 end
 
 if length(handles.mp1_idx{str2double(get(handles.masterno, 'string'))})<2
@@ -935,9 +1023,17 @@ function evaluate_Callback(hObject, handles, identify)
 if strcmp(identify, 'button')
     masterno = str2double(get(handles.masterno, 'string'));
     if isfield(handles, 'evaluatefigurehandle')
-        matchmaker_evaluate('evalreuse', handles.evaluatefigurehandle, [], handles.mp, handles.core, masterno, handles.mp1_idx{masterno});
+        if isfield(handles,'mp_2')
+            matchmaker_evaluate('evalreuse_2', handles.evaluatefigurehandle, [], handles.mp,handles.mp_2, handles.core, masterno, handles.mp1_idx{masterno});
+        else
+            matchmaker_evaluate('evalreuse', handles.evaluatefigurehandle, [], handles.mp, handles.core, masterno, handles.mp1_idx{masterno});
+        end
     else
-        matchmaker_evaluate('evalopen', handles.fig, [], handles.mp, handles.core, masterno, handles.mp1_idx{masterno});
+        if isfield(handles,'mp_2')
+            matchmaker_evaluate('evalopen_2', handles.fig, [], handles.mp,handles.mp_2, handles.core, masterno, handles.mp1_idx{masterno}, handles.othermarks);
+        else
+            matchmaker_evaluate('evalopen', handles.fig, [], handles.mp, handles.core, masterno, handles.mp1_idx{masterno});
+        end
     end
 elseif strcmp(identify, 'opening_evaluate')
     evalhandles = handles; % the input argument 'handles' is the handles of the evaluate window.
@@ -1052,11 +1148,29 @@ for i = 1:handles.N
         disp('   (this error does not influence the saving procedure itself)');
     end
     mp = handles.mp{i};
+
     % Over-write mp files
     save(['matchfiles' filesep handles.matchfile{i}], 'mp', '-MAT');
     %Back-up mp files
     copyfile(['matchfiles/' handles.matchfile{i}], output_dir); 
+    
+    if handles.mp_2{i}~=[0 0] %<-solve this
+        mp=handles.mp_2{i}; % save secondary dataset
 
+        a=split(handles.matchfile{i},'/');
+        b=split(handles.matchfile_others{i},'/');
+
+        if strcmp(a{end},b{end}) %if they are called the same
+            disp(['The primary and secondary matchfile are called the same. This can cause conflicts.']);
+            disp(['Saving others-matchfile as ' handles.matchfile_others{i}(1:end-4) '_others.mat']);
+
+            save(['matchfiles' filesep handles.matchfile_others{i}(1:end-4) '_others.mat' ], 'mp', '-MAT');%,'save mp_2'
+            copyfile(['matchfiles/' handles.matchfile_others{i}(1:end-4) '_others.mat'   ], output_dir); % save backup
+        else
+            save(['matchfiles' filesep handles.matchfile_others{i} ], 'mp', '-MAT');%,'save mp_2'
+            copyfile(['matchfiles/' handles.matchfile_bis{i} ], output_dir); % save backup
+        end
+    end
 end
 copyfile([datafile '.m'], output_dir); % save datafiles in backup folder
 disp(['Output directory: ','/',output_dir]);
