@@ -83,12 +83,19 @@ for i = 1:N
     
     waitbar(0.2*i+0.1, h_wait, ['Please be patient ... loading matchpoint file no. ' num2str(i)]); % Wait window is updated
     try
+        disp(['Loading matchfiles' filesep files.matchfile{fileno(i)},' ...']);
         load(['matchfiles' filesep files.matchfile{fileno(i)}]);
     catch
         disp(['Matchpoint file ' files.matchfile{fileno(i)} ' not found']);
-        delete(handles.fig);
-        delete(h_wait);
-        return
+        files.matchfile{fileno(i)}=[ files.core{fileno(i)} '.mat'];
+        if ~exist([files.core{fileno(i)} '.mat'])
+            disp([' Creating a new primary matchfile ' files.core{fileno(i)} ' contanining empty mp=[].']);
+            mp=[];
+            save(['matchfiles',filesep,files.matchfile{fileno(i)}],'mp');
+       else
+            disp([' Loading existing file ' files.core{fileno(i)} ' as primary matchfile.']);    
+       end
+       load(['matchfiles' filesep files.matchfile{fileno(i)}]);
     end
     handles.matchfile{i} = files.matchfile{fileno(i)};
     handles.core{i} = files.core{fileno(i)};
