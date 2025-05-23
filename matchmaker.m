@@ -1,6 +1,6 @@
 function matchmaker(varargin)
 % ------------------------------------------------------------------------
-% MATCHMAKER GIT running version 
+% MATCHMAKER GIT running version
 % (Originally released as v2.04, 27 July 2011, Sune Olander Rasmussen)
 % MATCHMAKER syntax : matchmaker(filenames, datafileID, numberofpanels);
 %    filenames        Name of .m file containing a list of data and matchpoint file names (try 'files_main')
@@ -93,10 +93,10 @@ for i = 1:N
             mp=[];
             save(['matchfiles',filesep,files.matchfile{fileno(i)}],'mp');
             disp(['Loading matchfiles' filesep files.matchfile{fileno(i)},' ...']);
-       else
-            disp(['The existing file ' 'matchfiles/' files.matchfile{fileno(i)} ' is loaded as as matchfile instead.']);    
-       end
-       load(['matchfiles' filesep files.matchfile{fileno(i)}]);
+        else
+            disp(['The existing file ' 'matchfiles/' files.matchfile{fileno(i)} ' is loaded as as matchfile instead.']);
+        end
+        load(['matchfiles' filesep files.matchfile{fileno(i)}]);
     end
     handles.matchfile{i} = files.matchfile{fileno(i)};
     handles.core{i} = files.core{fileno(i)};
@@ -109,7 +109,7 @@ for i = 1:N
         end
         mp_2=load(['matchfiles' filesep files.matchfile_others{fileno(i)}]);
         disp(['Loading secondary(others): matchfiles' filesep files.matchfile_others{fileno(i)},' ...']);
-
+        
         mp_2=mp_2.mp;
         handles.mp_2{i}=mp_2;
         handles.matchfile_others{i} = files.matchfile_others{fileno(i)};
@@ -152,18 +152,18 @@ button_y_spacing = 0.0016;
 buttons_left_edge_pos = 0.005;
 ax_left_edge_pos = 0.1;
 ax_width = 0.835;
-button_L = 0.072;
+N_buttons=13;
+button_L = (1-ax_left_edge_pos)/N_buttons;
 small_button_L=button_L/2;
 button_x_spacing =0.001;
 
 dummyax = axes('position', [0 0 1 1], 'xlim', [0 1], 'ylim', [0 1], 'visible', 'off', 'nextplot', 'add');
 handles.title = text(buttons_left_edge_pos, bottom_edge_pos,...
     'MATCHMAKER', 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'Fontsize', font2, 'fontweight', 'bold', 'parent', dummyax);
-p_neighbour=get(handles.title,'position');
 handles.save = uicontrol('units', 'normalized', ...
-    'position', [p_neighbour(1)+1.3*button_L+button_x_spacing, bottom_edge_pos, button_L, button_H],...
+    'position', [ax_left_edge_pos, bottom_edge_pos, button_L, button_H],...
     'string', 'Save', 'style', 'pushbutton', ...
-    'Tooltip', ['Saves all matchfiles.' 10 'Creates backup files of everything.'],...
+    'Tooltip', ['Saves all matchfiles.' 10 'Creates backup files of everything. (S)'],...
     'callback', ['matchmaker(''save_Callback'',gcbo,[],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'enable', 'off', 'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.save,'position');
 handles.save_fig = uicontrol('units', 'normalized',...
@@ -176,7 +176,7 @@ p_neighbour=get(handles.save_fig,'position');
 handles.accordianize = uicontrol('units', 'normalized', ...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
     'string', 'Accordianize', 'style', 'pushbutton', ...
-    'Tooltip', ['Align 1st and Last tiepoint of all icecores.' 10 'Won''''t work in case of mp number mismatch.'],...
+    'Tooltip', ['Align 1st and Last tiepoint of all icecores.' 10 'Won''''t work in case of mp number mismatch.  (A)'],...
     'callback', ['matchmaker(''accordianize_Callback'',gcbo,[],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.accordianize,'position');
 handles.masterno = uicontrol('units', 'normalized', ...
@@ -195,26 +195,33 @@ p_neighbour=get(handles.evaluate,'position');
 handles.mark = uicontrol('units', 'normalized', ...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
     'string', 'Mark ?', 'style', 'togglebutton', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 0, ...
-    'Tooltip', ['Activate mp adding/removing'],...
+    'Tooltip', ['Activate mp adding/removing. (M)'],...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.mark,'position');
 handles.dummymark = uicontrol('units', 'normalized', ...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
     'string', 'Dummies?', 'style', 'togglebutton', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 0, ...
-    'Tooltip', ['Change color to blue (type 4,5). Requires Mark+Second_order.'],...
+    'Tooltip', ['Change color to blue (type 4,5). Requires Mark+Second_order. (D)'],...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.dummymark,'position');
+handles.annual_lrs =    uicontrol('units', 'normalized',...
+    'Tooltip', ['Activate annual layers add/remove (type 6 right click, type 7 double-right click.).' 10 ' Requires Mark + Second_order. (G)'],...
+    'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
+    'string', 'Annual layers?', 'style', 'togglebutton',...
+    'callback', ['matchmaker(''annual_lrs_Callback'',gcbo,[],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 0, 'Selected', 'off',...
+    'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
+p_neighbour=get(handles.annual_lrs,'position');
 handles.othermarks = uicontrol('units', 'normalized', ...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
     'string', 'Others?', 'style', 'togglebutton', ...
-    'Tooltip', ['Show secondary matchfile.'],...
+    'Tooltip', ['Show secondary matchfile. (O)'],...
     'callback', ['matchmaker(''othermarks_Callback'',gcbo,[],guidata(gcbo), 0)'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 0, ...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.othermarks,'position');
 handles.plotmp2 = uicontrol('units', 'normalized', ...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
     'string', '2nd order?', 'style', 'togglebutton', ...
-    'Tooltip', ['Show minor mp(), i.e. types 2,5,6,7'],...
+    'Tooltip', ['Show minor mp, i.e. types 2,5,6,7. (2)'],...
     'callback', ['matchmaker(''plotmp2_Callback'',gcbo,[],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 1, 'Selected', 'off', ...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.plotmp2,'position');
@@ -228,14 +235,14 @@ p_neighbour=get(handles.check,'position');
 handles.exit = uicontrol('units', 'normalized', ...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
     'string', 'Exit', 'style', 'pushbutton', ...
-    'Tooltip', ['Exit program.'],...
+    'Tooltip', ['Exit program. (X)'],...
     'callback', ['matchmaker(''exit_Callback'',gcbo,[],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', ...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.exit,'position');
 handles.undo = uicontrol('units', 'normalized',...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
     'string', 'UNDO', 'style', 'pushbutton',...
-    'Tooltip', ['Cancels new mp and Re-adds removed mp.' 10 ' '],...
+    'Tooltip', ['Cancels new mp and Re-adds removed mp.' 10 ' (U)'],...
     'callback', ['matchmaker(''undo_Callback'',gcbo,[],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center',...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 handles.N_undo=1000; % how many moves are saved in memory
@@ -282,7 +289,7 @@ for i = 1:N
         'Tooltip', ['X-Axis Moving increment'],...
         'callback', ['matchmaker(''incx_Callback'',gcbo,[],guidata(gcbo),' num2str(i) ')'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'normal', 'horizontalalignment', 'right');
     text(buttons_left_edge_pos+small_button_L, primary_button_column_ypos-7*(button_H+button_y_spacing),'m', 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'Fontsize', font1, 'fontweight', 'normal', 'parent', dummyax);
-
+    
 end
 sides = [{'right'} {'left'}];
 for i = 1:N
@@ -298,7 +305,7 @@ for i = 1:N
         end
         %position of species-button column can be left or right depending on mod(n,2)
         secondary_button_column_xpos = (mod(j,2)==1)*(buttons_left_edge_pos+3*button_x_spacing+small_button_L)...%left
-                                      +(mod(j,2)==0)*(1-(buttons_left_edge_pos+small_button_L)+3*button_x_spacing);%right
+            +(mod(j,2)==0)*(1-(buttons_left_edge_pos+small_button_L)+3*button_x_spacing);%right
         
         N_secondary_buttons=6;
         handles.spec{i,j}  = uicontrol('units', 'normalized', ...
@@ -308,7 +315,7 @@ for i = 1:N
         handles.offset{i,j} = uicontrol('units', 'normalized', ...
             'position', [secondary_button_column_xpos, species_yax_ypos+(N_secondary_buttons-1)*button_H+button_y_spacing, small_button_L-0.01, button_H],...
             'string', 0, 'style', 'edit', ...
-            'Tooltip', ['Shift X-Axis by this offset (m)'],... 
+            'Tooltip', ['Shift X-Axis by this offset (m)'],...
             'callback', ['matchmaker(''offset_Callback'',gcbo,[],guidata(gcbo),' num2str(i) ',' num2str(j) ')'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'normal', 'horizontalalignment', 'right');
         text(secondary_button_column_xpos+small_button_L-0.01, species_yax_ypos+(N_secondary_buttons-1)*button_H+button_y_spacing,'m', 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'Fontsize', font1, 'fontweight', 'normal', 'parent', dummyax);
         handles.autoy{i,j} = uicontrol('units', 'normalized', ...
@@ -564,7 +571,7 @@ if get(handles.mark, 'Value') == 1
         if get(handles.othermarks, 'Value')==0
             mp = handles.mp{no1}; %delete mp of this ice core
         else
-            mp = handles.mp_2{no1}; %delete mp_2 of this ice core    
+            mp = handles.mp_2{no1}; %delete mp_2 of this ice core
         end
         del_idx=check_mp_click_inches_conversion(mp,pos(1,1),handles.bigax(no1));
         
@@ -580,6 +587,7 @@ if get(handles.mark, 'Value') == 1
     pos = 0.001*round(1000*pos(1,1)); %convert normalized units to data units
     but = get(handles.fig, 'selectiontype');
     dummy = get(handles.dummymark, 'Value');
+    annual_lrs = get(handles.annual_lrs, 'Value');
     
     % Listing all types of mark-bars
     other = get(handles.othermarks, 'Value')*(ypos<0.5);
@@ -590,16 +598,28 @@ if get(handles.mark, 'Value') == 1
             mptype = 1+10*other;
         end
     elseif strcmp(but, 'alt')
-        if dummy
+        if annual_lrs
+            mptype = 6+10*other;
+        else
+            if dummy
+                mptype = 5+10*other;
+            else
+                mptype = 2+10*other;
+            end
+        end
+        if get(handles.plotmp2, 'value') == 0
+            return;
+        end
+    elseif strcmp(but, 'extend')
+        mptype = 3+10*other;
+    elseif strcmp(but, 'open') % any double click
+        if annual_lrs
+            mptype = 7+10*other;
+        elseif dummy
             mptype = 5+10*other;
         else
             mptype = 2+10*other;
         end
-        if get(handles.plotmp2, 'value') == 0
-            return
-        end
-    elseif strcmp(but, 'extend')
-        mptype = 3+10*other;
     else
         return;
     end
@@ -726,15 +746,15 @@ if get(handles.mark, 'Value') == 1
     
     mp = mp(setdiff(1:length(mp(:,1)), delindx),:);
     mp_2 = mp_2(setdiff(1:length(mp_2(:,1)), delindx_2),:);
-
+    
     handles.mp{no1} = mp;
     handles.mp_2{no1} = mp_2;
     
     handles = plotmp(handles, no1);
     
     set(handles.save, 'enable', 'on');
-    guidata(handles.fig, handles);
     varargout{1}=handles;
+    guidata(handles.fig, handles);
 end
 
 %---
@@ -789,6 +809,7 @@ bluetone = 0.85*[0 0 1];
 greytone10 = 0.9*[1 1 1];
 redtone10 = 0.85*[1 0.5 0.5];
 bluetone10 = 0.85*[0.5 0.5 1];
+greentone = 0.85 * [0 1 0];
 
 mp = handles.mp{no1};
 if isfield(handles,'mp_2')
@@ -834,6 +855,23 @@ else
     if ~isempty(idx5) && get(handles.plotmp2, 'Value') == 1
         plot((mp(idx5,1)*[1 1])', repmat([0.05+othermarks*0.51 0.89]', 1, length(idx5)), 'linewidth', 4, 'color', bluetone, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
     end
+    
+    idx6= find(mp(:,2)==6 & mp(:,1)>=xlim(1) & mp(:,1)<=xlim(2));
+    idx7= find(mp(:,2)==7 & mp(:,1)>=xlim(1) & mp(:,1)<=xlim(2));
+    
+    if ~isempty([idx6;idx7]) && get(handles.plotmp2, 'Value') == 1
+        plot((mp(idx6,1)*[1 1])', repmat([0.05+othermarks*0.51 0.88]', 1, length(idx6)), 'linewidth', 2, 'color', greentone, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
+        %the type7 layers are thinner (sed for uncertain years)
+        plot((mp(idx7,1)*[1 1])', repmat([0.05+othermarks*0.51 0.88]', 1, length(idx7)), 'linewidth', 1, 'color', greentone, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
+        
+        if ~isempty([mp1' mp3' mp4']) && ~isempty(idx134) %if there are thick bars on screen, wrtie numbers on green bars only after the first thick bar
+            idx6no = find(or(mp(:,2)==6,mp(:,2)==7) & mp(:,1)>=mp134(idx134(1),1) & mp(:,1)<=xlim(2));
+            text(mp(idx6no,1), 0.885*ones(length(idx6no),1), num2str((1:length(idx6no))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+        else %else write numbers on all green bars
+            text(mp(sort([idx6;idx7]),1), 0.885*ones(length([idx6;idx7]),1), num2str((1:length([idx6;idx7]))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+        end
+    end
+    
     % NEW SECTION FOR TYPE 11/12/13/14/15 MARKS
     if othermarks
         mp11 = mp(find(mp(:,2)==11),1);
@@ -896,9 +934,29 @@ else
             if ~isempty(idx1_2_5) & get(handles.plotmp2, 'Value') == 1
                 plot((mp_2(idx1_2_5,1)*[1 1])', repmat([0.12 0.49]', 1, length(idx1_2_5)), 'linewidth', 4, 'color', light_bluetone10, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
             end
+            
+            mp_2_6 = mp_2(find(mp_2(:,2)==6));
+            mp_2_7 = mp_2(find(mp_2(:,2)==7));
+            idx_2_6 = find(mp_2_6>=xlim(1) & mp_2_6<=xlim(2));
+            idx_2_7 = find(mp_2_7>=xlim(1) & mp_2_7<=xlim(2));
+            
+            if ~isempty([idx_2_6;idx_2_7]) % secondary annual layers
+                plot((mp_2_6(idx_2_6)*[1 1])', repmat([0.07 0.49]', 1, length(idx_2_6)), 'linewidth', 2, 'color', greentone, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
+                plot((mp_2_7(idx_2_7)*[1 1])', repmat([0.07 0.49]', 1, length(idx_2_7)), 'linewidth', 1, 'color', greentone, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
+                
+                if ~isempty([mp_2_1' mp_2_3' mp_2_4']) && ~isempty(idx_2_134) %layer numbering
+                    idx6no_2 = find(or(mp_2(:,2)==6,mp_2(:,2)==7) & mp_2(:,1)>=mp_2_134(idx_2_134(1),1) & mp_2(:,1)<=xlim(2));
+                    text(mp_2(idx6no_2,1), 0.07*ones(length(idx6no_2),1), num2str((1:length(idx6no_2))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+                else
+                    a=mp_2_6(sort([idx_2_6;idx_2_7]),1);
+                    text(a, 0.07*ones(length([idx_2_6;idx_2_7]),1), num2str((1:length([idx_2_6;idx_2_7]))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+                end
+                
+            end
+            
         end
     end
- 
+    
 end
 
 if length(handles.mp1_idx{str2double(get(handles.masterno, 'string'))})<2
@@ -925,14 +983,19 @@ if ~isempty(key)
             print(handles.fig, '-dpsc2', '-noui', '-r300', 'matchmaker.eps');
         case {97, 65}   %a, A
             accordianize_Callback(hObject, handles);
-        case {99, 67}   %c, C
-            cursor_Callback(hObject, handles);
         case {100, 68}   %d, D
             state = get(handles.dummymark, 'Value');
             if state == 1
                 set(handles.dummymark, 'Value', 0);
             else
                 set(handles.dummymark, 'Value', 1);
+            end
+        case {103, 71}  %g,G
+            state = get(handles.annual_lrs, 'Value');
+            if state == 1
+                set(handles.annual_lrs, 'Value', 0);
+            else
+                set(handles.annual_lrs, 'Value', 1);
             end
         case {109, 77}  %m, M
             set(handles.mark, 'value', get(handles.mark, 'value')==0);
@@ -954,26 +1017,18 @@ if ~isempty(key)
                 '<- = move selected core one frame back and accordianize'
                 '-> = move selected core one frame forward and accordianize'
                 'A  = Accordianize'
-                'C  = change Cursor type'
                 'D  = Toggle "Dummy ?" button on/off'
                 'M  = Toggle "Mark ?" button on/off'
                 'O  = Toggle "Other ?" button on/off'
                 'S  = Save matchpoint files'
-                'X  = eXit'
+                'X  = Exit'
                 '2  = Toggle "2nd order" button on/off'
                 'U  = Undo'});
             
     end
 end
 
-%---
 
-function cursor_Callback(hObject, handles) % Change cursor type from crosshair to fullcrosshair and back
-if strcmp(get(handles.fig, 'pointer'), 'crosshair')
-    set(gcf, 'pointer', 'fullcrosshair');
-else
-    set(gcf, 'pointer', 'crosshair');
-end
 
 %---
 
@@ -1136,7 +1191,7 @@ else
 end
 save([backup_dir '/runID.mat'],'runID');
 %generate the backup forlder for this run
-output_dir = [backup_dir '#' num2str(runID)]; % create a sub folder 
+output_dir = [backup_dir '#' num2str(runID)]; % create a sub folder
 if ~exist(output_dir,'dir')
     mkdir(output_dir);
 end
@@ -1148,22 +1203,22 @@ for i = 1:handles.N
         disp('   (this error does not influence the saving procedure itself)');
     end
     mp = handles.mp{i};
-
+    
     % Over-write mp files
     save(['matchfiles' filesep handles.matchfile{i}], 'mp', '-MAT');
     %Back-up mp files
-    copyfile(['matchfiles/' handles.matchfile{i}], output_dir); 
+    copyfile(['matchfiles/' handles.matchfile{i}], output_dir);
     
     if handles.mp_2{i}~=[0 0] %<-solve this
         mp=handles.mp_2{i}; % save secondary dataset
-
+        
         a=split(handles.matchfile{i},'/');
         b=split(handles.matchfile_others{i},'/');
-
+        
         if strcmp(a{end},b{end}) %if they are called the same
             disp(['The primary and secondary matchfile are called the same. This can cause conflicts.']);
             disp(['Saving others-matchfile as ' handles.matchfile_others{i}(1:end-4) '_others.mat']);
-
+            
             save(['matchfiles' filesep handles.matchfile_others{i}(1:end-4) '_others.mat' ], 'mp', '-MAT');%,'save mp_2'
             copyfile(['matchfiles/' handles.matchfile_others{i}(1:end-4) '_others.mat'   ], output_dir); % save backup
         else
