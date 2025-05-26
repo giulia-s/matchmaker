@@ -799,27 +799,27 @@ xlim = get(handles.bigax(no1), 'xlim');
 if isempty(mp)
     return
 else
-    othermarks = get(handles.othermarks, 'Value');
+    othermarks = get(handles.othermarks, 'Value'); %logical value to decide whether to plot all screen or only top half
  
    % plot the "thick" mps within xlim(1) and xlim(2)
     mptypes=[1,3,4];
     colors=[greytone; redtone; bluetone];
     for i=1:length(mptypes)
         mp_subset=mp(mp(:,2)==mptypes(i),1);
-        idx_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
-        if ~isempty(idx_subset)
-            plot((mp_subset(idx_subset)*[1 1])', repmat([0.01+othermarks*0.5 0.93]', 1, length(idx_subset)), 'linewidth', 6, 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
+        depth_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
+        if ~isempty(depth_subset)
+            plot((mp_subset(depth_subset)*[1 1])', repmat([0.01+othermarks*0.5 0.93]', 1, length(depth_subset)), 'linewidth', 6, 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
         end
     end
     %number them:
-    mp_all_numbered = mp(ismember(mp(:,2),mptypes),1);
-    idx_all_numbered = find(mp_all_numbered>=xlim(1) & mp_all_numbered<=xlim(2));
-    text(mp_all_numbered(idx_all_numbered), 0.96*ones(length(idx_all_numbered),1), num2str(idx_all_numbered), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
+    mp_thick = mp(ismember(mp(:,2),mptypes),1);
+    depth_subset_thick = find(mp_thick>=xlim(1) & mp_thick<=xlim(2));
+    text(mp_thick(depth_subset_thick), 0.96*ones(length(depth_subset_thick),1), num2str(depth_subset_thick), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
     
     %keep track of the plotted ones for the evaluate function:
-    if isempty(idx_all_numbered)
-        handles.mp1_idx{no1} = idx_all_numbered;
-        handles.mp1_depth{no1} = mp_all_numbered(idx_all_numbered);
+    if isempty(depth_subset_thick)
+        handles.mp1_idx{no1} = depth_subset_thick;
+        handles.mp1_depth{no1} = mp_thick(depth_subset_thick);
     else
         handles.mp1_idx{no1} = 0;
         handles.mp1_depth{no1} = [];        
@@ -830,9 +830,9 @@ else
     colors=[greytone; bluetone];
     for i=1:length(mptypes)
         mp_subset=mp(mp(:,2)==mptypes(i),1);
-        idx_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
-        if ~isempty(idx_subset)
-            plot((mp_subset(idx_subset)*[1 1])', repmat([0.05+othermarks*0.51 0.89]', 1, length(idx_subset)), 'linewidth', 4, 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
+        depth_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
+        if ~isempty(depth_subset)
+            plot((mp_subset(depth_subset)*[1 1])', repmat([0.05+othermarks*0.51 0.89]', 1, length(depth_subset)), 'linewidth', 4, 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
         end
     end
     
@@ -842,44 +842,44 @@ else
     linewidth=[2,1];
     for i=1:length(mptypes)
         mp_subset=mp(mp(:,2)==mptypes(i),1);
-        idx_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
-        if ~isempty(idx_subset)
-            plot((mp_subset(idx_subset)*[1 1])', repmat([0.05+othermarks*0.51 0.88]', 1, length(idx_subset)), 'linewidth', linewidth(i), 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
+        depth_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
+        if ~isempty(depth_subset)
+            plot((mp_subset(depth_subset)*[1 1])', repmat([0.05+othermarks*0.51 0.88]', 1, length(depth_subset)), 'linewidth', linewidth(i), 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
         end
     end
-    if ~isempty(idx_all_numbered) %green layers numbering
-        mp_green_numbered = mp(ismember(mp(:,2),mptypes),1);
-        idx_green_numbered = find(mp_green_numbered>=mp_all_numbered(idx_all_numbered(1),1) & mp_green_numbered<=xlim(2));
+    if ~isempty(depth_subset_thick) %green layers numbering
+        mp_green = mp(ismember(mp(:,2),mptypes),1);
+        depth_subset_green = find(mp_green>=mp_thick(depth_subset_thick(1),1) & mp_green<=xlim(2));
     else
-        mp_green_numbered = mp(ismember(mp(:,2),mptypes),1);
-        idx_green_numbered = find(mp_green_numbered>=xlim(1) & mp_green_numbered<=xlim(2));
+        mp_green = mp(ismember(mp(:,2),mptypes),1);
+        depth_subset_green = find(mp_green>=xlim(1) & mp_green<=xlim(2));
     end
-    text(mp_green_numbered(idx_green_numbered), 0.91*ones(length(idx_green_numbered),1), num2str((1:length(idx_green_numbered))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+    text(mp_green(depth_subset_green), 0.91*ones(length(depth_subset_green),1), num2str((1:length(depth_subset_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
     
-    % Other/mp_2
+    % Same procedure for the "other/mp_2" dataset
     if othermarks
         if ~isempty(mp_2)
             mptypes=[1,3,4];
             colors=[greytone_2; redtone_2; bluetone_2];
             for i=1:length(mptypes)
                 mp_2_subset=mp_2(mp_2(:,2)==mptypes(i),1);
-                idx_2_subset=find(mp_2_subset>=xlim(1) & mp_2_subset<=xlim(2));
-                if ~isempty(idx_2_subset)
-                plot((mp_2_subset(idx_2_subset)*[1 1])', repmat([0.05 0.45]', 1, length(idx_2_subset)), 'linewidth', 6, 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
+                depth_2_subset=find(mp_2_subset>=xlim(1) & mp_2_subset<=xlim(2));
+                if ~isempty(depth_2_subset)
+                plot((mp_2_subset(depth_2_subset)*[1 1])', repmat([0.05 0.45]', 1, length(depth_2_subset)), 'linewidth', 6, 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
                 end
             end
             
-            mp_2_all_numbered = mp_2(ismember(mp_2(:,2),mptypes),1);
-            idx_2_all_numbered = find(mp_2_all_numbered>=xlim(1) & mp_2_all_numbered<=xlim(2));
-            text(mp_2_all_numbered(idx_2_all_numbered), 0.48*ones(length(idx_2_all_numbered),1), num2str(idx_2_all_numbered), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
+            mp_2_thick = mp_2(ismember(mp_2(:,2),mptypes),1);
+            depth_subset_2_thick = find(mp_2_thick>=xlim(1) & mp_2_thick<=xlim(2));
+            text(mp_2_thick(depth_subset_2_thick), 0.48*ones(length(depth_subset_2_thick),1), num2str(depth_subset_2_thick), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
             
             mptypes=[2,5];
             colors=[greytone_2; bluetone_2];
             for i=1:length(mptypes)
                 mp_2_subset=mp_2(mp_2(:,2)==mptypes(i),1);
-                idx_2_subset=find(mp_2_subset>=xlim(1) & mp_2_subset<=xlim(2));
-                if ~isempty(idx_2_subset)
-                plot((mp_2_subset(idx_2_subset)*[1 1])', repmat([0.05 0.4]', 1, length(idx_2_subset)), 'linewidth', 6, 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
+                depth_2_subset=find(mp_2_subset>=xlim(1) & mp_2_subset<=xlim(2));
+                if ~isempty(depth_2_subset)
+                plot((mp_2_subset(depth_2_subset)*[1 1])', repmat([0.05 0.4]', 1, length(depth_2_subset)), 'linewidth', 4, 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
                 end
             end
             
@@ -888,21 +888,21 @@ else
             linewidth=[2,1];
             for i=1:length(mptypes)
                 mp_2_subset=mp_2(mp_2(:,2)==mptypes(i),1);
-                idx_2_subset=find(mp_2_subset>=xlim(1) & mp_2_subset<=xlim(2));
-                if ~isempty(idx_2_subset)
-                plot((mp_2_subset(idx_2_subset)*[1 1])', repmat([0.05 0.4]', 1, length(idx_2_subset)), 'linewidth', linewidth(i), 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
+                depth_2_subset=find(mp_2_subset>=xlim(1) & mp_2_subset<=xlim(2));
+                if ~isempty(depth_2_subset)
+                plot((mp_2_subset(depth_2_subset)*[1 1])', repmat([0.05 0.4]', 1, length(depth_2_subset)), 'linewidth', linewidth(i), 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
                 end
             end
             
-             if ~isempty(idx_2_all_numbered) %green layers numbering
+             if ~isempty(depth_subset_2_thick) %green layers numbering
 %                     idx6no_2 = find(or(mp_2(:,2)==6,mp_2(:,2)==7) & mp_2(:,1)>=mp_2_134(idx_2_134(1),1) & mp_2(:,1)<=xlim(2));
-                    mp_2_green_numbered = mp_2(ismember(mp_2(:,2),mptypes),1);
-                    idx_2_green_numbered = find(mp_2_green_numbered>=mp_2_all_numbered(idx_2_all_numbered(1),1) & mp_2_green_numbered<=xlim(2));
+                    mp_2_green = mp_2(ismember(mp_2(:,2),mptypes),1);
+                    depth_subset_2_green = find(mp_2_green>=mp_2_thick(depth_subset_2_thick(1),1) & mp_2_green<=xlim(2));
                 else
-                    mp_2_green_numbered = mp_2(ismember(mp_2(:,2),mptypes),1);
-                    idx_2_green_numbered = find(mp_2_green_numbered>=xlim(1) & mp_2_green_numbered<=xlim(2));
+                    mp_2_green = mp_2(ismember(mp_2(:,2),mptypes),1);
+                    depth_subset_2_green = find(mp_2_green>=xlim(1) & mp_2_green<=xlim(2));
              end
-             text(mp_2_green_numbered(idx_2_green_numbered), 0.43*ones(length(idx_2_green_numbered),1), num2str((1:length(idx_2_green_numbered))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+             text(mp_2_green(depth_subset_2_green), 0.43*ones(length(depth_subset_2_green),1), num2str((1:length(depth_subset_2_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
 
                  
         end
