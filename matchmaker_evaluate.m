@@ -1,38 +1,33 @@
 function matchmaker_evaluate(varargin)
-%
 
-% MATCHMAKER_EVALUATE version 2.00, 16 March 2006, Sune Olander Rasmussen
 % MATCHMAKER_EVALUATE is designed to be called from MATCHMAKER.
 
 switch nargin
     case {0, 1, 2}% Only for development purposes
         disp('MATCHMAKER_EVALUATE needs input arguments, and is designed to be called from MATCHMAKER.');
-    case {3, 4, 5, 6, 7}
-%        try
-eval([char(varargin{1}) '(varargin{[2 4:nargin]})']);
-%        catch
-%            disp(lasterr)
-%            dummy = input('ERROR : Log the error and press enter to continue');
-%            disp(' ');
-%        end;
+    case {3, 4, 5, 6, 7, 8, 9}
+        eval([char(varargin{1}) '(varargin{[2 4:nargin]})']);
     otherwise
         disp('Wrong number of arguments when calling matchmaker_evaluate.m');
-end;
+end
 
 %---
 
 function evalopen(matchmakerfighandle, mp, core, masterno, current_mp);
-for i = 1:length(mp)
-    Nmpi134(i) = length(mp{i}(find(mp{i}(:,2)==1 | mp{i}(:,2)==3 | mp{i}(:,2)==4),1));
-end;
-if min(Nmpi134)<2
-    errordlg('There must be at least two first order fix points for each core for the evaluate window to work. Evaluate window will not open.', 'Warning calling MATCHMAKER_EVALUATE', 'modal');
+mp_thick = mp(ismember(mp(:,2),[1,3,4]),1);
+if length(mp_thick)<2
+    errordlg('There must be at least two first-order matchpoints for each icecore for the evaluate window to work. Evaluate window will not open.', 'Warning calling MATCHMAKER_EVALUATE', 'modal');
     return
 end;
 
-scrsize = get(0, 'screensize');
-hgt = scrsize(4);
-handles.fig = figure('position', [1 60 scrsize(3) scrsize(4)-100], 'name', 'Matchmaker Evaluation Tool', 'CloseRequestFcn', 'matchmaker_evaluate(''exit_Callback'',gcbo,[],guidata(gcbo))', 'nextplot', 'add', 'color', 0.9*[1 1 1], 'pointer', 'crosshair', 'toolbar', 'figure', 'Numbertitle', 'off', 'KeyPressFcn', 'matchmaker_evaluate(''keypressed_Callback'',gcbo,[],guidata(gcbo))', 'integerhandle', 'off');
+handles.fig = figure('units','normalized',...
+   'outerposition', [0.1 0.1 0.75 0.75], ...%initial dimensions upon opening
+   'name', 'Matchmaker Evaluation Tool',...
+   'CloseRequestFcn', 'matchmaker_evaluate(''exit_Callback'',gcbo,[],guidata(gcbo))',...
+   'nextplot', 'add', 'color', 0.9*[1 1 1], 'pointer', 'cross',...
+   'toolbar', 'figure', 'Numbertitle', 'off',...
+   'KeyPressFcn', 'matchmaker_evaluate(''keypressed_Callback'',gcbo,[],guidata(gcbo))',...
+   'integerhandle', 'off');
 handles.matchmakerfighandle = matchmakerfighandle; 
 handles.mp = mp;
 handles.core = core;
@@ -42,9 +37,11 @@ handles.current_mp = current_mp([1 end]);;
 
 dummyax = axes('position', [0 0 1 1], 'xlim', [0 1], 'ylim', [0 1], 'visible', 'off', 'nextplot', 'add', 'hittest', 'off');
 
-font1 = 9;
-font2 = 14;
-eh = 0.029*710/hgt;
+%font sizes
+font1 = 8;
+font2 = 10;
+
+button_height = 0.05;
 
 handles.title = text(0.005, 0.012, 'MATCHMAKER Evaluation Tool', 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'Fontsize', font2, 'fontweight', 'bold', 'parent', dummyax);
 handles.text1 = text(0.52, 0.04, 'Comparison match point interval', 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'center', 'Fontsize', font1, 'parent', dummyax);
