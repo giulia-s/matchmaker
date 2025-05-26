@@ -776,7 +776,7 @@ end
 
 function handles = plotmp(handles, no1)
 
-cla(handles.bigax2(no1));
+cla(handles.bigax2(no1)); %clear axes
 
 % colors for each mp type
 greytone = 0.8*[1 1 1];
@@ -789,7 +789,6 @@ redtone_2 = 0.85*[1 0.5 0.5];
 bluetone_2 = 0.85*[0.5 0.5 1];
 greentone_2 = 0.8 * [0.5 1 0.5];
 
-
 mp = handles.mp{no1};
 if isfield(handles,'mp_2')
     mp_2=handles.mp_2{no1};
@@ -801,18 +800,22 @@ if isempty(mp)
 else
     othermarks = get(handles.othermarks, 'Value'); %logical value to decide whether to plot all screen or only top half
  
-   % plot the "thick" mps within xlim(1) and xlim(2)
-    mptypes=[1,3,4];
-    colors=[greytone; redtone; bluetone];
+   % plot all mps within xlim(1) and xlim(2)
+    mptypes=[1,3,4,2,5,6,7];
+    linewidth=[6,6,6,4,4,2,1];
+    colors=[greytone; redtone; bluetone; greytone; bluetone; greentone; greentone];
+    bar_height=[0.93;0.93;0.93;0.88;0.88;0.85;0.85];
+
     for i=1:length(mptypes)
         mp_subset=mp(mp(:,2)==mptypes(i),1);
         depth_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
         if ~isempty(depth_subset)
-            plot((mp_subset(depth_subset)*[1 1])', repmat([0.01+othermarks*0.5 0.93]', 1, length(depth_subset)), 'linewidth', 6, 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
+            plot((mp_subset(depth_subset)*[1 1])', repmat([0.01+othermarks*0.5 bar_height(i)]', 1, length(depth_subset)), 'linewidth', linewidth(i), 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
         end
     end
-    %number them:
-    mp_thick = mp(ismember(mp(:,2),mptypes),1);
+    %number the "thick" bars:
+    mptypes_thick=[1,3,4];
+    mp_thick = mp(ismember(mp(:,2),mptypes_thick),1);
     depth_subset_thick = find(mp_thick>=xlim(1) & mp_thick<=xlim(2));
     text(mp_thick(depth_subset_thick), 0.96*ones(length(depth_subset_thick),1), num2str(depth_subset_thick), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
     
@@ -824,87 +827,47 @@ else
         handles.mp1_idx{no1} = 0;
         handles.mp1_depth{no1} = [];        
     end
-            
-% plot the "thin" mps within xlim(1) and xlim(2)
-    mptypes=[2,5];
-    colors=[greytone; bluetone];
-    for i=1:length(mptypes)
-        mp_subset=mp(mp(:,2)==mptypes(i),1);
-        depth_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
-        if ~isempty(depth_subset)
-            plot((mp_subset(depth_subset)*[1 1])', repmat([0.05+othermarks*0.51 0.89]', 1, length(depth_subset)), 'linewidth', 4, 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
-        end
-    end
     
-    % plot the "annual" mps within xlim(1) and xlim(2)
-    mptypes=[6,7];
-    colors=[greentone; greentone];
-    linewidth=[2,1];
-    for i=1:length(mptypes)
-        mp_subset=mp(mp(:,2)==mptypes(i),1);
-        depth_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
-        if ~isempty(depth_subset)
-            plot((mp_subset(depth_subset)*[1 1])', repmat([0.05+othermarks*0.51 0.88]', 1, length(depth_subset)), 'linewidth', linewidth(i), 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
-        end
-    end
-    if ~isempty(depth_subset_thick) %green layers numbering
-        mp_green = mp(ismember(mp(:,2),mptypes),1);
+    %green layers numbering
+    mp_green = mp(ismember(mp(:,2),[6,7]),1);
+    if ~isempty(depth_subset_thick) 
         depth_subset_green = find(mp_green>=mp_thick(depth_subset_thick(1),1) & mp_green<=xlim(2));
     else
-        mp_green = mp(ismember(mp(:,2),mptypes),1);
         depth_subset_green = find(mp_green>=xlim(1) & mp_green<=xlim(2));
     end
-    text(mp_green(depth_subset_green), 0.91*ones(length(depth_subset_green),1), num2str((1:length(depth_subset_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+    text(mp_green(depth_subset_green), (bar_height(end)+0.03)*ones(length(depth_subset_green),1), num2str((1:length(depth_subset_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
     
     % Same procedure for the "other/mp_2" dataset
     if othermarks
         if ~isempty(mp_2)
-            mptypes=[1,3,4];
-            colors=[greytone_2; redtone_2; bluetone_2];
-            for i=1:length(mptypes)
-                mp_2_subset=mp_2(mp_2(:,2)==mptypes(i),1);
-                depth_2_subset=find(mp_2_subset>=xlim(1) & mp_2_subset<=xlim(2));
-                if ~isempty(depth_2_subset)
-                plot((mp_2_subset(depth_2_subset)*[1 1])', repmat([0.05 0.45]', 1, length(depth_2_subset)), 'linewidth', 6, 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
-                end
-            end
             
-            mp_2_thick = mp_2(ismember(mp_2(:,2),mptypes),1);
-            depth_subset_2_thick = find(mp_2_thick>=xlim(1) & mp_2_thick<=xlim(2));
-            text(mp_2_thick(depth_subset_2_thick), 0.48*ones(length(depth_subset_2_thick),1), num2str(depth_subset_2_thick), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
-            
-            mptypes=[2,5];
-            colors=[greytone_2; bluetone_2];
-            for i=1:length(mptypes)
-                mp_2_subset=mp_2(mp_2(:,2)==mptypes(i),1);
-                depth_2_subset=find(mp_2_subset>=xlim(1) & mp_2_subset<=xlim(2));
-                if ~isempty(depth_2_subset)
-                plot((mp_2_subset(depth_2_subset)*[1 1])', repmat([0.05 0.4]', 1, length(depth_2_subset)), 'linewidth', 4, 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
-                end
-            end
-            
-            mptypes=[6,7];
-            colors=[greentone_2; greentone_2];
-            linewidth=[2,1];
-            for i=1:length(mptypes)
-                mp_2_subset=mp_2(mp_2(:,2)==mptypes(i),1);
-                depth_2_subset=find(mp_2_subset>=xlim(1) & mp_2_subset<=xlim(2));
-                if ~isempty(depth_2_subset)
-                plot((mp_2_subset(depth_2_subset)*[1 1])', repmat([0.05 0.4]', 1, length(depth_2_subset)), 'linewidth', linewidth(i), 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
-                end
-            end
-            
-             if ~isempty(depth_subset_2_thick) %green layers numbering
-%                     idx6no_2 = find(or(mp_2(:,2)==6,mp_2(:,2)==7) & mp_2(:,1)>=mp_2_134(idx_2_134(1),1) & mp_2(:,1)<=xlim(2));
-                    mp_2_green = mp_2(ismember(mp_2(:,2),mptypes),1);
-                    depth_subset_2_green = find(mp_2_green>=mp_2_thick(depth_subset_2_thick(1),1) & mp_2_green<=xlim(2));
-                else
-                    mp_2_green = mp_2(ismember(mp_2(:,2),mptypes),1);
-                    depth_subset_2_green = find(mp_2_green>=xlim(1) & mp_2_green<=xlim(2));
-             end
-             text(mp_2_green(depth_subset_2_green), 0.43*ones(length(depth_subset_2_green),1), num2str((1:length(depth_subset_2_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+               % plot all mps within xlim(1) and xlim(2)
+               mptypes=[1,3,4,2,5,6,7];
+               linewidth=[6,6,6,4,4,2,1];
+               colors=[greytone_2; redtone_2; bluetone_2; greytone_2; bluetone_2; greentone_2; greentone_2];
+               bar_height=[0.93;0.93;0.93;0.88;0.88;0.85;0.85]/2;
+               for i=1:length(mptypes)
+                   mp_subset=mp_2(mp_2(:,2)==mptypes(i),1);
+                   depth_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
+                   if ~isempty(depth_subset)
+                       plot((mp_subset(depth_subset)*[1 1])', repmat([0.01 bar_height(i)]', 1, length(depth_subset)), 'linewidth', linewidth(i), 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
+                   end
+               end
+               %number the "thick" bars:
+               mptypes_thick=[1,3,4];
+               mp_thick = mp_2(ismember(mp_2(:,2),mptypes_thick),1);
+               depth_subset_thick = find(mp_thick>=xlim(1) & mp_thick<=xlim(2));
+               text(mp_thick(depth_subset_thick), (bar_height(1)+0.03)*ones(length(depth_subset_thick),1), num2str(depth_subset_thick), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
 
-                 
+               mp_2_green = mp_2(ismember(mp_2(:,2),[6,7]),1);
+            
+             if ~isempty(depth_subset_thick) %green layers numbering
+                    depth_subset_green = find(mp_2_green>=mp_thick(depth_subset_thick(1),1) & mp_2_green<=xlim(2));
+                else
+                    depth_subset_green = find(mp_2_green>=xlim(1) & mp_2_green<=xlim(2));
+             end
+             text(mp_2_green(depth_subset_green), (bar_height(end)+0.03)*ones(length(depth_subset_green),1), num2str((1:length(depth_subset_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+
         end
     end
     
@@ -968,13 +931,14 @@ if ~isempty(key)
                 'Available keyboard commands:';
                 '<- = move selected core one frame back and accordianize'
                 '-> = move selected core one frame forward and accordianize'
-                'A  = Accordianize'
-                'D  = Toggle "Dummy ?" button on/off'
-                'M  = Toggle "Mark ?" button on/off'
-                'O  = Toggle "Other ?" button on/off'
                 'S  = Save matchpoint files'
+                'A  = Accordianize'
+                'M  = Toggle "Mark ?" button on/off'
+                'D  = Toggle "Dummy ?" button on/off'
+                'G = Toggle "Annual layers?" button on/off'
+                'O  = Toggle "Other ?" button on/off'
+                '2  = Toggle "2nd order" button on/off'             
                 'X  = Exit'
-                '2  = Toggle "2nd order" button on/off'
                 'U  = Undo'});
             
     end
