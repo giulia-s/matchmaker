@@ -54,10 +54,9 @@ handles.fig = figure('units','normalized',...
     'name', ['Matchmaker - ',datafiles],...
     'CloseRequestFcn', 'matchmaker(''exit_Callback'',gcbo,[],guidata(gcbo))',...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))',...
-    'nextplot', 'add', 'color', 0.9*[1 1 1], 'pointer', 'crosshair',...
+    'nextplot', 'add', 'color', 0.9*[1 1 1], 'pointer', 'cross',...
     'Interruptible', 'off', 'Numbertitle', 'off',...
     'tag', 'matchmakermainwindow', 'integerhandle', 'off');
-
 % initialize and populate data
 N = length(fileno);
 handles.fileno = fileno;
@@ -547,36 +546,38 @@ autoy_Callback(hObject, handles, no1, no2);
 update_yminmax(hObject, handles, no1, no2);
 guidata(handles.fig, handles)
 
-%---
+%--- Function for adding new mps:
 
 function axesclick_Callback(hObject, handles, no1)
-if get(handles.mark, 'Value') == 1
-    type = get(hObject,'type');
-    if strcmp(type,'axes')
-        pos = get(handles.bigax(no1), 'currentpoint');%click pos norm. units
+if get(handles.mark, 'Value') == 1 % it it's possible to mark
+    type = get(hObject,'type'); % get the type of surface you clicked on
+    if strcmp(type,'axes') %white area click
+        pos = get(handles.bigax(no1), 'currentpoint'); % click x-pos norm. units
         ypos = pos(1,2);% y pos in norm. units
         
-    elseif strcmp(type,'line')
-        pos=get(gcf, 'CurrentPoint'); %click pos norm. units
-        ypos = pos(1,2); % y pos in norm. units
+    elseif strcmp(type,'line') %line click : could be a free spot on the datacurve or an existing mp on that curve
+        temp_pos=get(gcf, 'CurrentPoint'); %click x pos norm. units
+        ypos = temp_pos(1,2); % y pos in norm. units
         
         parent=get(hObject,'parent');
-        pos=get(parent,'CurrentPoint'); %click pos in data units
+        pos=get(parent,'CurrentPoint'); %click x-pos in data units (m)
         
         % check if clicked spot is on an existing mp
         mp = handles.mp{no1}; %all mps of this ice core
         
-        temp_object.XData=pos;
-        temp_object.Type=type;
-        if get(handles.othermarks, 'Value')==0
+        click_pos_object.XData=pos;
+        click_pos_object.Type=type;
+        if get(handles.othermarks, 'Value')==0 || (ypos>=0.5 && get(handles.othermarks, 'Value')==1) 
             mp = handles.mp{no1}; %delete mp of this ice core
-        else
+        elseif get(handles.othermarks, 'Value')==1 && ypos<0.5
             mp = handles.mp_2{no1}; %delete mp_2 of this ice core
         end
+        
+        %identify if there is an mp to delete
         del_idx=check_mp_click_inches_conversion(mp,pos(1,1),handles.bigax(no1));
         
         if ~isempty(del_idx)
-            handles = mpclick_Callback(temp_object, handles, no1);
+            handles = mpclick_Callback(click_pos_object, handles, no1);
             return;
         end
         
@@ -584,55 +585,24 @@ if get(handles.mark, 'Value') == 1
         disp('unhandled object type');
     end
     
-    pos = 0.001*round(1000*pos(1,1)); %convert normalized units to data units
-    but = get(handles.fig, 'selectiontype');
-    dummy = get(handles.dummymark, 'Value');
-    annual_lrs = get(handles.annual_lrs, 'Value');
+    pos = 0.001*round(1000*pos(1,1)); %adjust precision to be 1 mm
     
-    % Listing all types of mark-bars
-    other = get(handles.othermarks, 'Value')*(ypos<0.5);
-    if strcmp(but, 'normal')
-        if dummy
-            mptype = 4+10*other;
-        else
-            mptype = 1+10*other;
-        end
-    elseif strcmp(but, 'alt')
-        if annual_lrs
-            mptype = 6+10*other;
-        else
-            if dummy
-                mptype = 5+10*other;
-            else
-                mptype = 2+10*other;
-            end
-        end
-        if get(handles.plotmp2, 'value') == 0
-            return;
-        end
-    elseif strcmp(but, 'extend')
-        mptype = 3+10*other;
-    elseif strcmp(but, 'open') % any double click
-        if annual_lrs
-            mptype = 7+10*other;
-        elseif dummy
-            mptype = 5+10*other;
-        else
-            mptype = 2+10*other;
-        end
-    else
-        return;
-    end
+    % Determining which type the new mp should be
+    mptype = determine_mptype(handles);
     
+    % calling current sets of mp and mp_2
     mp = handles.mp{no1};
-    %plotting matchfile_others
     mp_2 = handles.mp_2{no1};
-    %handling others if they have tpe >10
-    if mptype<10
+    
+    % distinguish if click is on top or lower half of axis, and update mp
+    if get(handles.othermarks, 'Value')==0 || (ypos>=0.5 && get(handles.othermarks, 'Value')==1) 
         mp = [mp; pos mptype];% amplitudes];
-    else
-        mp_2=[mp_2;pos mptype-10];
+    elseif get(handles.othermarks, 'Value')==1 && ypos<0.5
+        mp_2=[mp_2;pos mptype];
     end
+    
+    handles.mp{no1} = sortrows(mp);
+    handles.mp_2{no1} = sortrows(mp_2);
     
     %updating Undo memory
     
@@ -652,29 +622,27 @@ if get(handles.mark, 'Value') == 1
         handles.lastmove(1:handles.N_undo-1,:)=handles.lastmove(2:handles.N_undo,:);
         handles.saved_moves=handles.N_undo;
     end
-    % add new entry:
+    % add new mamory entry:
     
     handles.lastmove{handles.saved_moves,1}=pos; % mp position in data units
     handles.lastmove{handles.saved_moves,2}='added'; % this mp was added
     handles.lastmove{handles.saved_moves,3}=no1; % this mp was clicked on the icecore no1
     handles.lastmove{handles.saved_moves,4}=mptype; % this mp has type mptype
     
-    %
-    
-    handles.mp{no1} = sortrows(mp);
-    handles.mp_2{no1} = sortrows(mp_2);
-    
+    %replot everything and trigger save button
     handles = plotmp(handles, no1);
     set(handles.save, 'enable', 'on');
     guidata(hObject, handles);
 end
 
-%---
+%--- Function for deleting existing mps. Called either if clicking on
+%existing mp, or if clicking on curve (axesclick_callback) and then
+%deleting an mp found in proximity
 
-function varargout = mpclick_Callback(hObject, handles, no1)
-if get(handles.mark, 'Value') == 1
+function varargout = mpclick_Callback(hObject, handles, no1) 
+if get(handles.mark, 'Value') == 1 %if it's possible to mark mps
     
-    try
+    try %if clicking on white area
         type=get(hObject,'type');
         pos = get(handles.bigax(no1), 'currentpoint');
         ypos_true=pos(1,2);
@@ -687,10 +655,10 @@ if get(handles.mark, 'Value') == 1
         ypos=get(gcf,'currentpoint');
         ypos_true=ypos(1,2);
     end
-    % --- Undo update memory---
-    try %try if any memory is available
+    % --- update memory of saved moves ---
+    try %  if any memory is available
         saved_moves=handles.saved_moves;
-    catch e
+    catch e %start new undo-chain
         saved_moves=0;
         handles.saved_moves=saved_moves;
     end
@@ -709,10 +677,11 @@ if get(handles.mark, 'Value') == 1
     handles.lastmove{ handles.saved_moves,3}=no1; %which icecore
     handles.lastmove{ handles.saved_moves,4}=3; %assign type 3
     
-    
+    % acquire the current series of mps
     mp = handles.mp{no1};
     mp_2=handles.mp_2{no1};
     
+    % check if clicking on bottom or lower half of screen
     if get(handles.othermarks, 'Value')==0 || (ypos_true>=0.5 && get(handles.othermarks, 'Value')==1)
         delindx=check_mp_click_inches_conversion(mp,pos(1,1),handles.bigax(no1));
         delindx_2=[];
@@ -721,7 +690,7 @@ if get(handles.mark, 'Value') == 1
         delindx_2=check_mp_click_inches_conversion(mp_2,pos(1,1),handles.bigax(no1));
     end
     
-    
+    % if more than one mp in a close spot. 
     if length(delindx)>1 && get(handles.othermarks, 'Value') == 1
         [~, order] = sort(mp(delindx,2));
         pos = get(handles.bigax(no1), 'currentpoint');
@@ -744,15 +713,20 @@ if get(handles.mark, 'Value') == 1
         end
     end
     
+    % remove the identified mps:
     mp = mp(setdiff(1:length(mp(:,1)), delindx),:);
     mp_2 = mp_2(setdiff(1:length(mp_2(:,1)), delindx_2),:);
     
+    %update handles:
     handles.mp{no1} = mp;
     handles.mp_2{no1} = mp_2;
     
+    %re-plot everything
     handles = plotmp(handles, no1);
     
+    %toggle save button
     set(handles.save, 'enable', 'on');
+    
     varargout{1}=handles;
     guidata(handles.fig, handles);
 end
@@ -798,18 +772,23 @@ for j = no2
     
 end
 
-%---
+%--- Plot the mps, in the current viewing window between depth_min and depth_max
 
 function handles = plotmp(handles, no1)
 
 cla(handles.bigax2(no1));
+
+% colors for each mp type
 greytone = 0.8*[1 1 1];
 redtone = 0.85*[1 0 0];
 bluetone = 0.85*[0 0 1];
-greytone10 = 0.9*[1 1 1];
-redtone10 = 0.85*[1 0.5 0.5];
-bluetone10 = 0.85*[0.5 0.5 1];
-greentone = 0.85 * [0 1 0];
+greentone = 0.7 * [0 1 0];
+
+greytone_2 = 0.9*[1 1 1];
+redtone_2 = 0.85*[1 0.5 0.5];
+bluetone_2 = 0.85*[0.5 0.5 1];
+greentone_2 = 0.8 * [0.5 1 0.5];
+
 
 mp = handles.mp{no1};
 if isfield(handles,'mp_2')
@@ -821,139 +800,111 @@ if isempty(mp)
     return
 else
     othermarks = get(handles.othermarks, 'Value');
-    mp1 = mp(find(mp(:,2)==1),1);
-    mp3 = mp(find(mp(:,2)==3),1);
-    mp4 = mp(find(mp(:,2)==4),1);
-    mp134 = mp(find(mp(:,2)==1 | mp(:,2)==3 | mp(:,2)==4),1);
-    if ~isempty([mp1' mp3' mp4'])
-        idx1 = find(mp1>=xlim(1) & mp1<=xlim(2));
-        if ~isempty(idx1)
-            plot((mp1(idx1)*[1 1])', repmat([0.01+othermarks*0.5 0.93]', 1, length(idx1)), 'linewidth', 6, 'color', greytone, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ');']);
+ 
+   % plot the "thick" mps within xlim(1) and xlim(2)
+    mptypes=[1,3,4];
+    colors=[greytone; redtone; bluetone];
+    for i=1:length(mptypes)
+        mp_subset=mp(mp(:,2)==mptypes(i),1);
+        idx_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
+        if ~isempty(idx_subset)
+            plot((mp_subset(idx_subset)*[1 1])', repmat([0.01+othermarks*0.5 0.93]', 1, length(idx_subset)), 'linewidth', 6, 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
         end
-        idx3 = find(mp3>=xlim(1) & mp3<=xlim(2));
-        if ~isempty(idx3)
-            plot((mp3(idx3)*[1 1])', repmat([0.01+othermarks*0.5 0.93]', 1, length(idx3)), 'linewidth', 6, 'color', redtone, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
-        end
-        idx4 = find(mp4>=xlim(1) & mp4<=xlim(2));
-        if ~isempty(idx4)
-            plot((mp4(idx4)*[1 1])', repmat([0.01+othermarks*0.5 0.93]', 1, length(idx4)), 'linewidth', 6, 'color', bluetone, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
-        end
-        idx134 = find(mp134>=xlim(1) & mp134<=xlim(2));
-        text(mp134(idx134), 0.93*ones(length(idx134),1), num2str(idx134), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', 'k');
-        
-        handles.mp1_idx{no1} = idx134;
-        handles.mp1_depth{no1} = mp134(idx134);
+    end
+    %number them:
+    mp_all_numbered = mp(ismember(mp(:,2),mptypes),1);
+    idx_all_numbered = find(mp_all_numbered>=xlim(1) & mp_all_numbered<=xlim(2));
+    text(mp_all_numbered(idx_all_numbered), 0.96*ones(length(idx_all_numbered),1), num2str(idx_all_numbered), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
+    
+    %keep track of the plotted ones for the evaluate function:
+    if isempty(idx_all_numbered)
+        handles.mp1_idx{no1} = idx_all_numbered;
+        handles.mp1_depth{no1} = mp_all_numbered(idx_all_numbered);
     else
         handles.mp1_idx{no1} = 0;
-        handles.mp1_depth{no1} = [];
+        handles.mp1_depth{no1} = [];        
     end
-    idx2 = find(mp(:,2)==2 & mp(:,1)>=xlim(1) & mp(:,1)<=xlim(2));
-    idx5 = find(mp(:,2)==5 & mp(:,1)>=xlim(1) & mp(:,1)<=xlim(2));
-    if ~isempty(idx2) && get(handles.plotmp2, 'Value') == 1
-        plot((mp(idx2,1)*[1 1])', repmat([0.05+othermarks*0.51 0.89]', 1, length(idx2)), 'linewidth', 4, 'color', greytone, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
-    end
-    if ~isempty(idx5) && get(handles.plotmp2, 'Value') == 1
-        plot((mp(idx5,1)*[1 1])', repmat([0.05+othermarks*0.51 0.89]', 1, length(idx5)), 'linewidth', 4, 'color', bluetone, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
-    end
-    
-    idx6= find(mp(:,2)==6 & mp(:,1)>=xlim(1) & mp(:,1)<=xlim(2));
-    idx7= find(mp(:,2)==7 & mp(:,1)>=xlim(1) & mp(:,1)<=xlim(2));
-    
-    if ~isempty([idx6;idx7]) && get(handles.plotmp2, 'Value') == 1
-        plot((mp(idx6,1)*[1 1])', repmat([0.05+othermarks*0.51 0.88]', 1, length(idx6)), 'linewidth', 2, 'color', greentone, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
-        %the type7 layers are thinner (sed for uncertain years)
-        plot((mp(idx7,1)*[1 1])', repmat([0.05+othermarks*0.51 0.88]', 1, length(idx7)), 'linewidth', 1, 'color', greentone, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
-        
-        if ~isempty([mp1' mp3' mp4']) && ~isempty(idx134) %if there are thick bars on screen, wrtie numbers on green bars only after the first thick bar
-            idx6no = find(or(mp(:,2)==6,mp(:,2)==7) & mp(:,1)>=mp134(idx134(1),1) & mp(:,1)<=xlim(2));
-            text(mp(idx6no,1), 0.885*ones(length(idx6no),1), num2str((1:length(idx6no))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
-        else %else write numbers on all green bars
-            text(mp(sort([idx6;idx7]),1), 0.885*ones(length([idx6;idx7]),1), num2str((1:length([idx6;idx7]))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'bottom', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+            
+% plot the "thin" mps within xlim(1) and xlim(2)
+    mptypes=[2,5];
+    colors=[greytone; bluetone];
+    for i=1:length(mptypes)
+        mp_subset=mp(mp(:,2)==mptypes(i),1);
+        idx_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
+        if ~isempty(idx_subset)
+            plot((mp_subset(idx_subset)*[1 1])', repmat([0.05+othermarks*0.51 0.89]', 1, length(idx_subset)), 'linewidth', 4, 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
         end
     end
     
-    % NEW SECTION FOR TYPE 11/12/13/14/15 MARKS
+    % plot the "annual" mps within xlim(1) and xlim(2)
+    mptypes=[6,7];
+    colors=[greentone; greentone];
+    linewidth=[2,1];
+    for i=1:length(mptypes)
+        mp_subset=mp(mp(:,2)==mptypes(i),1);
+        idx_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
+        if ~isempty(idx_subset)
+            plot((mp_subset(idx_subset)*[1 1])', repmat([0.05+othermarks*0.51 0.88]', 1, length(idx_subset)), 'linewidth', linewidth(i), 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
+        end
+    end
+    if ~isempty(idx_all_numbered) %green layers numbering
+        mp_green_numbered = mp(ismember(mp(:,2),mptypes),1);
+        idx_green_numbered = find(mp_green_numbered>=mp_all_numbered(idx_all_numbered(1),1) & mp_green_numbered<=xlim(2));
+    else
+        mp_green_numbered = mp(ismember(mp(:,2),mptypes),1);
+        idx_green_numbered = find(mp_green_numbered>=xlim(1) & mp_green_numbered<=xlim(2));
+    end
+    text(mp_green_numbered(idx_green_numbered), 0.91*ones(length(idx_green_numbered),1), num2str((1:length(idx_green_numbered))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+    
+    % Other/mp_2
     if othermarks
-        mp11 = mp(find(mp(:,2)==11),1);
-        mp13 = mp(find(mp(:,2)==13),1);
-        mp14 = mp(find(mp(:,2)==14),1);
-        mp111314 = mp(find(mp(:,2)==11 | mp(:,2)==13 | mp(:,2)==14),1);
-        if ~isempty([mp11' mp13' mp14'])
-            idx11 = find(mp11>=xlim(1) & mp11<=xlim(2));
-            idx13 = find(mp13>=xlim(1) & mp13<=xlim(2));
-            idx14 = find(mp14>=xlim(1) & mp14<=xlim(2));
-            idx111314 = find(mp111314>=xlim(1) & mp111314<=xlim(2));
-            if ~isempty(idx11)
-                plot((mp11(idx11)*[1 1])', repmat([0.07 0.49]', 1, length(idx11)), 'linewidth', 6, 'color', greytone10, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
-            end
-            if ~isempty(idx13)
-                plot((mp13(idx13)*[1 1])', repmat([0.07 0.49]', 1, length(idx13)), 'linewidth', 6, 'color', redtone10, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
-            end
-            if ~isempty(idx14)
-                plot((mp14(idx14)*[1 1])', repmat([0.07 0.49]', 1, length(idx14)), 'linewidth', 6, 'color', bluetone10, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
-            end
-            text(mp111314(idx111314), 0.07*ones(length(idx111314),1), num2str(idx111314), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
-        end
-        
-        idx12 = find(mp(:,2)==12 & mp(:,1)>=xlim(1) & mp(:,1)<=xlim(2));
-        idx15 = find(mp(:,2)==15 & mp(:,1)>=xlim(1) & mp(:,1)<=xlim(2));
-        if ~isempty(idx12) && get(handles.plotmp2, 'Value') == 1
-            plot((mp(idx12,1)*[1 1])', repmat([0.12 0.49]', 1, length(idx12)), 'linewidth', 4, 'color', greytone10, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
-        end
-        if ~isempty(idx15) && get(handles.plotmp2, 'Value') == 1
-            plot((mp(idx15,1)*[1 1])', repmat([0.12 0.49]', 1, length(idx15)), 'linewidth', 4, 'color', bluetone10, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
-        end
         if ~isempty(mp_2)
-            mp_2_1 = mp_2(mp_2(:,2)==1,1);
-            mp_2_3 = mp_2((mp_2(:,2)==3),1);
-            mp_2_4 = mp_2((mp_2(:,2)==4),1);
-            mp_2_134 = mp_2((mp_2(:,2)==1 | mp_2(:,2)==3| mp_2(:,2)==4),1);
-            
-            if ~isempty([mp_2_1' mp_2_3' mp_2_4'])
-                indx_2_1 = find(mp_2_1>=xlim(1) & mp_2_1<=xlim(2));
-                if ~isempty(indx_2_1)
-                    plot((mp_2_1(indx_2_1)*[1 1])', repmat([0.07 0.49]', 1, length(indx_2_1)), 'linewidth', 6, 'color', greytone10, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
+            mptypes=[1,3,4];
+            colors=[greytone_2; redtone_2; bluetone_2];
+            for i=1:length(mptypes)
+                mp_2_subset=mp_2(mp_2(:,2)==mptypes(i),1);
+                idx_2_subset=find(mp_2_subset>=xlim(1) & mp_2_subset<=xlim(2));
+                if ~isempty(idx_2_subset)
+                plot((mp_2_subset(idx_2_subset)*[1 1])', repmat([0.05 0.45]', 1, length(idx_2_subset)), 'linewidth', 6, 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
                 end
-                idx_2_3 = find(mp_2_3>=xlim(1) & mp_2_3<=xlim(2));
-                if ~isempty(idx_2_3)
-                    plot((mp_2_3(idx_2_3)*[1 1])', repmat([0.07 0.49]', 1, length(idx_2_3)), 'linewidth', 6, 'color', redtone10, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
-                end
-                idx_2_4 = find(mp_2_4>=xlim(1) & mp_2_4<=xlim(2));
-                if ~isempty(idx_2_4)
-                    plot((mp_2_4(idx_2_4)*[1 1])', repmat([0.07 0.49]', 1, length(idx_2_4)), 'linewidth', 6, 'color', light_bluetone10, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
-                end
-                idx_2_134 = find(mp_2_134>=xlim(1) & mp_2_134<=xlim(2));
-                text(mp_2_134(idx_2_134), 0.07*ones(length(idx_2_134),1), num2str(idx_2_134), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
             end
             
-            idx_2_2 = find(mp_2(:,2)==2 & mp_2(:,1)>=xlim(1) & mp_2(:,1)<=xlim(2));
-            if ~isempty(idx_2_2) && get(handles.plotmp2, 'Value') == 1
-                plot((mp_2(idx_2_2,1)*[1 1])', repmat([0.12 0.49]', 1, length(idx_2_2)), 'linewidth', 4, 'color', greytone10, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
-            end
-            idx1_2_5 = find(mp_2(:,2)==5 & mp_2(:,1)>=xlim(1) & mp_2(:,1)<=xlim(2));
-            if ~isempty(idx1_2_5) & get(handles.plotmp2, 'Value') == 1
-                plot((mp_2(idx1_2_5,1)*[1 1])', repmat([0.12 0.49]', 1, length(idx1_2_5)), 'linewidth', 4, 'color', light_bluetone10, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
+            mp_2_all_numbered = mp_2(ismember(mp_2(:,2),mptypes),1);
+            idx_2_all_numbered = find(mp_2_all_numbered>=xlim(1) & mp_2_all_numbered<=xlim(2));
+            text(mp_2_all_numbered(idx_2_all_numbered), 0.48*ones(length(idx_2_all_numbered),1), num2str(idx_2_all_numbered), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
+            
+            mptypes=[2,5];
+            colors=[greytone_2; bluetone_2];
+            for i=1:length(mptypes)
+                mp_2_subset=mp_2(mp_2(:,2)==mptypes(i),1);
+                idx_2_subset=find(mp_2_subset>=xlim(1) & mp_2_subset<=xlim(2));
+                if ~isempty(idx_2_subset)
+                plot((mp_2_subset(idx_2_subset)*[1 1])', repmat([0.05 0.4]', 1, length(idx_2_subset)), 'linewidth', 6, 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
+                end
             end
             
-            mp_2_6 = mp_2(find(mp_2(:,2)==6));
-            mp_2_7 = mp_2(find(mp_2(:,2)==7));
-            idx_2_6 = find(mp_2_6>=xlim(1) & mp_2_6<=xlim(2));
-            idx_2_7 = find(mp_2_7>=xlim(1) & mp_2_7<=xlim(2));
+            mptypes=[6,7];
+            colors=[greentone_2; greentone_2];
+            linewidth=[2,1];
+            for i=1:length(mptypes)
+                mp_2_subset=mp_2(mp_2(:,2)==mptypes(i),1);
+                idx_2_subset=find(mp_2_subset>=xlim(1) & mp_2_subset<=xlim(2));
+                if ~isempty(idx_2_subset)
+                plot((mp_2_subset(idx_2_subset)*[1 1])', repmat([0.05 0.4]', 1, length(idx_2_subset)), 'linewidth', linewidth(i), 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
+                end
+            end
             
-            if ~isempty([idx_2_6;idx_2_7]) % secondary annual layers
-                plot((mp_2_6(idx_2_6)*[1 1])', repmat([0.07 0.49]', 1, length(idx_2_6)), 'linewidth', 2, 'color', greentone, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
-                plot((mp_2_7(idx_2_7)*[1 1])', repmat([0.07 0.49]', 1, length(idx_2_7)), 'linewidth', 1, 'color', greentone, 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
-                
-                if ~isempty([mp_2_1' mp_2_3' mp_2_4']) && ~isempty(idx_2_134) %layer numbering
-                    idx6no_2 = find(or(mp_2(:,2)==6,mp_2(:,2)==7) & mp_2(:,1)>=mp_2_134(idx_2_134(1),1) & mp_2(:,1)<=xlim(2));
-                    text(mp_2(idx6no_2,1), 0.07*ones(length(idx6no_2),1), num2str((1:length(idx6no_2))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+             if ~isempty(idx_2_all_numbered) %green layers numbering
+%                     idx6no_2 = find(or(mp_2(:,2)==6,mp_2(:,2)==7) & mp_2(:,1)>=mp_2_134(idx_2_134(1),1) & mp_2(:,1)<=xlim(2));
+                    mp_2_green_numbered = mp_2(ismember(mp_2(:,2),mptypes),1);
+                    idx_2_green_numbered = find(mp_2_green_numbered>=mp_2_all_numbered(idx_2_all_numbered(1),1) & mp_2_green_numbered<=xlim(2));
                 else
-                    a=mp_2_6(sort([idx_2_6;idx_2_7]),1);
-                    text(a, 0.07*ones(length([idx_2_6;idx_2_7]),1), num2str((1:length([idx_2_6;idx_2_7]))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
-                end
-                
-            end
-            
+                    mp_2_green_numbered = mp_2(ismember(mp_2(:,2),mptypes),1);
+                    idx_2_green_numbered = find(mp_2_green_numbered>=xlim(1) & mp_2_green_numbered<=xlim(2));
+             end
+             text(mp_2_green_numbered(idx_2_green_numbered), 0.43*ones(length(idx_2_green_numbered),1), num2str((1:length(idx_2_green_numbered))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+
+                 
         end
     end
     
@@ -964,6 +915,7 @@ if length(handles.mp1_idx{str2double(get(handles.masterno, 'string'))})<2
 else
     set(handles.evaluate, 'Enable', 'on');
 end
+
 
 %---
 
@@ -1432,5 +1384,52 @@ save(['data' filesep files.datafile{handles.fileno(no1)}],'colours','-append'); 
 
 if color_activated_save==1 %if save was activated only by the color button
     set(handles.save, 'enable', 'off'); %put if off again
+end
+
+%--Annual layer callback
+function annual_lrs_Callback(hObject, handles);
+for i = 1:handles.N
+    handles = plotmp(handles, i);
+end
+guidata(hObject, handles);
+
+%
+
+function mptype=determine_mptype(handles)
+selectiontype = get(handles.fig, 'selectiontype');
+dummy = get(handles.dummymark, 'Value');
+annual_lrs = get(handles.annual_lrs, 'Value');
+
+if strcmp(selectiontype, 'normal')
+    if dummy
+        mptype = 4;
+    else
+        mptype = 1;
+    end
+elseif strcmp(selectiontype, 'alt')
+    if annual_lrs
+        mptype = 6;
+    else
+        if dummy
+            mptype = 5;
+        else
+            mptype = 2;
+        end
+    end
+    if get(handles.plotmp2, 'value') == 0
+        return;
+    end
+elseif strcmp(selectiontype, 'extend')
+    mptype = 3;
+elseif strcmp(selectiontype, 'open') % any double click
+    if annual_lrs
+        mptype = 7;
+    elseif dummy
+        mptype = 5;
+    else
+        mptype = 2;
+    end
+else
+    return;
 end
 
