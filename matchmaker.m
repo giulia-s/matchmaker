@@ -594,7 +594,7 @@ if get(handles.mark, 'Value') == 1 % it it's possible to mark
     pos = 0.001*round(1000*pos(1,1)); %adjust precision to be 1 mm
     
     % Determining which type the new mp should be
-    mptype = determine_mptype(handles);
+    mptype = determine_mptype_from_click(handles);
     
     % calling current sets of mp and mp_2
     mp = handles.mp{no1};
@@ -603,8 +603,10 @@ if get(handles.mark, 'Value') == 1 % it it's possible to mark
     % distinguish if click is on top or lower half of axis, and update mp
     if get(handles.othermarks, 'Value')==0 || (ypos>=0.5 && get(handles.othermarks, 'Value')==1) 
         mp = [mp; pos mptype];% amplitudes];
+        othermarks=0;
     elseif get(handles.othermarks, 'Value')==1 && ypos<0.5
         mp_2=[mp_2;pos mptype];
+        othermarks=1;
     end
     
     handles.mp{no1} = sortrows(mp);
@@ -633,7 +635,7 @@ if get(handles.mark, 'Value') == 1 % it it's possible to mark
     handles.lastmove{handles.saved_moves,1}=pos; % mp position in data units
     handles.lastmove{handles.saved_moves,2}='added'; % this mp was added
     handles.lastmove{handles.saved_moves,3}=no1; % this mp was clicked on the icecore no1
-    handles.lastmove{handles.saved_moves,4}=mptype; % this mp has type mptype
+    handles.lastmove{handles.saved_moves,4}=mptype+10*othermarks; % this mp has type mptype
     
     % to remove all datatips from the current axes
         
@@ -685,7 +687,8 @@ if get(handles.mark, 'Value') == 1 %if it's possible to mark mps
     handles.lastmove{ handles.saved_moves,1}=pos(1,1); % pos of mp
     handles.lastmove{ handles.saved_moves,2}='removed'; %removed mp: because the mp_callback was activated by removing an existing mp
     handles.lastmove{ handles.saved_moves,3}=no1; %which icecore
-    handles.lastmove{ handles.saved_moves,4}=3; %assign type 3
+    [mptype,othermarks]=determine_mptype_from_shape(hObject);%< solve this
+    handles.lastmove{ handles.saved_moves,4}=mptype+10*othermarks;
     
     % acquire the current series of mps
     mp = handles.mp{no1};
@@ -1380,8 +1383,7 @@ guidata(hObject, handles);
 
 %
 
-function mptype=determine_mptype(handles)
-get(handles.fig)
+function mptype=determine_mptype_from_click(handles)
 selectiontype = get(handles.fig, 'selectiontype');
 dummy = get(handles.dummymark, 'Value');
 annual_lrs = get(handles.annual_lrs, 'Value');
@@ -1419,3 +1421,70 @@ else
     return;
 end
 
+function [mptype,othermarks]=determine_mptype_from_shape(hObject)
+% colors for each mp type
+greytone = 0.8*[1 1 1];
+redtone = 0.85*[1 0 0];
+bluetone = 0.85*[0 0 1];
+greentone = 0.7 * [0 1 0];
+
+greytone_2 = 0.9*[1 1 1];
+redtone_2 = 0.85*[1 0.5 0.5];
+bluetone_2 = 0.85*[0.5 0.5 1];
+greentone_2 = 0.8 * [0.5 1 0.5];
+
+othermarks=0;
+
+if isstruct(hObject)
+    'clicking on curve'
+    hObject
+elseif hObject.Type=='line'
+    if hObject.LineWidth==6
+        if hObject.Color == greytone
+            mptype=1;
+        elseif hObject.Color == redtone
+                mptype=3;
+        elseif hObject.Color == bluetone
+                    mptype=4;
+        elseif hObject.Color == greytone_2
+            mptype=1;
+            othermarks=1;
+        elseif hObject.Color == redtone_2
+                mptype=3;
+                othermarks=1;
+        elseif hObject.Color == bluetone_2
+                    mptype=4;
+                    othermarks=1;
+        end
+    elseif hObject.LineWidth==4
+        if hObject.Color == greytone
+            mptype=2;
+        elseif hObject.Color == bluetone
+            mptype=5;
+        elseif hObject.Color == greytone_2
+            mptype=2;
+            othermarks=1;
+        elseif hObject.Color == bluetone_2
+                    mptype=5;
+                    othermarks=1;
+        end
+    elseif hObject.LineWidth==2
+        if hObject.Color == greentone
+            mptype=6;
+        elseif hObject.Color == greentone_2
+            mptype=6;
+            othermarks=1;
+        end
+    elseif hObject.LineWidth==1
+        if hObject.Color == greentone
+            mptype=7;
+        elseif hObject.Color == greentone_2
+            mptype=7;
+            othermarks=1;
+        end
+    else
+        return
+    end
+else
+    return
+end
