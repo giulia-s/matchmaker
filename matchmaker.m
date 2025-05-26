@@ -57,6 +57,7 @@ handles.fig = figure('units','normalized',...
     'nextplot', 'add', 'color', 0.9*[1 1 1], 'pointer', 'cross',...
     'Interruptible', 'off', 'Numbertitle', 'off',...
     'tag', 'matchmakermainwindow', 'integerhandle', 'off');
+
 % initialize and populate data
 N = length(fileno);
 handles.fileno = fileno;
@@ -257,6 +258,7 @@ for i = 1:N
         'nextplot', 'add', 'ylim', [0 1], 'ytick', [], 'box', 'off', 'fontsize', font1, 'ycolor', 'w', 'xcolor', 'w',...
         'ButtonDownFcn', ['matchmaker(''axesclick_Callback'',gcbo,[],guidata(gcbo),' num2str(i) ')'],...
         'hittest','on');
+    set(handles.bigax(i) ,'interactions',[])
     handles.bigax2(i) = axes('position', [ax_left_edge_pos, main_ax_y_pos , ax_width, ax_H-ax_xlabel_H], 'nextplot', 'add', 'visible', 'off', 'hittest', 'off', 'clipping', 'on', 'ylim', [0 1]);
     handles.name(i) = text(buttons_left_edge_pos, primary_button_column_ypos,...
         files.core{fileno(i)}, 'VerticalAlignment', 'top', 'HorizontalAlignment', 'left', 'Fontsize', font2, 'fontweight', 'bold', 'parent', dummyax);
@@ -365,6 +367,8 @@ for i = 1:N
     
     update_yminmax(handles.fig, handles, i, 0); % Update the y-scaling
 end
+
+
 set(handles.fig, 'HandleVisibility', 'callback');
 guidata(handles.fig, handles);
 warning('off', 'MATLAB:Axes:NegativeDataInLogAxis');
@@ -549,6 +553,7 @@ guidata(handles.fig, handles)
 %--- Function for adding new mps:
 
 function axesclick_Callback(hObject, handles, no1)
+
 if get(handles.mark, 'Value') == 1 % it it's possible to mark
     type = get(hObject,'type'); % get the type of surface you clicked on
     if strcmp(type,'axes') %white area click
@@ -556,6 +561,7 @@ if get(handles.mark, 'Value') == 1 % it it's possible to mark
         ypos = pos(1,2);% y pos in norm. units
         
     elseif strcmp(type,'line') %line click : could be a free spot on the datacurve or an existing mp on that curve
+
         temp_pos=get(gcf, 'CurrentPoint'); %click x pos norm. units
         ypos = temp_pos(1,2); % y pos in norm. units
         
@@ -629,6 +635,10 @@ if get(handles.mark, 'Value') == 1 % it it's possible to mark
     handles.lastmove{handles.saved_moves,3}=no1; % this mp was clicked on the icecore no1
     handles.lastmove{handles.saved_moves,4}=mptype; % this mp has type mptype
     
+    % to remove all datatips from the current axes
+        
+    delete(findall(gcf, 'Type', 'datatip'))
+
     %replot everything and trigger save button
     handles = plotmp(handles, no1);
     set(handles.save, 'enable', 'on');
@@ -727,6 +737,10 @@ if get(handles.mark, 'Value') == 1 %if it's possible to mark mps
     %toggle save button
     set(handles.save, 'enable', 'on');
     
+    % to remove all datatips from the current axes
+        
+    delete(findall(gcf, 'Type', 'datatip'))
+    
     varargout{1}=handles;
     guidata(handles.fig, handles);
 end
@@ -768,8 +782,9 @@ for j = no2
     set(handles.tickax{no1, j}, 'ycolor', handles.colours{no1}(handles.selectedspecs{no1}(j),:));
     
     % the curves are set to be "clickable":
-    set(curve,'hittest', 'on','PickableParts','all','ButtonDownFcn',['matchmaker(''axesclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')'],'parent',handles.plotax{no1,j});
-    
+    set(curve,'hittest', 'on','PickableParts','visible','ButtonDownFcn',['matchmaker(''axesclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')'],'parent',handles.plotax{no1,j});
+    % to remove all datatips from the current axes
+    delete(findall(gcf, 'Type', 'datatip'))
 end
 
 %--- Plot the mps, in the current viewing window between depth_min and depth_max
@@ -789,16 +804,18 @@ redtone_2 = 0.85*[1 0.5 0.5];
 bluetone_2 = 0.85*[0.5 0.5 1];
 greentone_2 = 0.8 * [0.5 1 0.5];
 
+% collect current mp data
 mp = handles.mp{no1};
 if isfield(handles,'mp_2')
     mp_2=handles.mp_2{no1};
 end
-
+% collect current depth limits
 xlim = get(handles.bigax(no1), 'xlim');
+
 if isempty(mp)
     return
 else
-    othermarks = get(handles.othermarks, 'Value'); %logical value to decide whether to plot all screen or only top half
+    othermarks = get(handles.othermarks, 'Value'); %logical value to decide whether to plot full screen or only top half
  
    % plot all mps within xlim(1) and xlim(2)
     mptypes=[1,3,4,2,5,6,7];
@@ -817,9 +834,9 @@ else
     mptypes_thick=[1,3,4];
     mp_thick = mp(ismember(mp(:,2),mptypes_thick),1);
     depth_subset_thick = find(mp_thick>=xlim(1) & mp_thick<=xlim(2));
-    text(mp_thick(depth_subset_thick), 0.96*ones(length(depth_subset_thick),1), num2str(depth_subset_thick), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
+    text(mp_thick(depth_subset_thick), (bar_height(1)+0.03)*ones(length(depth_subset_thick),1), num2str(depth_subset_thick), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
     
-    %keep track of the plotted ones for the evaluate function:
+    %keep track of the plotted thick mps for the evaluate function:
     if isempty(depth_subset_thick)
         handles.mp1_idx{no1} = depth_subset_thick;
         handles.mp1_depth{no1} = mp_thick(depth_subset_thick);
@@ -831,8 +848,10 @@ else
     %green layers numbering
     mp_green = mp(ismember(mp(:,2),[6,7]),1);
     if ~isempty(depth_subset_thick) 
+        % number only after the left-most thick bar
         depth_subset_green = find(mp_green>=mp_thick(depth_subset_thick(1),1) & mp_green<=xlim(2));
     else
+        %number all
         depth_subset_green = find(mp_green>=xlim(1) & mp_green<=xlim(2));
     end
     text(mp_green(depth_subset_green), (bar_height(end)+0.03)*ones(length(depth_subset_green),1), num2str((1:length(depth_subset_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
@@ -845,7 +864,7 @@ else
                mptypes=[1,3,4,2,5,6,7];
                linewidth=[6,6,6,4,4,2,1];
                colors=[greytone_2; redtone_2; bluetone_2; greytone_2; bluetone_2; greentone_2; greentone_2];
-               bar_height=[0.93;0.93;0.93;0.88;0.88;0.85;0.85]/2;
+               bar_height=[0.93;0.93;0.93;0.88;0.88;0.85;0.85]/2; %half height
                for i=1:length(mptypes)
                    mp_subset=mp_2(mp_2(:,2)==mptypes(i),1);
                    depth_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
@@ -866,7 +885,7 @@ else
                 else
                     depth_subset_green = find(mp_2_green>=xlim(1) & mp_2_green<=xlim(2));
              end
-             text(mp_2_green(depth_subset_green), (bar_height(end)+0.03)*ones(length(depth_subset_green),1), num2str((1:length(depth_subset_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+             text(mp_2_green(depth_subset_green), (bar_height(end)+0.03)*ones(length(depth_subset_green),1), num2str((1:length(depth_subset_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone_2);
 
         end
     end
@@ -878,6 +897,8 @@ if length(handles.mp1_idx{str2double(get(handles.masterno, 'string'))})<2
 else
     set(handles.evaluate, 'Enable', 'on');
 end
+
+
 
 
 %---
@@ -1360,6 +1381,7 @@ guidata(hObject, handles);
 %
 
 function mptype=determine_mptype(handles)
+get(handles.fig)
 selectiontype = get(handles.fig, 'selectiontype');
 dummy = get(handles.dummymark, 'Value');
 annual_lrs = get(handles.annual_lrs, 'Value');
