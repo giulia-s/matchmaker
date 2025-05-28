@@ -6,7 +6,7 @@ switch nargin
     case {0, 1, 2}% Only for development purposes
         disp('MATCHMAKER_EVALUATE needs input arguments, and is designed to be called from MATCHMAKER.');
     case {3, 4, 5, 6, 7, 8, 9}
-
+        
         eval([char(varargin{1}) '(varargin{[2 4:nargin]})']);
     otherwise
         disp('Wrong number of arguments when calling matchmaker_evaluate.m');
@@ -17,23 +17,23 @@ end
 function evalopen(matchmakerfighandle, mp, mp_2, core, masterno, current_mp_1, othermarks)
 
 for i = 1:length(mp)
-mp_thick = mp{i}(ismember(mp{i}(:,2),[1,3,4]),1);
-
-if length(mp_thick)<2
-    errordlg('There must be at least two first-order matchpoints for each icecore for the evaluate window to work. Evaluate window will not open.', 'Warning calling MATCHMAKER_EVALUATE', 'modal');
-    return
-end
+    mp_thick = mp{i}(ismember(mp{i}(:,2),[1,3,4]),1);
+    
+    if length(mp_thick)<2
+        errordlg('There must be at least two first-order matchpoints for each icecore for the evaluate window to work. Evaluate window will not open.', 'Warning calling MATCHMAKER_EVALUATE', 'modal');
+        return
+    end
 end
 
 handles.fig = figure('units','normalized',...
-   'outerposition', [0.1 0.1 0.75 0.75], ...%initial dimensions upon opening
-   'name', 'Matchmaker Evaluation Tool',...
-   'CloseRequestFcn', 'matchmaker_evaluate(''exit_Callback'', gcbo, [], guidata(gcbo))',...
-   'nextplot', 'add', 'color', 0.9*[1 1 1], 'pointer', 'cross',...
-   'toolbar', 'figure', 'Numbertitle', 'off',...
-   'KeyPressFcn', 'matchmaker_evaluate(''keypressed_Callback'', gcbo, [], guidata(gcbo))',... 
-   'integerhandle', 'off');
-handles.matchmakerfighandle = matchmakerfighandle; 
+    'outerposition', [0.1 0.1 0.75 0.75], ...%initial dimensions upon opening
+    'name', 'Matchmaker Evaluation Tool',...
+    'CloseRequestFcn', 'matchmaker_evaluate(''exit_Callback'', gcbo, [], guidata(gcbo))',...
+    'nextplot', 'add', 'color', 0.9*[1 1 1], 'pointer', 'cross',...
+    'toolbar', 'figure', 'Numbertitle', 'off',...
+    'KeyPressFcn', 'matchmaker_evaluate(''keypressed_Callback'', gcbo, [], guidata(gcbo))',...
+    'integerhandle', 'off');
+handles.matchmakerfighandle = matchmakerfighandle;
 handles.mp = mp;
 handles.mp_2=mp_2;
 handles.othermarks=othermarks;
@@ -46,25 +46,49 @@ dummyax = axes('position', [0 0 1 1], 'xlim', [0 1], 'ylim', [0 1], 'visible', '
 
 font1 = 8;
 font2 = 10;
-button_height=0.05;
+button_height=0.025;
 
 handles.title = text(0.005, 0.012, 'MATCHMAKER Evaluation Tool', 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'Fontsize', font2, 'fontweight', 'bold', 'parent', dummyax);
 handles.text1 = text(0.52, 0.04, 'Comparison match point interval', 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'center', 'Fontsize', font1, 'parent', dummyax);
 handles.text1 = text(0.69, 0.04, 'Match point ID', 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'center', 'Fontsize', font1, 'parent', dummyax);
-handles.return = uicontrol('units', 'normalized', 'position', [0.81 0.012 0.08 button_height], 'string', 'Return', 'style', 'pushbutton', 'callback', ['matchmaker_evaluate(''return_Callback'',gcbo, [],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
-handles.exit = uicontrol('units', 'normalized', 'position', [0.91 0.012 0.08 button_height], 'string', 'Exit', 'style', 'pushbutton', 'callback', ['matchmaker_evaluate(''exit_Callback'',gcbo, [],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
-handles.lowmp = uicontrol('units', 'normalized', 'position', [0.41 0.012 0.08 button_height], 'string', num2str(current_mp_1(1)), 'style', 'edit', 'callback', ['matchmaker_evaluate(''xlim_Callback'',gcbo, [],guidata(gcbo), -1)'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
-handles.highmp = uicontrol('units', 'normalized', 'position', [0.55 0.012 0.08 button_height], 'string', num2str(current_mp_1(end)), 'style', 'edit', 'callback', ['matchmaker_evaluate(''xlim_Callback'',gcbo, [],guidata(gcbo), 1)'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
-handles.inc = uicontrol('units', 'normalized', 'position', [0.50 0.012 0.04 button_height], 'string', '1', 'style', 'edit', 'callback', ['matchmaker_evaluate(''inc_Callback'',gcbo, [],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
-handles.info = uicontrol('units', 'normalized', 'position', [0.65 0.012 0.08 button_height], 'string', [], 'style', 'edit', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
-handles.diff = uicontrol('units', 'normalized', 'position', [0.31 0.012 0.08 button_height], 'string', 'Depth diff', 'style', 'togglebutton', 'callback', ['matchmaker_evaluate(''diff_Callback'',gcbo, [],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 1);
+handles.return = uicontrol('units', 'normalized', 'position', [0.81 0.012 0.08 button_height],...
+    'string', 'Return',...
+    'Tooltip', ['Return to matchmaker'],...
+    'style', 'pushbutton', 'callback', ['matchmaker_evaluate(''return_Callback'',gcbo, [],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
+handles.exit = uicontrol('units', 'normalized', 'position', [0.91 0.012 0.08 button_height],...
+    'string', 'Exit',...
+    'Tooltip', ['Close'],...
+    'style', 'pushbutton', 'callback', ['matchmaker_evaluate(''exit_Callback'',gcbo, [],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
+handles.lowmp = uicontrol('units', 'normalized', 'position', [0.41 0.012 0.08 button_height],...
+    'string', num2str(current_mp_1(1)),...
+    'Tooltip', ['Lowest mp to visualize'],...
+    'style', 'edit', 'callback', ['matchmaker_evaluate(''xlim_Callback'',gcbo, [],guidata(gcbo), -1)'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
+handles.highmp = uicontrol('units', 'normalized', 'position', [0.55 0.012 0.08 button_height],...
+    'string', num2str(current_mp_1(end)),...
+    'Tooltip', ['Highest mp to visualize'],...
+    'style', 'edit', 'callback', ['matchmaker_evaluate(''xlim_Callback'',gcbo, [],guidata(gcbo), 1)'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
+handles.inc = uicontrol('units', 'normalized', 'position', [0.50 0.012 0.04 button_height],...
+    'string', '1',...
+    'Tooltip', ['mp increment when scrolling left and right'],...
+    'style', 'edit', 'callback', ['matchmaker_evaluate(''inc_Callback'',gcbo, [],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
+handles.info = uicontrol('units', 'normalized', 'position', [0.65 0.012 0.08 button_height],...
+    'string', [],...
+    'Tooltip', ['current mp'],...
+    'style', 'edit', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
+handles.diff = uicontrol('units', 'normalized', 'position', [0.31 0.012 0.08 button_height],...
+    'Tooltip', ['depth difference or normalized depth difference'],...
+    'string', 'Depth diff', 'style', 'togglebutton', 'callback', ['matchmaker_evaluate(''diff_Callback'',gcbo, [],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 1);
 
 handles.ax(1) = axes('position', [0.05 0.1 0.44 0.84], 'nextplot', 'add', 'box', 'on', 'fontsize', font1);
 handles.axtitle(1) = title(['Depth vs. ' handles.core{handles.masterno} ' depth'], 'Fontsize', font1);
 handles.ax(2) = axes('position', [0.55 0.1 0.44 0.84], 'nextplot', 'add', 'box', 'on', 'fontsize', font1);
 handles.axtitle(2) = title(['(slope / ' handles.core{handles.masterno} ' slope) vs. ' handles.core{handles.masterno} 'depth'], 'Fontsize', font1);
+for i=[1,2]
+    handles.ax(i).XLabel.String='m';
+    handles.ax(i).YLabel.String='arb.units';
+end
 xlim_Callback(handles.fig, handles, 1);
-diff_Callback(handles.fig, handles)
+diff_Callback(handles.fig, handles);
 
 set(handles.fig, 'handlevisibility', 'callback');
 guidata(handles.fig, handles);
@@ -77,6 +101,7 @@ function evalreuse(evaluatefigurehandle, mp, mp_2, core, masterno, current_mp_1)
 figure(evaluatefigurehandle);
 handles = guidata(evaluatefigurehandle);
 handles.mp = mp;
+handles.mp_2 = mp_2;
 handles.core = core;
 handles.masterno = masterno;
 handles.N = length(mp);
@@ -90,34 +115,31 @@ guidata(handles.fig, handles);
 function keypressed_Callback(hObject, handles) % Translate keypress to appropriate button actions.
 key = double(get(handles.fig, 'currentcharacter'));
 if ~isempty(key)
+
     switch key
-    case 28   %<-
-        set(handles.lowmp, 'string', num2str(str2num(get(handles.lowmp, 'string'))-str2num(get(handles.inc, 'string'))));
-        set(handles.highmp, 'string', num2str(str2num(get(handles.highmp, 'string'))-str2num(get(handles.inc, 'string'))));
-        xlim_Callback(handles.fig, handles, 1);
-        guidata(handles.fig, handles);
-    case 29  %->
-        set(handles.lowmp, 'string', num2str(str2num(get(handles.lowmp, 'string'))+str2num(get(handles.inc, 'string'))));
-        set(handles.highmp, 'string', num2str(str2num(get(handles.highmp, 'string'))+str2num(get(handles.inc, 'string'))));
-        xlim_Callback(handles.fig, handles, 1);
-        guidata(handles.fig, handles);
-    case {99, 67}   %c, C
-        cursor_Callback(hObject, handles);
-    case {114, 82}  %r, R
-        figure(handles.matchmakerfighandle)
-    case {120, 88}  %x, X
-        exit_Callback(hObject, handles);
-    otherwise % If key not defined, show info window
-        disp(['Just for information : MATCHMAKER_EVALUATE undefined key callback : ' num2str(key)]);
-        h_help = helpdlg({...
-            'Available keyboard commands:';
-            '<- = move selected core one frame back and accordianize'
-            '-> = move selected core one frame forward and accordianize'
-            'C  = change Cursor type'
-            'R  = Return to Matchmaker main screen'
-            'X  = eXit'});
-    end;
-end;
+        case 28   %<-
+            set(handles.lowmp, 'string', num2str(str2num(get(handles.lowmp, 'string'))-str2num(get(handles.inc, 'string'))));
+            set(handles.highmp, 'string', num2str(str2num(get(handles.highmp, 'string'))-str2num(get(handles.inc, 'string'))));
+            xlim_Callback(handles.fig, handles, 1);
+            guidata(handles.fig, handles);
+        case 29  %->
+            set(handles.lowmp, 'string', num2str(str2num(get(handles.lowmp, 'string'))+str2num(get(handles.inc, 'string'))));
+            set(handles.highmp, 'string', num2str(str2num(get(handles.highmp, 'string'))+str2num(get(handles.inc, 'string'))));
+            xlim_Callback(handles.fig, handles, 1);
+            guidata(handles.fig, handles);
+        case {114, 82}  %r, R
+            figure(handles.matchmakerfighandle)
+        case {120, 88}  %x, X
+            exit_Callback(hObject, handles);
+        otherwise % If key not defined, show info window
+            h_help = helpdlg({...
+                'Available keyboard commands:';
+                '<- = move selected core one frame back and accordianize'
+                '-> = move selected core one frame forward and accordianize'
+                'R  = Return to Matchmaker main screen'
+                'X  = Exit'});
+    end
+end
 
 %---
 
@@ -127,7 +149,11 @@ figure(handles.matchmakerfighandle)
 %---
 
 function diff_Callback(hObject, handles) % Change cursor type from crosshair to fullcrosshair and back
-plotcurves(handles);
+if ~isfield(handles,'mp_2')
+    plotcurves(handles);
+else
+    plotcurves_2(handles);
+end
 if get(handles.diff, 'value') == 1
     set(handles.axtitle(1), 'String', ['Normalized depth difference(s) vs. ' handles.core{handles.masterno} ' depth']);
 else
@@ -136,18 +162,7 @@ end;
 
 %---
 
-function cursor_Callback(hObject, handles) % Change cursor type from crosshair to fullcrosshair and back
-if strcmp(get(handles.fig, 'pointer'), 'crosshair')
-    set(handles.fig, 'pointer', 'fullcrosshair');
-else
-    set(handles.fig, 'pointer', 'crosshair');
-end;
-
-%---
-
 function exit_Callback(hObject, handles)
-'exit clicked'
-handles
 length({'evaluate_Callback',hObject,[], handles, 'closing_evaluate'})
 matchmaker('evaluate_Callback',hObject,[], handles, 'closing_evaluate');
 figure(handles.matchmakerfighandle)
@@ -164,21 +179,32 @@ elseif value < 0
 end
 
 %---
-    
+
 function xlim_Callback(hObject, handles, lowhigh);
 lowmp = str2num(get(handles.lowmp, 'string'));
 highmp = str2num(get(handles.highmp, 'string'));
 oldmplim = handles.current_mp_1;
-if mod(lowmp,1)==0 & isreal(lowmp) & length(lowmp) == 1 & mod(highmp,1)==0 & isreal(highmp) & length(highmp)==1 % check if input is valid
+if mod(lowmp,1)==0 &...
+        isreal(lowmp) &...
+        length(lowmp) == 1 &...
+        mod(highmp,1)==0 &...
+        isreal(highmp) &...
+        length(highmp)==1 % check if input is valid
+    Nmpi134=zeros(handles.N,1);
+
     for i = 1:handles.N
         mp = handles.mp{i};
-        Nmpi134(i) = length(mp(find(mp(:,2)==1 | mp(:,2)==3 | mp(:,2)==4),1));
-    end;
+        Nmpi134(i) = length(mp(ismember(mp(:,2),[1,3,4]),1));
+
+    end
     Nmp = min(Nmpi134);
+    
     lowmp = max(1, lowmp);
     lowmp = min(Nmp-1, lowmp);
     highmp = min(Nmp, highmp);
     highmp = max(2, highmp);
+
+    
     if lowmp>highmp
         if lowhigh == -1
             highmp = min(Nmp, lowmp+(diff(oldmplim)-1));
@@ -198,17 +224,24 @@ if mod(lowmp,1)==0 & isreal(lowmp) & length(lowmp) == 1 & mod(highmp,1)==0 & isr
     mp134 = mp(find(mp(:,2)==1 | mp(:,2)==3 | mp(:,2)==4),1);
     xlim = [mp134(lowmp)-0.1 mp134(highmp)+0.1];
     set(handles.ax, 'xlim', xlim);
-    plotcurves(handles);
+    if ~isfield(handles,'mp_2')
+        plotcurves(handles);
+    else
+        plotcurves_2(handles);
+    end
 else
     set(handles.lowmp, 'string', handles.current_mp_1(1));
     set(handles.highmp, 'string', handles.current_mp_1(2));
 end;
 %---
 
-function plotcurves(handles) 
+function plotcurves(handles)
+
 lowmp = str2num(get(handles.lowmp, 'string'));
 highmp = str2num(get(handles.highmp, 'string'));
+
 idx1 = [lowmp:highmp];
+
 cla(handles.ax(1));
 cla(handles.ax(2));
 if length(idx1) < 2
@@ -216,74 +249,207 @@ if length(idx1) < 2
 end;
 colours = [{'b'} {'g'} {'r'} {'c'} {'m'} {'k'}];
 
-mpmaster = handles.mp{handles.masterno};
-mpmaster134 = mpmaster(find(mpmaster(:,2)==1 | mpmaster(:,2)==3 | mpmaster(:,2)==4),:);
-mpmaster25 = mpmaster(find((mpmaster(:,2)==2 | mpmaster(:,2)==5) & mpmaster(:,1)>=mpmaster134(lowmp) & mpmaster(:,1)<=mpmaster134(highmp)),:);
+mp_master = handles.mp{handles.masterno};
+mp_master_thick = mp_master(ismember(mp_master(:,2),[1,3,4]),:);
+mp_master_thin = mp_master(ismember(mp_master(:,2),[2,5]) & mp_master(:,1)>=mp_master_thick(lowmp) & mp_master(:,1)<=mp_master_thick(highmp),:);
 
-for i = setdiff([1:handles.N], handles.masterno);
+for i = setdiff([1:handles.N], handles.masterno)
     mp = handles.mp{i};
     if length(mp(:,1))>=2
-        mp134 = mp(find(mp(:,2)==1 | mp(:,2)==3 | mp(:,2)==4),:);
-        mp25 = mp(find((mp(:,2)==2 | mp(:,2)==5) & mp(:,1)>=mp134(lowmp) & mp(:,1)<=mp134(highmp)),:);
-        idx_13 = intersect(find(mpmaster134(1:idx1(end),2)<4 & mp134(1:idx1(end),2)<4), idx1);
-        if length(idx_13) == 1
+        mp_sure = mp(ismember(mp(:,2),[1,3]),:); %only grey and red markers are deemend "sure"
+        mp_thin = mp(ismember(mp(:,2),[2,5]) & mp(:,1)>=mp_thick(lowmp) & mp(:,1)<=mp_thick(highmp),:);
+        idx_sure = intersect(find(mp_master_thick(1:idx1(end),2)<4 & mp_thick(1:idx1(end),2)<4), idx1);
+        if length(idx_sure) == 1
             disp('Not enough first order matchpoints on screen (blue type 4 matchpoints do not count)');
         else
-            if length(idx_13) == 2
-                deltadepth{i} = [mpmaster134(idx_13(1), 1) diff(mp134(idx_13, 1)); mp134(idx_13(2), 1) diff(mp134(idx_13, 1))];
+            if length(idx_sure) == 2
+                deltadepth{i} = [mp_master_thick(idx_sure(1), 1) diff(mp_thick(idx_sure, 1)); mp_thick(idx_sure(2), 1) diff(mp_thick(idx_sure, 1))];
             else
-                deltadepth{i} = stepit([mpmaster134(idx_13(2:end), 1) diff(mp134(idx_13, 1))./diff(mpmaster134(idx_13, 1))]);
-                deltadepth{i}(1,1) = mpmaster134(idx_13(1), 1);
+                deltadepth{i} = stepit([mp_master_thick(idx_sure(2:end), 1) diff(mp_thick(idx_sure, 1))./diff(mp_master_thick(idx_sure, 1))]);
+                deltadepth{i}(1,1) = mp_master_thick(idx_sure(1), 1);
             end;
             plot(deltadepth{i}(:,1), deltadepth{i}(:,2), 'color', colours{i}, 'linewidth', 2, 'parent', handles.ax(2));
-%        plot(deltadepth{i}([1 end],1), [1 1]*mean(deltadepth{i}(:,2)), ':', 'color', colours{i}, 'linewidth', 1, 'parent', handles.ax(2));
-        
+            %        plot(deltadepth{i}([1 end],1), [1 1]*mean(deltadepth{i}(:,2)), ':', 'color', colours{i}, 'linewidth', 1, 'parent', handles.ax(2));
+            
             plotdiff = get(handles.diff, 'Value');
-            offset = mean(mp134(idx1, 1)-mpmaster134(idx1, 1));
-
-            plot(mpmaster134(idx1, 1), mp134(idx1, 1)-plotdiff*(mpmaster134(idx1, 1)+offset), '--', 'color', colours{i}, 'Linewidth', 1, 'parent', handles.ax(1), 'hittest', 'off');
-            plot(mpmaster134(idx_13, 1), mp134(idx_13, 1)-plotdiff*(mpmaster134(idx_13, 1)+offset), '-', 'color', colours{i}, 'Linewidth', 2, 'parent', handles.ax(1), 'hittest', 'off');
-            if size(mpmaster25, 1)==size(mp25, 1)
-    % faster !, but without callbacks : plot(mpmaster25, mp25, '-', 'color', colours{i}, 'Linewidth', 0.5, 'parent', handles.ax(1), 'hittest', 'off');
+            offset = mean(mp_thick(idx1, 1)-mp_master_thick(idx1, 1));
+            
+            plot(mp_master_thick(idx1, 1), mp_thick(idx1, 1)-plotdiff*(mp_master_thick(idx1, 1)+offset), '--', 'color', colours{i}, 'Linewidth', 1, 'parent', handles.ax(1), 'hittest', 'off');
+            plot(mp_master_thick(idx_sure, 1), mp_thick(idx_sure, 1)-plotdiff*(mp_master_thick(idx_sure, 1)+offset), '-', 'color', colours{i}, 'Linewidth', 2, 'parent', handles.ax(1), 'hittest', 'off');
+            if size(mp_master_thin, 1)==size(mp25, 1)
+                % faster !, but without callbacks : plot(mp_master_thin, mp25, '-', 'color', colours{i}, 'Linewidth', 0.5, 'parent', handles.ax(1), 'hittest', 'off');
                 for j = 1:size(mp25,1)
-                    if mp25(j,2) == 2 & mpmaster25(j,2) == 2
-                        plot(mpmaster25(j, 1), mp25(j, 1)-plotdiff*(mpmaster25(j, 1)+offset), '.', 'color', colours{i}, 'Markersize', 8, 'parent', handles.ax(1), 'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo, [],guidata(gcbo))', 'Tag', num2str(mpmaster25(j, 1)));
+                    if mp25(j,2) == 2 & mp_master_thin(j,2) == 2
+                        plot(mp_master_thin(j, 1), mp25(j, 1)-plotdiff*(mp_master_thin(j, 1)+offset), '.', 'color', colours{i}, 'Markersize', 8, 'parent', handles.ax(1), 'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo, [],guidata(gcbo))', 'Tag', num2str(mp_master_thin(j, 1)));
                     else
-                        plot(mpmaster25(j, 1), mp25(j, 1)-plotdiff*(mpmaster25(j, 1)+offset), 'o', 'color', colours{i}, 'Markersize', 2, 'parent', handles.ax(1), 'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo, [],guidata(gcbo))', 'Tag', num2str(mpmaster25(j, 1)));
+                        plot(mp_master_thin(j, 1), mp25(j, 1)-plotdiff*(mp_master_thin(j, 1)+offset), 'o', 'color', colours{i}, 'Markersize', 2, 'parent', handles.ax(1), 'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo, [],guidata(gcbo))', 'Tag', num2str(mp_master_thin(j, 1)));
                     end;
                 end;
             end;
             for j = 1:length(idx1)
-                if (mp134(idx1(j),2) < 1.5) & (mpmaster134(idx1(j),2) < 1.5)
-                    plot(mpmaster134(idx1(j), 1), mp134(idx1(j), 1)-plotdiff*(mpmaster134(idx1(j), 1)+offset), '.', 'color', colours{i}, 'Markersize', 20, 'parent', handles.ax(1), 'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo, [],guidata(gcbo))', 'Tag', num2str(idx1(j)));
+                if (mp_thick(idx1(j),2) < 1.5) & (mp_master_thick(idx1(j),2) < 1.5)
+                    plot(mp_master_thick(idx1(j), 1), mp_thick(idx1(j), 1)-plotdiff*(mp_master_thick(idx1(j), 1)+offset), '.', 'color', colours{i}, 'Markersize', 20, 'parent', handles.ax(1), 'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo, [],guidata(gcbo))', 'Tag', num2str(idx1(j)));
                 else
-                    plot(mpmaster134(idx1(j), 1), mp134(idx1(j), 1)-plotdiff*(mpmaster134(idx1(j), 1)+offset), 'o', 'color', colours{i}, 'Markersize', 5, 'parent', handles.ax(1), 'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo, [],guidata(gcbo))', 'Tag', num2str(idx1(j)));
+                    plot(mp_master_thick(idx1(j), 1), mp_thick(idx1(j), 1)-plotdiff*(mp_master_thick(idx1(j), 1)+offset), 'o', 'color', colours{i}, 'Markersize', 5, 'parent', handles.ax(1), 'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo, [],guidata(gcbo))', 'Tag', num2str(idx1(j)));
                 end;
             end;
         end;
     end;
 end;
+
 axes(handles.ax(2))
 h_lgd = legend(handles.ax(2), handles.core(setdiff([1:handles.N], handles.masterno)));
 set(h_lgd, 'box', 'off');
-    
+
+
+
+function plotcurves_2(handles) 
+lowmp = str2num(get(handles.lowmp, 'string'));
+highmp = str2num(get(handles.highmp, 'string'));
+idx1 = [lowmp : highmp];
+cla(handles.ax(1));
+cla(handles.ax(2));
+
+colours = [{'b'} {'g'} {'r'} {'c'} {'m'} {'k'}];
+
+mp_master = handles.mp{handles.masterno};
+mp_master_thick = mp_master(ismember(mp_master(:,2),[1,3,4]),:);
+mp_master_thin = mp_master(ismember(mp_master(:,2),[2,5]) & mp_master(:,1)>=mp_master_thick(lowmp) & mp_master(:,1)<=mp_master_thick(highmp),:);
+
+mp_master_2 = handles.mp_2{handles.masterno};
+mp_master_thick_2 = mp_master_2(ismember(mp_master_2(:,2),[1,3,4]),:);
+mp_master_thin_2 = mp_master_2(ismember(mp_master_2(:,2),[2,5]) & mp_master_2(:,1)>=mp_master_thick_2(lowmp) & mp_master_2(:,1)<=mp_master_thick_2(highmp),:);
+
+temp_idx=find(mp_master_thick_2(:,1)>=min(mp_master_thick(idx1,1))...
+    & mp_master_thick_2(:,1)<=max(mp_master_thick(idx1,1)));
+
+if ~isempty(temp_idx)
+    lowmp_2=temp_idx(1);
+    highmp_2=temp_idx(end);
+    idx2 = [lowmp_2:highmp_2];
+    othermarks=1;
+else %<solve this
+    othermarks=0; %don't evaluate mp_2 
+end
+
+if length(idx1) < 2
+    return
+end
+
+for i = setdiff([1:handles.N], handles.masterno) %all cores excluding master_no
+    mp = handles.mp{i};
+    mp_2 = handles.mp_2{i};
+    if length(mp(:,1))>=2
+        mp_thick = mp(ismember(mp(:,2),[1,3,4]),:);
+        mp_thick_2 = mp_2(ismember(mp_2(:,2),[1,3,4]),:);
+        
+        mp_thin = mp(ismember(mp(:,2),[2,5]) & mp(:,1)>=mp_thick(lowmp) & mp(:,1)<=mp_thick(highmp),:);
+        
+        idx_sure = intersect(find(mp_master_thick(1:idx1(end),2)<4 &...
+            mp_thick(1:idx1(end),2)<4), idx1);
+        
+        i2=min(length(mp_thick_2),highmp_2);
+        idx_sure_2 = intersect(find(mp_master_thick_2(1:i2,2)<4 &...
+            mp_thick_2(1:i2,2)<4), idx2);
+        
+        if length(idx_sure) == 1
+            disp('Not enough first order matchpoints on screen (blue type 4 matchpoints do not count)');
+        else
+            if length(idx_sure) == 2
+                deltadepth{i} = [mp_master_thick(idx_sure(1), 1), diff(mp_thick(idx_sure, 1));...
+                                 mp_thick(idx_sure(2), 1), diff(mp_thick(idx_sure, 1))];
+                deltadepth_2{i} = [mp_master_thick_2(idx_sure_2(1), 1), diff(mp_thick_2(idx_sure_2, 1));...
+                                    mp_thick_2(idx_sure_2(2), 1), diff(mp_thick_2(idx_sure_2, 1))];
+            else
+                deltadepth{i} = stepit([mp_master_thick(idx_sure(2:end), 1), diff(mp_thick(idx_sure, 1))./diff(mp_master_thick(idx_sure, 1))]);
+                deltadepth{i}(1,1) = mp_master_thick(idx_sure(1), 1);
+                              
+                deltadepth_2{i} = stepit([mp_master_thick_2(idx_sure_2(2:end), 1), diff(mp_thick_2(idx_sure_2, 1))./diff(mp_master_thick_2(idx_sure_2, 1))]);
+                deltadepth_2{i}(1,1) = mp_master_thick_2(idx_sure_2(1), 1);
+            end
+            
+            %right plot
+            plot(deltadepth{i}(:,1), deltadepth{i}(:,2), 'color', colours{i}, 'linewidth', 2, 'parent', handles.ax(2));
+            plot(deltadepth_2{i}(:,1), deltadepth_2{i}(:,2),'-.' ,'color', colours{i}, 'linewidth', 1, 'parent', handles.ax(2));
+            
+            plotdiff = get(handles.diff, 'Value'); %if button "depth diff" is toggled
+            if plotdiff
+                handles.ax(1).YLabel.String = 'arb.units';
+            else
+                handles.ax(1).YLabel.String ='m';
+            end
+            offset = mean(mp_thick(idx1, 1) - mp_master_thick(idx1, 1));
+            offset_2 = offset;
+            
+            %left plot
+            plot(mp_master_thick(idx1, 1), mp_thick(idx1, 1)-plotdiff*(mp_master_thick(idx1, 1)+offset),...
+                '--', 'color', colours{i}, 'Linewidth', 1, 'parent', handles.ax(1), 'hittest', 'off');
+            plot(mp_master_thick(idx_sure, 1), mp_thick(idx_sure, 1)-plotdiff*(mp_master_thick(idx_sure, 1)+offset),...
+                '-', 'color', colours{i}, 'Linewidth', 2, 'parent', handles.ax(1), 'hittest', 'off');
+            
+            plot(mp_master_thick_2(i2, 1), mp_thick_2(i2, 1)-plotdiff*(mp_master_thick_2(i2, 1)+offset_2),...
+                '-.', 'color', colours{i}, 'Linewidth', 0.5, 'parent', handles.ax(1), 'hittest', 'off');
+            plot(mp_master_thick_2(idx_sure_2, 1), mp_thick_2(idx_sure_2, 1)-plotdiff*(mp_master_thick_2(idx_sure_2, 1)+offset_2),...
+                '-.', 'color', colours{i}, 'Linewidth', 1, 'parent', handles.ax(1), 'hittest', 'off');
+            
+            
+            if size(mp_master_thin, 1)==size(mp_thin, 1) % if they have the sam enumber of thin bars
+                for j = 1:size(mp_thin,1)
+                    if mp_thin(j,2) == 2 & mp_master_thin(j,2) == 2
+                        plot(mp_master_thin(j, 1), mp_thin(j, 1)-plotdiff*(mp_master_thin(j, 1)+offset), '.', 'color', colours{i}, 'Markersize', 8, 'parent', handles.ax(1), 'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo,[],guidata(gcbo))', 'Tag', num2str(mp_master_thin(j, 1)));
+                    else
+                        plot(mp_master_thin(j, 1), mp_thin(j, 1)-plotdiff*(mp_master_thin(j, 1)+offset), 'o', 'color', colours{i}, 'Markersize', 2, 'parent', handles.ax(1), 'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo,[],guidata(gcbo))', 'Tag', num2str(mp_master_thin(j, 1)));
+                    end
+                end
+            end
+            for j = 1:length(idx1)
+                if (mp_thick(idx1(j),2) < 1.5) & (mp_master_thick(idx1(j),2) < 1.5)
+                    plot(mp_master_thick(idx1(j), 1), mp_thick(idx1(j), 1)-plotdiff*(mp_master_thick(idx1(j), 1)+offset), '.', 'color', colours{i}, 'Markersize', 20, 'parent', handles.ax(1), 'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo,[],guidata(gcbo))', 'Tag', num2str(idx1(j)));
+                    
+                else
+                    plot(mp_master_thick(idx1(j), 1), mp_thick(idx1(j), 1)-plotdiff*(mp_master_thick(idx1(j), 1)+offset), 'o', 'color', colours{i}, 'Markersize', 5, 'parent', handles.ax(1), 'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo,[],guidata(gcbo))', 'Tag', num2str(idx1(j)));
+                    
+                end;
+            end;
+            for j = 1:length(idx2(idx2<=i2))
+                if (mp_thick_2(idx2(j),2) < 1.5) & (mp_master_thick_2(idx2(j),2) < 1.5)
+                    plot(mp_master_thick_2(idx2(j), 1), mp_thick_2(idx2(j), 1)-plotdiff*(mp_master_thick_2(idx2(j), 1)+offset_2), 'o', 'color', colours{i}, 'Markersize', 5, 'parent', handles.ax(1), 'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo,[],guidata(gcbo))', 'Tag', num2str(idx2(j)));
+                else
+                    plot(mp_master_thick_2(idx2(j), 1), mp_thick_2(idx2(j), 1)-plotdiff*(mp_master_thick_2(idx2(j), 1)+offset_2), '^', 'color', colours{i}, 'Markersize', 3, 'parent', handles.ax(1), 'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo,[],guidata(gcbo))', 'Tag', num2str(idx2(j)));
+                    
+                end
+            end
+            
+        end;
+    end;
+end;
+axes(handles.ax(2))
+a=handles.core(setdiff([1:handles.N], handles.masterno));
+legend_item=[a;strcat(a,' others')];
+legend_item=reshape(legend_item,2*length(a),1);
+
+h_lgd = legend(handles.ax(2), legend_item);
+set(h_lgd, 'box', 'off');
+set(h_lgd, 'box', 'off');
+
+
 
 function mpclick_Callback(hObject, handles);
 id = get(hObject, 'tag');
 set(handles.info, 'string', id);
 mpmaster = handles.mp{handles.masterno};
-mpmaster134 = mpmaster(find(mpmaster(:,2)==1 | mpmaster(:,2)==3 | mpmaster(:,2)==4),1);
-mpmaster25 = mpmaster(find(mpmaster(:,2)==2 | mpmaster(:,2)==5), 1);
+mp_master_thick = mpmaster(find(mpmaster(:,2)==1 | mpmaster(:,2)==3 | mpmaster(:,2)==4),1);
+mp_master_thin = mpmaster(find(mpmaster(:,2)==2 | mpmaster(:,2)==5), 1);
 pos = str2num(id);
 if isfield(handles, 'indicatorline')
     if ishandle(handles.indicatorline)
         delete(handles.indicatorline);
     end;
 end;
-if ismember(pos, mpmaster25)
+if ismember(pos, mp_master_thin)
     handles.indicatorline = plot([pos pos], get(handles.ax(2), 'ylim')+[1e-3 -1e-3], ':k', 'parent', handles.ax(2));
 else
-    pos = mpmaster134(pos);
+    pos = mp_master_thick(pos);
     handles.indicatorline = plot([pos pos], get(handles.ax(2), 'ylim')+[1e-3 -1e-3], ':k', 'parent', handles.ax(2));
 end;
 guidata(handles.fig, handles);

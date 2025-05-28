@@ -717,10 +717,10 @@ if get(handles.mark, 'Value') == 1 %if it's possible to mark mps
         [~, order] = sort(mp_2(delindx_2,2));
         
         pos = get(handles.bigax(no1), 'currentpoint');
-        ypos=get(gcf, 'CurrentPoint')
+        ypos=get(gcf, 'CurrentPoint');
         ypos=ypos(1,2);
         
-        if ypos>0.5;
+        if ypos>0.5
             delindx_2 = delindx_2(order(1));
         else
             delindx_2 = delindx_2(order(2));
@@ -910,6 +910,7 @@ end
 function keypressed_Callback(hObject, handles) % Translate keypress to appropriate button actions.
 key = double(get(handles.fig, 'currentcharacter'));
 if ~isempty(key)
+
     switch key
         case 28   %<-
             handles = move_Callback(hObject, handles, str2double(get(handles.masterno, 'string')), -1);
@@ -951,7 +952,6 @@ if ~isempty(key)
             set(handles.plotmp2, 'value', get(handles.plotmp2, 'value')==0);
             plotmp2_Callback(hObject, handles);
         otherwise % If key not defined, show info window
-            disp(['Just for information : MATCHMAKER undefined key callback : ' num2str(key)]);
             h_help = helpdlg({...
                 'Available keyboard commands:';
                 '<- = move selected core one frame back and accordianize'
@@ -1430,7 +1430,7 @@ othermarks=0;
 
 if isstruct(hObject)
     'clicking on curve'
-    hObject
+    mptype = 3;
 elseif hObject.Type=='line'
     if hObject.LineWidth==6
         if hObject.Color == greytone
