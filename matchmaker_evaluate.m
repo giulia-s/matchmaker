@@ -6,6 +6,7 @@ switch nargin
     case {0, 1, 2}% Only for development purposes
         disp('MATCHMAKER_EVALUATE needs input arguments, and is designed to be called from MATCHMAKER.');
     case {3, 4, 5, 6, 7, 8, 9}
+
         eval([char(varargin{1}) '(varargin{[2 4:nargin]})']);
     otherwise
         disp('Wrong number of arguments when calling matchmaker_evaluate.m');
@@ -13,46 +14,50 @@ end
 
 %---
 
-function evalopen(matchmakerfighandle, mp, core, masterno, current_mp);
-mp_thick = mp(ismember(mp(:,2),[1,3,4]),1);
+function evalopen(matchmakerfighandle, mp, mp_2, core, masterno, current_mp_1, othermarks)
+
+for i = 1:length(mp)
+mp_thick = mp{i}(ismember(mp{i}(:,2),[1,3,4]),1);
+
 if length(mp_thick)<2
     errordlg('There must be at least two first-order matchpoints for each icecore for the evaluate window to work. Evaluate window will not open.', 'Warning calling MATCHMAKER_EVALUATE', 'modal');
     return
-end;
+end
+end
 
 handles.fig = figure('units','normalized',...
    'outerposition', [0.1 0.1 0.75 0.75], ...%initial dimensions upon opening
    'name', 'Matchmaker Evaluation Tool',...
-   'CloseRequestFcn', 'matchmaker_evaluate(''exit_Callback'',gcbo,[],guidata(gcbo))',...
+   'CloseRequestFcn', 'matchmaker_evaluate(''exit_Callback'', gcbo, [], guidata(gcbo))',...
    'nextplot', 'add', 'color', 0.9*[1 1 1], 'pointer', 'cross',...
    'toolbar', 'figure', 'Numbertitle', 'off',...
-   'KeyPressFcn', 'matchmaker_evaluate(''keypressed_Callback'',gcbo,[],guidata(gcbo))',...
+   'KeyPressFcn', 'matchmaker_evaluate(''keypressed_Callback'', gcbo, [], guidata(gcbo))',... 
    'integerhandle', 'off');
 handles.matchmakerfighandle = matchmakerfighandle; 
 handles.mp = mp;
+handles.mp_2=mp_2;
+handles.othermarks=othermarks;
 handles.core = core;
 handles.masterno = masterno;
 handles.N = length(mp);
-handles.current_mp = current_mp([1 end]);;
+handles.current_mp_1 = current_mp_1([1 end]);
 
 dummyax = axes('position', [0 0 1 1], 'xlim', [0 1], 'ylim', [0 1], 'visible', 'off', 'nextplot', 'add', 'hittest', 'off');
 
-%font sizes
 font1 = 8;
 font2 = 10;
-
-button_height = 0.05;
+button_height=0.05;
 
 handles.title = text(0.005, 0.012, 'MATCHMAKER Evaluation Tool', 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'Fontsize', font2, 'fontweight', 'bold', 'parent', dummyax);
 handles.text1 = text(0.52, 0.04, 'Comparison match point interval', 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'center', 'Fontsize', font1, 'parent', dummyax);
 handles.text1 = text(0.69, 0.04, 'Match point ID', 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'center', 'Fontsize', font1, 'parent', dummyax);
-handles.return = uicontrol('units', 'normalized', 'position', [0.81 0.012 0.08 eh], 'string', 'Return', 'style', 'pushbutton', 'callback', ['matchmaker_evaluate(''return_Callback'',gcbo,[],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
-handles.exit = uicontrol('units', 'normalized', 'position', [0.91 0.012 0.08 eh], 'string', 'Exit', 'style', 'pushbutton', 'callback', ['matchmaker_evaluate(''exit_Callback'',gcbo,[],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
-handles.lowmp = uicontrol('units', 'normalized', 'position', [0.41 0.012 0.08 eh], 'string', num2str(current_mp(1)), 'style', 'edit', 'callback', ['matchmaker_evaluate(''xlim_Callback'',gcbo,[],guidata(gcbo), -1)'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
-handles.highmp = uicontrol('units', 'normalized', 'position', [0.55 0.012 0.08 eh], 'string', num2str(current_mp(end)), 'style', 'edit', 'callback', ['matchmaker_evaluate(''xlim_Callback'',gcbo,[],guidata(gcbo), 1)'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
-handles.inc = uicontrol('units', 'normalized', 'position', [0.50 0.012 0.04 eh], 'string', '1', 'style', 'edit', 'callback', ['matchmaker_evaluate(''inc_Callback'',gcbo,[],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
-handles.info = uicontrol('units', 'normalized', 'position', [0.65 0.012 0.08 eh], 'string', [], 'style', 'edit', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
-handles.diff = uicontrol('units', 'normalized', 'position', [0.31 0.012 0.08 eh], 'string', 'Depth diff', 'style', 'togglebutton', 'callback', ['matchmaker_evaluate(''diff_Callback'',gcbo,[],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 1);
+handles.return = uicontrol('units', 'normalized', 'position', [0.81 0.012 0.08 button_height], 'string', 'Return', 'style', 'pushbutton', 'callback', ['matchmaker_evaluate(''return_Callback'',gcbo, [],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
+handles.exit = uicontrol('units', 'normalized', 'position', [0.91 0.012 0.08 button_height], 'string', 'Exit', 'style', 'pushbutton', 'callback', ['matchmaker_evaluate(''exit_Callback'',gcbo, [],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
+handles.lowmp = uicontrol('units', 'normalized', 'position', [0.41 0.012 0.08 button_height], 'string', num2str(current_mp_1(1)), 'style', 'edit', 'callback', ['matchmaker_evaluate(''xlim_Callback'',gcbo, [],guidata(gcbo), -1)'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
+handles.highmp = uicontrol('units', 'normalized', 'position', [0.55 0.012 0.08 button_height], 'string', num2str(current_mp_1(end)), 'style', 'edit', 'callback', ['matchmaker_evaluate(''xlim_Callback'',gcbo, [],guidata(gcbo), 1)'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
+handles.inc = uicontrol('units', 'normalized', 'position', [0.50 0.012 0.04 button_height], 'string', '1', 'style', 'edit', 'callback', ['matchmaker_evaluate(''inc_Callback'',gcbo, [],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
+handles.info = uicontrol('units', 'normalized', 'position', [0.65 0.012 0.08 button_height], 'string', [], 'style', 'edit', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
+handles.diff = uicontrol('units', 'normalized', 'position', [0.31 0.012 0.08 button_height], 'string', 'Depth diff', 'style', 'togglebutton', 'callback', ['matchmaker_evaluate(''diff_Callback'',gcbo, [],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 1);
 
 handles.ax(1) = axes('position', [0.05 0.1 0.44 0.84], 'nextplot', 'add', 'box', 'on', 'fontsize', font1);
 handles.axtitle(1) = title(['Depth vs. ' handles.core{handles.masterno} ' depth'], 'Fontsize', font1);
@@ -64,18 +69,18 @@ diff_Callback(handles.fig, handles)
 set(handles.fig, 'handlevisibility', 'callback');
 guidata(handles.fig, handles);
 
-matchmaker('evaluate_Callback',handles.fig,[],handles, 'opening_evaluate'); % THIS LINE SHOULD BE UNCOMMENTED !!!!
+matchmaker('evaluate_Callback', handles.fig, [], handles, 'opening_evaluate');
 
 %---
 
-function evalreuse(evaluatefigurehandle, mp, core, masterno, current_mp);
+function evalreuse(evaluatefigurehandle, mp, mp_2, core, masterno, current_mp_1)
 figure(evaluatefigurehandle);
 handles = guidata(evaluatefigurehandle);
 handles.mp = mp;
 handles.core = core;
 handles.masterno = masterno;
 handles.N = length(mp);
-handles.current_mp = current_mp([1 end]);;
+handles.current_mp_1 = current_mp_1([1 end]);;
 
 xlim_Callback(handles.fig, handles, 1);
 guidata(handles.fig, handles);
@@ -140,8 +145,11 @@ end;
 
 %---
 
-function exit_Callback(hObject, handles);
-matchmaker('evaluate_Callback',hObject,[],handles, 'closing_evaluate'); % THIS LINE SHOULD BE UNCOMMENTED !!!!
+function exit_Callback(hObject, handles)
+'exit clicked'
+handles
+length({'evaluate_Callback',hObject,[], handles, 'closing_evaluate'})
+matchmaker('evaluate_Callback',hObject,[], handles, 'closing_evaluate');
 figure(handles.matchmakerfighandle)
 delete(handles.fig)
 
@@ -160,7 +168,7 @@ end
 function xlim_Callback(hObject, handles, lowhigh);
 lowmp = str2num(get(handles.lowmp, 'string'));
 highmp = str2num(get(handles.highmp, 'string'));
-oldmplim = handles.current_mp;
+oldmplim = handles.current_mp_1;
 if mod(lowmp,1)==0 & isreal(lowmp) & length(lowmp) == 1 & mod(highmp,1)==0 & isreal(highmp) & length(highmp)==1 % check if input is valid
     for i = 1:handles.N
         mp = handles.mp{i};
@@ -184,7 +192,7 @@ if mod(lowmp,1)==0 & isreal(lowmp) & length(lowmp) == 1 & mod(highmp,1)==0 & isr
     end;
     set(handles.highmp, 'string', num2str(highmp));
     set(handles.lowmp, 'string', num2str(lowmp));
-    handles.current_mp = [lowmp highmp];
+    handles.current_mp_1 = [lowmp highmp];
     guidata(handles.fig, handles);
     mp = handles.mp{handles.masterno};
     mp134 = mp(find(mp(:,2)==1 | mp(:,2)==3 | mp(:,2)==4),1);
@@ -192,8 +200,8 @@ if mod(lowmp,1)==0 & isreal(lowmp) & length(lowmp) == 1 & mod(highmp,1)==0 & isr
     set(handles.ax, 'xlim', xlim);
     plotcurves(handles);
 else
-    set(handles.lowmp, 'string', handles.current_mp(1));
-    set(handles.highmp, 'string', handles.current_mp(2));
+    set(handles.lowmp, 'string', handles.current_mp_1(1));
+    set(handles.highmp, 'string', handles.current_mp_1(2));
 end;
 %---
 
@@ -239,17 +247,17 @@ for i = setdiff([1:handles.N], handles.masterno);
     % faster !, but without callbacks : plot(mpmaster25, mp25, '-', 'color', colours{i}, 'Linewidth', 0.5, 'parent', handles.ax(1), 'hittest', 'off');
                 for j = 1:size(mp25,1)
                     if mp25(j,2) == 2 & mpmaster25(j,2) == 2
-                        plot(mpmaster25(j, 1), mp25(j, 1)-plotdiff*(mpmaster25(j, 1)+offset), '.', 'color', colours{i}, 'Markersize', 8, 'parent', handles.ax(1), 'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo,[],guidata(gcbo))', 'Tag', num2str(mpmaster25(j, 1)));
+                        plot(mpmaster25(j, 1), mp25(j, 1)-plotdiff*(mpmaster25(j, 1)+offset), '.', 'color', colours{i}, 'Markersize', 8, 'parent', handles.ax(1), 'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo, [],guidata(gcbo))', 'Tag', num2str(mpmaster25(j, 1)));
                     else
-                        plot(mpmaster25(j, 1), mp25(j, 1)-plotdiff*(mpmaster25(j, 1)+offset), 'o', 'color', colours{i}, 'Markersize', 2, 'parent', handles.ax(1), 'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo,[],guidata(gcbo))', 'Tag', num2str(mpmaster25(j, 1)));
+                        plot(mpmaster25(j, 1), mp25(j, 1)-plotdiff*(mpmaster25(j, 1)+offset), 'o', 'color', colours{i}, 'Markersize', 2, 'parent', handles.ax(1), 'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo, [],guidata(gcbo))', 'Tag', num2str(mpmaster25(j, 1)));
                     end;
                 end;
             end;
             for j = 1:length(idx1)
                 if (mp134(idx1(j),2) < 1.5) & (mpmaster134(idx1(j),2) < 1.5)
-                    plot(mpmaster134(idx1(j), 1), mp134(idx1(j), 1)-plotdiff*(mpmaster134(idx1(j), 1)+offset), '.', 'color', colours{i}, 'Markersize', 20, 'parent', handles.ax(1), 'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo,[],guidata(gcbo))', 'Tag', num2str(idx1(j)));
+                    plot(mpmaster134(idx1(j), 1), mp134(idx1(j), 1)-plotdiff*(mpmaster134(idx1(j), 1)+offset), '.', 'color', colours{i}, 'Markersize', 20, 'parent', handles.ax(1), 'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo, [],guidata(gcbo))', 'Tag', num2str(idx1(j)));
                 else
-                    plot(mpmaster134(idx1(j), 1), mp134(idx1(j), 1)-plotdiff*(mpmaster134(idx1(j), 1)+offset), 'o', 'color', colours{i}, 'Markersize', 5, 'parent', handles.ax(1), 'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo,[],guidata(gcbo))', 'Tag', num2str(idx1(j)));
+                    plot(mpmaster134(idx1(j), 1), mp134(idx1(j), 1)-plotdiff*(mpmaster134(idx1(j), 1)+offset), 'o', 'color', colours{i}, 'Markersize', 5, 'parent', handles.ax(1), 'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo, [],guidata(gcbo))', 'Tag', num2str(idx1(j)));
                 end;
             end;
         end;

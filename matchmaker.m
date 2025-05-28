@@ -417,13 +417,14 @@ end
 %---
 
 function masterno_Callback(hObject, handles)
-value = str2double(get(handles.masterno, 'string')); % get input
-if ~isreal(value) || length(value) ~= 1 || mod(value,1)~=0 || value>handles.N || value<1% check if input is valid
+accord_value = str2double(get(handles.masterno, 'string')); % get input
+if ~isreal(accord_value) || length(accord_value) ~= 1 || mod(accord_value,1)~=0 || accord_value>handles.N || accord_value<1% check if input is valid
     set(handles.masterno, 'string', '1');
-    value = 1;
+    accord_value = 1;
 end
-idx1 = handles.mp1_depth{value};
-if length(idx1)<2
+
+mp = handles.mp1_depth{accord_value};
+if length(mp)<2
     set(handles.evaluate, 'Enable', 'off');
 else
     set(handles.evaluate, 'Enable', 'on');
@@ -840,7 +841,7 @@ else
     text(mp_thick(depth_subset_thick), (bar_height(1)+0.03)*ones(length(depth_subset_thick),1), num2str(depth_subset_thick), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
     
     %keep track of the plotted thick mps for the evaluate function:
-    if isempty(depth_subset_thick)
+    if ~isempty(depth_subset_thick)
         handles.mp1_idx{no1} = depth_subset_thick;
         handles.mp1_depth{no1} = mp_thick(depth_subset_thick);
     else
@@ -1017,18 +1018,10 @@ guidata(handles.fig, handles); % Is it OK to have it outside the loop ???
 function evaluate_Callback(hObject, handles, identify)
 if strcmp(identify, 'button')
     masterno = str2double(get(handles.masterno, 'string'));
-    if isfield(handles, 'evaluatefigurehandle')
-        if isfield(handles,'mp_2')
-            matchmaker_evaluate('evalreuse_2', handles.evaluatefigurehandle, [], handles.mp,handles.mp_2, handles.core, masterno, handles.mp1_idx{masterno});
-        else
-            matchmaker_evaluate('evalreuse', handles.evaluatefigurehandle, [], handles.mp, handles.core, masterno, handles.mp1_idx{masterno});
-        end
-    else
-        if isfield(handles,'mp_2')
-            matchmaker_evaluate('evalopen_2', handles.fig, [], handles.mp,handles.mp_2, handles.core, masterno, handles.mp1_idx{masterno}, handles.othermarks);
-        else
-            matchmaker_evaluate('evalopen', handles.fig, [], handles.mp, handles.core, masterno, handles.mp1_idx{masterno});
-        end
+    if isfield(handles, 'evaluatefigurehandle') %if evaluate was already open
+            matchmaker_evaluate('evalreuse', handles.evaluatefigurehandle, [], handles.mp, handles.mp_2, handles.core, masterno, handles.mp1_idx{masterno});
+    else %open new evaluate window
+            matchmaker_evaluate('evalopen', handles.fig, [], handles.mp, handles.mp_2, handles.core, masterno, handles.mp1_idx{masterno}, handles.othermarks);
     end
 elseif strcmp(identify, 'opening_evaluate')
     evalhandles = handles; % the input argument 'handles' is the handles of the evaluate window.
