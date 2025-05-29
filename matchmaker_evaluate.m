@@ -331,8 +331,7 @@ for i = setdiff(1:handles.N, handles.masterno) % all cores, excluding master_no
             end
             
             %right-side plot
-         'h'
-         handles.core{i}
+
             plot(deltadepth{i}(:,1), deltadepth{i}(:,2), 'DisplayName',handles.core{i},...
                 'color', colours{i}, 'linewidth', 2, 'parent', handles.ax(2));
             if othermarks

@@ -40,7 +40,7 @@ catch
     disp('ERROR in Matchmaker : File name file could not be read.');
     return;
 end
-load matchmaker_sett
+load matchmaker_sett  
 if size(fileno) ~= size(N_species)
     disp('ERROR in Matchmaker : 2nd and 3rd argument must have same dimension.');
     return;
@@ -68,7 +68,7 @@ for i = 1:N
     waitbar(0.2*i, h_wait,...
         ['Please be patient ... loading data file no. ' num2str(i)]); % Wait window is launched
     try
-        load(['data' filesep files.datafile{fileno(i)}]);
+        load(['data' filesep files.datafile{fileno(i)}]); %#ok<*LOAD>
     catch
         disp(['Data file of record ' num2str(fileno(i)) ' not found']);
         delete(handles.fig);
@@ -88,7 +88,7 @@ for i = 1:N
     catch
         disp(['Matchfile of ' files.core{fileno(i)} ' not found. Either it was not specified or it is not existing.']);
         files.matchfile{fileno(i)}=[ files.core{fileno(i)} '.mat'];
-        if ~exist(['matchfiles/' files.matchfile{fileno(i)}])
+        if ~exist(['matchfiles/' files.matchfile{fileno(i)}]) %#ok<*EXIST>
             disp(['Creating a new matchfile for ' files.core{fileno(i)} ' contanining empty mp=[].']);
             mp=[];
             save(['matchfiles',filesep,files.matchfile{fileno(i)}],'mp');
@@ -104,7 +104,7 @@ for i = 1:N
     
     % try finding a secondary set of mps (if specified in init_file)
     try
-        try %in the init_file it may be called matchfile_bis or matchfile_others
+        try %#ok<*TRYNC> %in the init_file it may be called matchfile_bis or matchfile_others
             files.matchfile_others{fileno(i)}=files.matchfile_bis{fileno(i)};
         end
         mp_2=load(['matchfiles' filesep files.matchfile_others{fileno(i)}]);
@@ -115,7 +115,7 @@ for i = 1:N
         handles.matchfile_others{i} = files.matchfile_others{fileno(i)};
     catch
         disp(['Matchfile_others file for ' files.core{fileno(i)} ' not found. Program will continue without.']);
-        mp_2=zeros(1,2);
+        mp_2=zeros(1,2); 
         handles.mp_2{i}=zeros(1,2);
     end
     
@@ -164,86 +164,86 @@ handles.save = uicontrol('units', 'normalized', ...
     'position', [ax_left_edge_pos, bottom_edge_pos, button_L, button_H],...
     'string', 'Save', 'style', 'pushbutton', ...
     'Tooltip', ['Saves all matchfiles.' 10 'Creates backup files of everything. (S)'],...
-    'callback', ['matchmaker(''save_Callback'',gcbo,[],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'enable', 'off', 'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
+    'callback', 'matchmaker(''save_Callback'',gcbo,[],guidata(gcbo))', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'enable', 'off', 'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.save,'position');
 handles.save_fig = uicontrol('units', 'normalized',...
     'position', [p_neighbour(1)+p_neighbour(3)+button_x_spacing, bottom_edge_pos, button_L, button_H],...
     'string', 'SaveFig', 'style', 'pushbutton',...
-    'Tooltip', ['Saves a figure.'],...
-    'callback', ['matchmaker(''save_fig_Callback'',gcbo,[],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'enable', 'on',...
+    'Tooltip', 'Saves a figure.',...
+    'callback', 'matchmaker(''save_fig_Callback'',gcbo,[],guidata(gcbo))', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'enable', 'on',...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.save_fig,'position');
 handles.accordianize = uicontrol('units', 'normalized', ...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
     'string', 'Accordianize', 'style', 'pushbutton', ...
     'Tooltip', ['Align 1st and Last tiepoint of all icecores.' 10 'Won''''t work in case of mp number mismatch.  (A)'],...
-    'callback', ['matchmaker(''accordianize_Callback'',gcbo,[],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
+    'callback', 'matchmaker(''accordianize_Callback'',gcbo,[],guidata(gcbo))', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.accordianize,'position');
 handles.masterno = uicontrol('units', 'normalized', ...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, small_button_L, button_H],...
-    'Tooltip', ['Set which icecore to align to.'],...
+    'Tooltip', 'Set which icecore to align to.',...
     'string', '1', 'style', 'edit', ...
-    'callback', ['matchmaker(''masterno_Callback'',gcbo,[],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
+    'callback', 'matchmaker(''masterno_Callback'',gcbo,[],guidata(gcbo))', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center');
 p_neighbour=get(handles.masterno,'position');
 handles.evaluate = uicontrol('units', 'normalized', ...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
     'string', 'Evaluate', 'style', 'pushbutton', ...
-    'Tooltip', ['Opens new panel with evaluation tools.'],...
-    'callback', ['matchmaker(''evaluate_Callback'',gcbo,[],guidata(gcbo), ''button'')'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', ...
+    'Tooltip', 'Opens new panel with evaluation tools.',...
+    'callback', 'matchmaker(''evaluate_Callback'',gcbo,[],guidata(gcbo), ''button'')', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', ...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.evaluate,'position');
 handles.mark = uicontrol('units', 'normalized', ...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
     'string', 'Mark ?', 'style', 'togglebutton', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 0, ...
-    'Tooltip', ['Activate mp adding/removing. (M)'],...
+    'Tooltip', 'Activate mp adding/removing. (M)',...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.mark,'position');
 handles.dummymark = uicontrol('units', 'normalized', ...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
     'string', 'Dummies?', 'style', 'togglebutton', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 0, ...
-    'Tooltip', ['Change color to blue (type 4,5). Requires Mark+Second_order. (D)'],...
+    'Tooltip', 'Change color to blue (type 4,5). Requires Mark+Second_order. (D)',...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.dummymark,'position');
 handles.annual_lrs =    uicontrol('units', 'normalized',...
     'Tooltip', ['Activate annual layers add/remove (type 6 right click, type 7 double-right click.).' 10 ' Requires Mark + Second_order. (G)'],...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
     'string', 'Annual layers?', 'style', 'togglebutton',...
-    'callback', ['matchmaker(''annual_lrs_Callback'',gcbo,[],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 0, 'Selected', 'off',...
+    'callback', 'matchmaker(''annual_lrs_Callback'',gcbo,[],guidata(gcbo))', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 0, 'Selected', 'off',...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.annual_lrs,'position');
 handles.othermarks = uicontrol('units', 'normalized', ...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
     'string', 'Others?', 'style', 'togglebutton', ...
-    'Tooltip', ['Show secondary matchfile. (O)'],...
-    'callback', ['matchmaker(''othermarks_Callback'',gcbo,[],guidata(gcbo), 0)'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 0, ...
+    'Tooltip', 'Show secondary matchfile. (O)',...
+    'callback', 'matchmaker(''othermarks_Callback'',gcbo,[],guidata(gcbo), 0)', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 0, ...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.othermarks,'position');
 handles.plotmp2 = uicontrol('units', 'normalized', ...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
     'string', '2nd order?', 'style', 'togglebutton', ...
-    'Tooltip', ['Show minor mp, i.e. types 2,5,6,7. (2)'],...
-    'callback', ['matchmaker(''plotmp2_Callback'',gcbo,[],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 1, 'Selected', 'off', ...
+    'Tooltip', 'Show minor mp, i.e. types 2,5,6,7. (2)',...
+    'callback', 'matchmaker(''plotmp2_Callback'',gcbo,[],guidata(gcbo))', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 1, 'Selected', 'off', ...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.plotmp2,'position');
 handles.check = uicontrol('units', 'normalized', ...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
     'string', 'Check mps', 'style', 'pushbutton', ...
-    'Tooltip', ['Displays matchmaker diagnostics on command window.'],...
-    'callback', ['matchmaker(''check_Callback'',gcbo,[],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', ...
+    'Tooltip', 'Displays matchmaker diagnostics on command window.',...
+    'callback', 'matchmaker(''check_Callback'',gcbo,[],guidata(gcbo))', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', ...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.check,'position');
 handles.exit = uicontrol('units', 'normalized', ...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
     'string', 'Exit', 'style', 'pushbutton', ...
-    'Tooltip', ['Exit program. (X)'],...
-    'callback', ['matchmaker(''exit_Callback'',gcbo,[],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', ...
+    'Tooltip', 'Exit program. (X)',...
+    'callback', 'matchmaker(''exit_Callback'',gcbo,[],guidata(gcbo))', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', ...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.exit,'position');
 handles.undo = uicontrol('units', 'normalized',...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
     'string', 'UNDO', 'style', 'pushbutton',...
     'Tooltip', ['Cancels new mp and Re-adds removed mp.' 10 ' (U)'],...
-    'callback', ['matchmaker(''undo_Callback'',gcbo,[],guidata(gcbo))'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center',...
+    'callback', 'matchmaker(''undo_Callback'',gcbo,[],guidata(gcbo))', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center',...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 handles.N_undo=1000; % how many moves are saved in memory
 handles.lastmoves=cell(handles.N_undo,1);
@@ -265,29 +265,29 @@ for i = 1:N
     handles.minx(i) = uicontrol('units', 'normalized', ...
         'position', [buttons_left_edge_pos, primary_button_column_ypos-2*(button_H+button_y_spacing), small_button_L, button_H],...
         'string', '0', 'style', 'edit', ...
-        'Tooltip', ['Min X Limit'],...
+        'Tooltip', 'Min X Limit',...
         'callback', ['matchmaker(''xscale_Callback'',gcbo,[],guidata(gcbo),' num2str(i) ', 1)'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'normal', 'horizontalalignment', 'right');
     text(buttons_left_edge_pos+small_button_L, primary_button_column_ypos-2*(button_H+button_y_spacing),'m', 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'Fontsize', font1, 'fontweight', 'normal', 'parent', dummyax);
     handles.maxx(i) = uicontrol('units', 'normalized', ...
         'position', [buttons_left_edge_pos, primary_button_column_ypos-3*(button_H+button_y_spacing) small_button_L, button_H],...
-        'Tooltip', ['Max X Limit'],...
+        'Tooltip', 'Max X Limit',...
         'string', '1', 'style', 'edit', ...
         'callback', ['matchmaker(''xscale_Callback'',gcbo,[],guidata(gcbo),' num2str(i) ', 2)'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'normal', 'horizontalalignment', 'right');
     text(buttons_left_edge_pos+small_button_L, primary_button_column_ypos-3*(button_H+button_y_spacing),'m', 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'Fontsize', font1, 'fontweight', 'normal', 'parent', dummyax);
     handles.back(i) = uicontrol('units', 'normalized', ...
         'position', [buttons_left_edge_pos, primary_button_column_ypos-5*(button_H+button_y_spacing) small_button_L, button_H],...
         'string', '<--', 'style', 'pushbutton', ...
-        'Tooltip', ['Move Back'],...
+        'Tooltip', 'Move Back',...
         'callback', ['matchmaker(''move_Callback'',gcbo,[],guidata(gcbo),' num2str(i) ', -1)'], 'fontname', 'default', 'fontsize', font2, 'fontweight', 'bold', 'horizontalalignment', 'center', 'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
     handles.fwd(i) = uicontrol('units', 'normalized', ...
         'position', [buttons_left_edge_pos, primary_button_column_ypos-6*(button_H+button_y_spacing) small_button_L, button_H],...
         'string', '-->', 'style', 'pushbutton', ...
-        'Tooltip', ['Move Forward'],...
+        'Tooltip', 'Move Forward',...
         'callback', ['matchmaker(''move_Callback'',gcbo,[],guidata(gcbo),' num2str(i) ', 1)'], 'fontname', 'default', 'fontsize', font2, 'fontweight', 'bold', 'horizontalalignment', 'center', 'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
     handles.incx(i) = uicontrol('units', 'normalized', ...
         'position', [buttons_left_edge_pos, primary_button_column_ypos-7*(button_H+button_y_spacing) small_button_L, button_H],...
         'string', '1', 'style', 'edit', ...
-        'Tooltip', ['X-Axis Moving increment'],...
+        'Tooltip','X-Axis Moving increment',...
         'callback', ['matchmaker(''incx_Callback'',gcbo,[],guidata(gcbo),' num2str(i) ')'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'normal', 'horizontalalignment', 'right');
     text(buttons_left_edge_pos+small_button_L, primary_button_column_ypos-7*(button_H+button_y_spacing),'m', 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'Fontsize', font1, 'fontweight', 'normal', 'parent', dummyax);
     
@@ -311,37 +311,37 @@ for i = 1:N
         N_secondary_buttons=6;
         handles.spec{i,j}  = uicontrol('units', 'normalized', ...
             'position', [secondary_button_column_xpos,  species_yax_ypos+N_secondary_buttons*button_H+6*button_y_spacing, small_button_L, button_H],...
-            'Tooltip', ['Select species to display'],...
+            'Tooltip', 'Select species to display',...
             'string', handles.species{i}, 'value', handles.selectedspecs{i}(j), 'style', 'popupmenu', 'callback', ['matchmaker(''spec_Callback'',gcbo,[],guidata(gcbo),' num2str(i) ',' num2str(j) ')'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'normal', 'horizontalalignment', 'center');
         handles.offset{i,j} = uicontrol('units', 'normalized', ...
             'position', [secondary_button_column_xpos, species_yax_ypos+(N_secondary_buttons-1)*button_H+button_y_spacing, small_button_L-0.01, button_H],...
             'string', 0, 'style', 'edit', ...
-            'Tooltip', ['Shift X-Axis by this offset (m)'],...
+            'Tooltip', 'Shift X-Axis by this offset (m)',...
             'callback', ['matchmaker(''offset_Callback'',gcbo,[],guidata(gcbo),' num2str(i) ',' num2str(j) ')'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'normal', 'horizontalalignment', 'right');
         text(secondary_button_column_xpos+small_button_L-0.01, species_yax_ypos+(N_secondary_buttons-1)*button_H+button_y_spacing,'m', 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'Fontsize', font1, 'fontweight', 'normal', 'parent', dummyax);
         handles.autoy{i,j} = uicontrol('units', 'normalized', ...
             'position', [secondary_button_column_xpos, species_yax_ypos+(N_secondary_buttons-2)*button_H+button_y_spacing, small_button_L/2, button_H],...
             'string', 'Aut', 'style', 'togglebutton', ...
-            'Tooltip', ['Automatic y-axis limits'],...
+            'Tooltip', 'Automatic y-axis limits',...
             'callback', ['matchmaker(''autoy_Callback'',gcbo,[],guidata(gcbo),' num2str(i) ',' num2str(j) ')'], 'value', 1, 'fontname', 'default', 'fontsize', font1, 'fontweight', 'normal', 'horizontalalignment', 'center', 'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
         handles.logy{i,j}  = uicontrol('units', 'normalized', ...
             'position', [secondary_button_column_xpos+small_button_L/2+button_x_spacing species_yax_ypos+(N_secondary_buttons-2)*button_H (small_button_L-button_y_spacing)/2, button_H],...
             'string', 'Log', 'style', 'togglebutton', ...
-            'Tooltip', ['Set y-axis to log'],...
+            'Tooltip', 'Set y-axis to log',...
             'callback', ['matchmaker(''logy_Callback'',gcbo,[],guidata(gcbo),' num2str(i) ',' num2str(j) ')'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'normal', 'horizontalalignment', 'center', 'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
         handles.maxy{i,j} = uicontrol('units', 'normalized', ...
             'position', [secondary_button_column_xpos, species_yax_ypos+(N_secondary_buttons-3)*button_H+button_y_spacing, small_button_L, button_H],...
             'string', 1, 'style', 'edit', ...
-            'Tooltip', ['Max Y (arb.units)'],...
+            'Tooltip', 'Max Y (arb.units)',...
             'callback', ['matchmaker(''yscale_Callback'',gcbo,[],guidata(gcbo),' num2str(i) ',' num2str(j) ', 2)'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'normal', 'horizontalalignment', 'right');
         handles.miny{i,j} = uicontrol('units', 'normalized', ...
             'position', [secondary_button_column_xpos, species_yax_ypos+(N_secondary_buttons-4)*button_H+button_y_spacing, small_button_L, button_H],...
             'string', 0, 'style', 'edit', ...
-            'Tooltip', ['Min Y (arb.units)'],...
+            'Tooltip', 'Min Y (arb.units)',...
             'callback', ['matchmaker(''yscale_Callback'',gcbo,[],guidata(gcbo),' num2str(i) ',' num2str(j) ', 1)'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'normal', 'horizontalalignment', 'right');
         
         % button to change color of species
-        handles.color_change{i,j} = uicontrol('units', 'normalized','Tooltip', ['Color'],...
+        handles.color_change{i,j} = uicontrol('units', 'normalized','Tooltip', 'Color',...
             'position', [secondary_button_column_xpos, species_yax_ypos+(N_secondary_buttons-5)*button_H+button_y_spacing, small_button_L, button_H],...
             'string', 'Color', 'style', 'pushbutton',...
             'Tooltip','Change color of species. Changes are saved automatically.',...
@@ -401,7 +401,7 @@ update_yminmax(hObject, handles, no1, no2); % The view has changed, so update th
 
 %---
 
-function othermarks_Callback(hObject, handles, keyboardcall)
+function othermarks_Callback(~, handles, keyboardcall)
 if keyboardcall == 1
     state = get(handles.othermarks, 'Value');
     if state == 1
@@ -416,7 +416,7 @@ end
 
 %---
 
-function masterno_Callback(hObject, handles)
+function masterno_Callback(~, handles)
 accord_value = str2double(get(handles.masterno, 'string')); % get input
 if ~isreal(accord_value) | length(accord_value) ~= 1 | mod(accord_value,1)~=0 | accord_value>handles.N | accord_value<1% check if input is valid
     set(handles.masterno, 'string', '1');
@@ -432,7 +432,7 @@ end
 
 %---
 
-function incx_Callback(hObject, handles, no) % Depth increment edit-box callback. The validity of the input is checked, the actual value is used elsewhere
+function incx_Callback(~, handles, no) % Depth increment edit-box callback. The validity of the input is checked, the actual value is used elsewhere
 value = str2double(get(handles.incx(no), 'string')); % get input
 if ~isreal(value) | length(value) ~= 1 % check if input is valid
     set(handles.incx(no), 'string', '1');
@@ -449,7 +449,7 @@ if limit == 1
 else
     value = get(handles.maxx(no), 'string'); % Get input
 end
-if length(value)>0 && value(1) == 'b'
+if ~isempty(value) && value(1) == 'b'
     if limit == 1
         numvalue = (str2double(value(2:end))-1)*0.55;
         set(handles.minx(no), 'string', num2str(numvalue)); % ... use old lower limit
@@ -490,7 +490,7 @@ guidata(handles.fig, handles)
 
 %---
 
-function yscale_Callback(hObject, handles, no1, no2, limit) % Y-scaling edit-boxes callback
+function yscale_Callback(~, handles, no1, no2, limit) % Y-scaling edit-boxes callback
 if limit == 1
     value = str2double(get(handles.miny{no1, no2}, 'string')); % Get input
 else
@@ -584,7 +584,7 @@ if get(handles.mark, 'Value') == 1 % it it's possible to mark
         del_idx=check_mp_click_inches_conversion(mp,pos(1,1),handles.bigax(no1));
         
         if ~isempty(del_idx)
-            handles = mpclick_Callback(click_pos_object, handles, no1);
+            handles = mpclick_Callback(click_pos_object, handles, no1); 
             return;
         end
         
@@ -602,7 +602,7 @@ if get(handles.mark, 'Value') == 1 % it it's possible to mark
     mp_2 = handles.mp_2{no1};
     
     % distinguish if click is on top or lower half of axis, and update mp
-    if get(handles.othermarks, 'Value')==0 | (ypos>=0.5 && get(handles.othermarks, 'Value')==1) 
+    if get(handles.othermarks, 'Value')==0 | (ypos>=0.5 && get(handles.othermarks, 'Value')==1)  %#ok<*OR2>
         mp = [mp; pos mptype];% amplitudes];
         othermarks=0;
     elseif get(handles.othermarks, 'Value')==1 && ypos<0.5
@@ -656,14 +656,14 @@ function varargout = mpclick_Callback(hObject, handles, no1)
 if get(handles.mark, 'Value') == 1 %if it's possible to mark mps
     
     try %if clicking on white area
-        type=get(hObject,'type');
+        type=get(hObject,'type'); 
         pos = get(handles.bigax(no1), 'currentpoint');
         ypos_true=pos(1,2);
         
-    catch e
+    catch 
         % if it's a data line you are clicking on, then the hObject is a
         % different structure:
-        type=(hObject.Type);
+        type=(hObject.Type); %#ok<*NASGU>
         pos = (hObject.XData);
         ypos=get(gcf,'currentpoint');
         ypos_true=ypos(1,2);
@@ -671,7 +671,7 @@ if get(handles.mark, 'Value') == 1 %if it's possible to mark mps
     % --- update memory of saved moves ---
     try %  if any memory is available
         saved_moves=handles.saved_moves;
-    catch e %start new undo-chain
+    catch  %start new undo-chain
         saved_moves=0;
         handles.saved_moves=saved_moves;
     end
@@ -751,7 +751,7 @@ end
 
 %---
 
-function update_yminmax(hObject, handles, no1, no2) % Updates the minY and maxY edit-boxes with the current Y-axis limits. Is called whenever the view changes.
+function update_yminmax(~, handles, no1, no2) % Updates the minY and maxY edit-boxes with the current Y-axis limits. Is called whenever the view changes.
 if no2 == 0
     no2 = 1:handles.N_species(no1);
 end
@@ -774,7 +774,25 @@ for j = no2
     offsetxlim = xlim - offset;
     depth = handles.depth{no1}{handles.depth_no{no1}(handles.selectedspecs{no1}(j))};
     data = handles.data{no1}{handles.selectedspecs{no1}(j)};
-    idx = [max(1, min(find(depth>=offsetxlim(1)))-1) : min(length(data), max(find(depth<=offsetxlim(2)))+1)];
+    
+    startIdx = find(depth >= offsetxlim(1), 1, 'first');
+    endIdx   = find(depth <= offsetxlim(2), 1, 'last');
+    
+    % Handle cases where limits are outside the depth range
+    if isempty(startIdx)
+        startIdx = 1;
+    else
+        startIdx = max(1, startIdx - 1);
+    end
+    
+    if isempty(endIdx)
+        endIdx = length(data);
+    else
+        endIdx = min(length(data), endIdx + 1);
+    end
+    
+    % Final index range
+    idx = startIdx:endIdx;
     if isempty(idx)
         curve = plot(0, 0, 'parent', handles.plotax{no1,j}, 'hittest', 'off');
     else
@@ -973,7 +991,7 @@ end
 
 %---
 
-function accordianize_Callback(hObject, handles)
+function accordianize_Callback(~, handles)
 masterno = str2double(get(handles.masterno, 'string'));
 mastermp = handles.mp1_idx{masterno};
 if isempty(mastermp)
@@ -1015,7 +1033,7 @@ guidata(handles.fig, handles); % Is it OK to have it outside the loop ???
 
 %---
 
-function evaluate_Callback(hObject, handles, identify)
+function evaluate_Callback(~, handles, identify)
 if strcmp(identify, 'button')
     masterno = str2double(get(handles.masterno, 'string'));
     if isfield(handles, 'evaluatefigurehandle') %if evaluate was already open
@@ -1039,21 +1057,33 @@ end
 
 %---
 
-function check_Callback(hObject, handles)
+function check_Callback(~, handles)
 clc
 names = [];
 for i = 1:handles.N
-    names = [names char(handles.core{i}) ' '];
+    names = [names char(handles.core{i}) ' ']; %#ok<AGROW>
 end
 disp(['MATCHMAKER DIAGNOSTICS            for matchpoints from the cores : ' names]);
 disp(' ');
+
+'a'
+handles.N
+Nmp1=zeros(1:handles.N,1);
+Nmp134=zeros( 1:handles.N,1);
+Nmp25=zeros( 1:handles.N,1);
+mindist134=zeros( 1:handles.N,1);
+mindist25=zeros( 1:handles.N,1);
+
 for i = 1:handles.N
     mpi = handles.mp{i};
-    mpi1 = mpi(ismember(mpi(:,2),[1]),1);
+    mpi1 = mpi(ismember(mpi(:,2),1),1);
     mpi25 = mpi(ismember(mpi(:,2),[2,5]),1);
     mpi134 = mpi(ismember(mpi(:,2),[1,3,4]),1);
+    
     Nmp1(i) = length(mpi1);
     Nmp134(i) = length(mpi134);
+    
+    Nmp25(i)=zeros(1:Nmp134(i)-1,1);
     for j = 1:Nmp134(i)-1
         Nmp25(i,j) = sum(mpi25>=mpi134(j) & mpi25<mpi134(j+1));
     end
@@ -1099,14 +1129,14 @@ disp(['The minimum distance between two adjacent type 1/3/4 matchpoints is  : ' 
 disp(['The minimum distance between two adjacent type 2/5 matchpoints is  : ' num2str(mindist25, 2)]);
 disp('(rounded off to nearest centimeter value)');
 disp(' ');
-answer = input('(Press ENTER to return)');
+answer = input('(Press ENTER to return)'); 
 disp(' ');
 disp(' ');
 figure(handles.fig);
 
 %---
 
-function save_Callback(hObject, handles)
+function save_Callback(~, handles)
 
 % Setting up the back-up folder
 datafile=handles.datafiles;
@@ -1118,7 +1148,7 @@ backup_dir=['matchfiles/matchfiles_backup/' datafile '/' ];
 %generate a counter file
 if exist( [backup_dir '/runID.mat'],'file')
     load( [backup_dir '/runID.mat']); % increment a counter
-    runID = runID+1;
+    runID = runID+1; %#ok<NODEF>
 else
     runID = 1;
 end
@@ -1142,14 +1172,14 @@ for i = 1:handles.N
     %Back-up mp files
     copyfile(['matchfiles/' handles.matchfile{i}], output_dir);
     
-    if handles.mp_2{i}~=[0 0] %<-solve this
+    if sum(handles.mp_2{i})~=0 %if mp_2 isn't empty
         mp=handles.mp_2{i}; % save secondary dataset
         
         a=split(handles.matchfile{i},'/');
         b=split(handles.matchfile_others{i},'/');
         
         if strcmp(a{end},b{end}) %if they are called the same
-            disp(['The primary and secondary matchfile are called the same. This can cause conflicts.']);
+            disp('The primary and secondary matchfile are called the same. This can cause conflicts.');
             disp(['Saving others-matchfile as ' handles.matchfile_others{i}(1:end-4) '_others.mat']);
             
             save(['matchfiles' filesep handles.matchfile_others{i}(1:end-4) '_others.mat' ], 'mp', '-MAT');%,'save mp_2'
@@ -1283,7 +1313,7 @@ end
 
 %---
 
-function save_fig_Callback(hObject, handles)
+function save_fig_Callback(~, handles)
 state=get(handles.save_fig,'Enable');
 if strcmp(state,'on')
     matchmaker_savefig('open_save_fig',handles)
@@ -1306,7 +1336,7 @@ function delindx = check_mp_click_inches_conversion(mp,P,x_axis)
 t=mp(closest_idx,2);
 min_X=x_axis.XLim(1);
 max_X=x_axis.XLim(2);
-D_X=max_X-min_X; % X_axis width in data units
+
 set(x_axis,'units','inch');
 X_inch=get(x_axis,'Position');
 set(x_axis,'units','normalized');
@@ -1320,7 +1350,7 @@ elseif t==2 | t==5
 elseif t==1 | t==3 | t==4
     LW=6;
 else
-    LW=NaN; % no mp was clicked
+    LW=NaN;  % no mp was clicked
     delindx=[];
     return;
 end
@@ -1368,7 +1398,7 @@ if color_activated_save==1 %if save was activated only by the color button
 end
 
 %--Annual layer callback
-function annual_lrs_Callback(hObject, handles);
+function annual_lrs_Callback(hObject, handles)
 for i = 1:handles.N
     handles = plotmp(handles, i);
 end
@@ -1431,7 +1461,7 @@ othermarks=0;
 if isstruct(hObject)
     'clicking on curve'
     mptype = 3;
-elseif hObject.Type=='line'
+elseif hObject.Type=='line'  %#ok<BDSCA>
     if hObject.LineWidth==6
         if hObject.Color == greytone
             mptype=1;
