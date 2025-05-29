@@ -393,7 +393,7 @@ end
 
 function offset_Callback(hObject, handles, no1, no2)
 value = str2double(get(handles.offset{no1, no2}, 'string')); % get input
-if ~isreal(value) || length(value) ~= 1 % check if input is valid
+if ~isreal(value) | length(value) ~= 1 % check if input is valid
     set(handles.offset{no1, no2}, 'string', '0');
 end
 plotcurve(handles, no1, no2);
@@ -418,7 +418,7 @@ end
 
 function masterno_Callback(hObject, handles)
 accord_value = str2double(get(handles.masterno, 'string')); % get input
-if ~isreal(accord_value) || length(accord_value) ~= 1 || mod(accord_value,1)~=0 || accord_value>handles.N || accord_value<1% check if input is valid
+if ~isreal(accord_value) | length(accord_value) ~= 1 | mod(accord_value,1)~=0 | accord_value>handles.N | accord_value<1% check if input is valid
     set(handles.masterno, 'string', '1');
     accord_value = 1;
 end
@@ -434,7 +434,7 @@ end
 
 function incx_Callback(hObject, handles, no) % Depth increment edit-box callback. The validity of the input is checked, the actual value is used elsewhere
 value = str2double(get(handles.incx(no), 'string')); % get input
-if ~isreal(value) || length(value) ~= 1 % check if input is valid
+if ~isreal(value) | length(value) ~= 1 % check if input is valid
     set(handles.incx(no), 'string', '1');
 end
 if value <= 0
@@ -461,7 +461,7 @@ else
     numvalue = str2double(value);
 end
 Xlim = get(handles.bigax(no), 'xlim'); % Get old limits
-if ~isreal(numvalue) || length(numvalue) ~= 1 % If input is not a valid number ...
+if ~isreal(numvalue) | length(numvalue) ~= 1 % If input is not a valid number ...
     set(handles.minx(no), 'string', num2str(Xlim(1))); % ... use old lower limit
     set(handles.maxx(no), 'string', num2str(Xlim(2))); % ... use old upper limit
     return
@@ -497,7 +497,7 @@ else
     value = str2double(get(handles.maxy{no1, no2}, 'string')); % Get input
 end
 Ylim = get(handles.tickax{no1, no2}, 'ylim'); % Get old limits
-if ~isreal(value) || length(value) ~= 1 % If input is not a valid number ...
+if ~isreal(value) | length(value) ~= 1 % If input is not a valid number ...
     set(handles.miny{no1, no2}, 'string', num2str(Ylim(1))); % ... use old lower limit
     set(handles.maxy{no1, no2}, 'string', num2str(Ylim(2))); % ... use old upper limit
     return
@@ -574,7 +574,7 @@ if get(handles.mark, 'Value') == 1 % it it's possible to mark
         
         click_pos_object.XData=pos;
         click_pos_object.Type=type;
-        if get(handles.othermarks, 'Value')==0 || (ypos>=0.5 && get(handles.othermarks, 'Value')==1) 
+        if get(handles.othermarks, 'Value')==0 | (ypos>=0.5 && get(handles.othermarks, 'Value')==1) 
             mp = handles.mp{no1}; %delete mp of this ice core
         elseif get(handles.othermarks, 'Value')==1 && ypos<0.5
             mp = handles.mp_2{no1}; %delete mp_2 of this ice core
@@ -602,7 +602,7 @@ if get(handles.mark, 'Value') == 1 % it it's possible to mark
     mp_2 = handles.mp_2{no1};
     
     % distinguish if click is on top or lower half of axis, and update mp
-    if get(handles.othermarks, 'Value')==0 || (ypos>=0.5 && get(handles.othermarks, 'Value')==1) 
+    if get(handles.othermarks, 'Value')==0 | (ypos>=0.5 && get(handles.othermarks, 'Value')==1) 
         mp = [mp; pos mptype];% amplitudes];
         othermarks=0;
     elseif get(handles.othermarks, 'Value')==1 && ypos<0.5
@@ -696,7 +696,7 @@ if get(handles.mark, 'Value') == 1 %if it's possible to mark mps
     mp_2=handles.mp_2{no1};
     
     % check if clicking on bottom or lower half of screen
-    if get(handles.othermarks, 'Value')==0 || (ypos_true>=0.5 && get(handles.othermarks, 'Value')==1)
+    if get(handles.othermarks, 'Value')==0 | (ypos_true>=0.5 && get(handles.othermarks, 'Value')==1)
         delindx=check_mp_click_inches_conversion(mp,pos(1,1),handles.bigax(no1));
         delindx_2=[];
     elseif get(handles.othermarks, 'Value')==1 && ypos_true<0.5
@@ -838,7 +838,7 @@ else
     mptypes_thick=[1,3,4];
     mp_thick = mp(ismember(mp(:,2),mptypes_thick),1);
     depth_subset_thick = find(mp_thick>=xlim(1) & mp_thick<=xlim(2));
-    text(mp_thick(depth_subset_thick), (bar_height(1)+0.03)*ones(length(depth_subset_thick),1), num2str(depth_subset_thick), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
+    text(mp_thick(depth_subset_thick), (bar_height(1)+bar_height(1)/15)*ones(length(depth_subset_thick),1), num2str(depth_subset_thick), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
     
     %keep track of the plotted thick mps for the evaluate function:
     if ~isempty(depth_subset_thick)
@@ -858,7 +858,7 @@ else
         %number all
         depth_subset_green = find(mp_green>=xlim(1) & mp_green<=xlim(2));
     end
-    text(mp_green(depth_subset_green), (bar_height(end)+0.03)*ones(length(depth_subset_green),1), num2str((1:length(depth_subset_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+    text(mp_green(depth_subset_green), (bar_height(end)+bar_height(1)/15)*ones(length(depth_subset_green),1), num2str((1:length(depth_subset_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
     
     % Same procedure for the "other/mp_2" dataset
     if othermarks
@@ -880,7 +880,7 @@ else
                mptypes_thick=[1,3,4];
                mp_thick = mp_2(ismember(mp_2(:,2),mptypes_thick),1);
                depth_subset_thick = find(mp_thick>=xlim(1) & mp_thick<=xlim(2));
-               text(mp_thick(depth_subset_thick), (bar_height(1)+0.03)*ones(length(depth_subset_thick),1), num2str(depth_subset_thick), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
+               text(mp_thick(depth_subset_thick), (bar_height(1)+bar_height(1)/8)*ones(length(depth_subset_thick),1), num2str(depth_subset_thick), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
 
                mp_2_green = mp_2(ismember(mp_2(:,2),[6,7]),1);
             
@@ -889,7 +889,7 @@ else
                 else
                     depth_subset_green = find(mp_2_green>=xlim(1) & mp_2_green<=xlim(2));
              end
-             text(mp_2_green(depth_subset_green), (bar_height(end)+0.03)*ones(length(depth_subset_green),1), num2str((1:length(depth_subset_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone_2);
+             text(mp_2_green(depth_subset_green), (bar_height(end)+bar_height(1)/8)*ones(length(depth_subset_green),1), num2str((1:length(depth_subset_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone_2);
 
         end
     end
@@ -986,7 +986,7 @@ if length(mastermp) == 1
     for i = setdiff(1:handles.N, masterno)
         mpi = handles.mp{i};
         if length(mpi)>=max(mastermp)
-            mpi134 = mpi(find(mpi(:,2)==1 || mpi(:,2)==3 || mpi(:,2)==4),1);
+            mpi134 = mpi(ismember(mpi(:,2),[1,3,4]),1);
             newxlim = round(1000*(mpi134(mastermp)+[-frac(1) (1-frac(1))]*(xlim(2)-xlim(1))))/1000;
             set([handles.bigax(i) handles.bigax2(i) handles.plotax{i,:} handles.tickax{i,:}], 'xlim', newxlim);
             plotcurve(handles, i, 0);
@@ -999,7 +999,7 @@ else
     for i = setdiff(1:handles.N, masterno)
         mpi = handles.mp{i};
         if length(mpi)>=max(mastermp)
-            mpi134 = mpi(find(mpi(:,2)==1 || mpi(:,2)==3 || mpi(:,2)==4),1);
+            mpi134 = mpi(ismember(mpi(:,2),[1,3,4]),1);
             mpi134_depth = mpi134(mastermp([1 end]));
             newwidth = diff(mpi134_depth)/(frac(2)-frac(1));
             newxlim = round(100*(mpi134_depth(1)-frac(1)*newwidth + [0 newwidth]))/100;
@@ -1049,9 +1049,9 @@ disp(['MATCHMAKER DIAGNOSTICS            for matchpoints from the cores : ' name
 disp(' ');
 for i = 1:handles.N
     mpi = handles.mp{i};
-    mpi1 = mpi(find(mpi(:,2)==1),1);
-    mpi25 = mpi(find(mpi(:,2)==2 || mpi(:,2)==5),1);
-    mpi134 = mpi(find(mpi(:,2)==1 || mpi(:,2)==3 || mpi(:,2)==4),1);
+    mpi1 = mpi(ismember(mpi(:,2),[1]),1);
+    mpi25 = mpi(ismember(mpi(:,2),[2,5]),1);
+    mpi134 = mpi(ismember(mpi(:,2),[1,3,4]),1);
     Nmp1(i) = length(mpi1);
     Nmp134(i) = length(mpi134);
     for j = 1:Nmp134(i)-1
@@ -1315,9 +1315,9 @@ if t==7
     LW=1;
 elseif t==6
     LW=2;
-elseif t==2 || t==5
+elseif t==2 | t==5
     LW=4;
-elseif t==1 || t==3 || t==4
+elseif t==1 | t==3 | t==4
     LW=6;
 else
     LW=NaN; % no mp was clicked
