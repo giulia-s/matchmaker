@@ -1066,13 +1066,14 @@ end
 disp(['MATCHMAKER DIAGNOSTICS            for matchpoints from the cores : ' names]);
 disp(' ');
 
-'a'
-handles.N
-Nmp1=zeros(1:handles.N,1);
-Nmp134=zeros( 1:handles.N,1);
-Nmp25=zeros( 1:handles.N,1);
-mindist134=zeros( 1:handles.N,1);
-mindist25=zeros( 1:handles.N,1);
+Nmp1=zeros(1,handles.N);
+Nmp134=zeros(1,handles.N);
+% Nmp25=cell(1,handles.N);
+mindist134=zeros(1,handles.N);
+% mindist25=zeros(1,handles.N);
+
+%currently tpe 2/5 are excluded from calculations, as this doesn't seem
+%useful at this moment.
 
 for i = 1:handles.N
     mpi = handles.mp{i};
@@ -1083,20 +1084,20 @@ for i = 1:handles.N
     Nmp1(i) = length(mpi1);
     Nmp134(i) = length(mpi134);
     
-    Nmp25(i)=zeros(1:Nmp134(i)-1,1);
-    for j = 1:Nmp134(i)-1
-        Nmp25(i,j) = sum(mpi25>=mpi134(j) & mpi25<mpi134(j+1));
-    end
+%     Nmp25{i}=zeros(Nmp134(i)-1,1);
+%     for j = 1:Nmp134(i)-1
+%         Nmp25{i}(j) = sum(mpi25>=mpi134(j) & mpi25<mpi134(j+1));
+%     end
     if length(mpi134)<2
         mindist134(i) = 0;
     else
         mindist134(i) = min(diff(mpi134));
     end
-    if length(mpi25)<2
-        mindist25(i) = 0;
-    else
-        mindist25(i) = min(diff(mpi25));
-    end
+%     if length(mpi25)<2
+%         mindist25(i) = 0;
+%     else
+%         mindist25(i) = min(diff(mpi25));
+%     end
 end
 if isempty(setdiff(Nmp1, Nmp1(1)))
     disp('The number of type 1 matchpoints is the same for all cores.');
@@ -1109,24 +1110,27 @@ else
     disp(['The total number of type 1/3/4 matchpoints is not the same for all cores   : ' num2str(Nmp134, 2)]);
 end
 
-disp(' ')
-diffidx = [];
-for j = 1:max(Nmp134)-1
-    if ~isempty(setdiff(Nmp25(:,j), Nmp25(1,j)))
-        diffidx = [diffidx j];
-    end
-end
-if isempty(diffidx)
-    disp('The number of type 2/5 matchpoints between each set of type 1/3/4 matchpoints is the same for all cores.');
-else
-    disp('The number of type 2/5 matchpoints between each set of type 1/3/4 matchpoints is not the same for all cores :');
-    for k = 1:length(diffidx)
-        disp(['Number of type 2/5 matchpoints between type 1/3/4 matchpoint ' num2str(diffidx(k)) ' and ' num2str(diffidx(k)+1) ' : ' num2str(Nmp25(:, diffidx(k))', 2)]);
-    end
-end
+% disp(' ')
+% diffidx = [];
+% for j = 1:max(Nmp134)
+%     try 
+%         d = setdiff(cellfun(@(x) x(j), Nmp25), Nmp25{1}(j));
+%         diffidx = [diffidx j]; %#ok<AGROW>
+%     catch e
+%         disp(e)
+%     end
+% end
+% if isempty(diffidx)
+%     disp('The number of type 2/5 matchpoints between each set of type 1/3/4 matchpoints is the same for all cores.');
+% else
+%     disp('The number of type 2/5 matchpoints between each set of type 1/3/4 matchpoints is not the same for all cores :');
+%     for k = 1:length(diffidx)
+%         disp(['Number of type 2/5 matchpoints between type 1/3/4 matchpoint ' num2str(diffidx(k)) ' and ' num2str(diffidx(k)+1) ' : ' num2str(cellfun(@(x) x(diffidx(k)), Nmp25), 2)]);
+%     end
+% end
 disp(' ');
-disp(['The minimum distance between two adjacent type 1/3/4 matchpoints is  : ' num2str(mindist134, 2)]);
-disp(['The minimum distance between two adjacent type 2/5 matchpoints is  : ' num2str(mindist25, 2)]);
+disp(['The minimum distance (m) between two adjacent type 1/3/4 matchpoints is  : ' num2str(mindist134, 2)]);
+% disp(['The minimum distance (m) between two adjacent type 2/5 matchpoints is  : ' num2str(mindist25, 2)]);
 disp('(rounded off to nearest centimeter value)');
 disp(' ');
 answer = input('(Press ENTER to return)'); 
