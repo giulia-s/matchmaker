@@ -56,7 +56,8 @@ handles.fig = figure('units','normalized',...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))',...
     'nextplot', 'add', 'color', 0.9*[1 1 1], 'pointer', 'cross',...
     'Interruptible', 'off', 'Numbertitle', 'off',...
-    'tag', 'matchmakermainwindow', 'integerhandle', 'off');
+    'tag', 'matchmakermainwindow', 'integerhandle', 'off',...
+    'Toolbar', 'none');
 
 % initialize and populate data
 N = length(fileno);
@@ -639,9 +640,6 @@ if get(handles.mark, 'Value') == 1 % it it's possible to mark
     handles.lastmove{handles.saved_moves,3}=no1; % this mp was clicked on the icecore no1
     handles.lastmove{handles.saved_moves,4}=mptype+10*othermarks; % this mp has type mptype
     
-    % to remove all datatips from the current axes
-        
-    delete(findall(gcf, 'Type', 'datatip'))
 
     %replot everything and trigger save button
     handles = plotmp(handles, no1);
@@ -742,9 +740,6 @@ if get(handles.mark, 'Value') == 1 %if it's possible to mark mps
     %toggle save button
     set(handles.save, 'enable', 'on');
     
-    % to remove all datatips from the current axes
-        
-    delete(findall(gcf, 'Type', 'datatip'));
      
 end
 guidata(handles.fig, handles);
@@ -804,8 +799,7 @@ for j = no2
     
     % the curves are set to be "clickable":
     set(curve,'hittest', 'on','PickableParts','visible','ButtonDownFcn',['matchmaker(''axesclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')'],'parent',handles.plotax{no1,j});
-    % to remove all datatips from the current axes
-    delete(findall(gcf, 'Type', 'datatip'))
+
 end
 
 %--- Plot the mps, in the current viewing window between depth_min and depth_max
