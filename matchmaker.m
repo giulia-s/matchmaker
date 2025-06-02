@@ -584,7 +584,7 @@ if get(handles.mark, 'Value') == 1 % it it's possible to mark
         del_idx=check_mp_click_inches_conversion(mp,pos(1,1),handles.bigax(no1));
         
         if ~isempty(del_idx)
-            handles = mpclick_Callback(click_pos_object, handles, no1); 
+            mpclick_Callback(click_pos_object, handles, no1); 
             return;
         end
         
@@ -652,7 +652,7 @@ end
 %existing mp, or if clicking on curve (axesclick_callback) and then
 %deleting an mp found in proximity
 
-function varargout = mpclick_Callback(hObject, handles, no1) 
+function mpclick_Callback(hObject, handles, no1)
 if get(handles.mark, 'Value') == 1 %if it's possible to mark mps
     
     try %if clicking on white area
@@ -743,12 +743,10 @@ if get(handles.mark, 'Value') == 1 %if it's possible to mark mps
     
     % to remove all datatips from the current axes
         
-    delete(findall(gcf, 'Type', 'datatip'))
-    
-    varargout{1}=handles;
-    guidata(handles.fig, handles);
+    delete(findall(gcf, 'Type', 'datatip'));
+     
 end
-
+guidata(handles.fig, handles);
 %---
 
 function update_yminmax(~, handles, no1, no2) % Updates the minY and maxY edit-boxes with the current Y-axis limits. Is called whenever the view changes.
@@ -849,7 +847,7 @@ else
         mp_subset=mp(mp(:,2)==mptypes(i),1);
         depth_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
         if ~isempty(depth_subset)
-            plot((mp_subset(depth_subset)*[1 1])', repmat([0.01+othermarks*0.5 bar_height(i)]', 1, length(depth_subset)), 'linewidth', linewidth(i), 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
+            plot((mp_subset(depth_subset)*[1 1])', repmat([0.01+othermarks*0.5 bar_height(i)]', 1, length(depth_subset)), 'linewidth', linewidth(i), 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', [' matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ');']);
         end
     end
     %number the "thick" bars:
@@ -891,7 +889,7 @@ else
                    mp_subset=mp_2(mp_2(:,2)==mptypes(i),1);
                    depth_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
                    if ~isempty(depth_subset)
-                       plot((mp_subset(depth_subset)*[1 1])', repmat([0.01 bar_height(i)]', 1, length(depth_subset)), 'linewidth', linewidth(i), 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')']);
+                       plot((mp_subset(depth_subset)*[1 1])', repmat([0.01 bar_height(i)]', 1, length(depth_subset)), 'linewidth', linewidth(i), 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ');']);
                    end
                end
                %number the "thick" bars:
@@ -1244,7 +1242,6 @@ function handles=undo_Callback(hObject, handles)
 try
     saved_moves= handles.saved_moves;
 catch e
-    disp(e);
     saved_moves=0;
 end
 
