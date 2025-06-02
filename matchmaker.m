@@ -624,14 +624,15 @@ if get(handles.mark, 'Value') == 1 % it it's possible to mark
     
     if saved_moves<handles.N_undo % if not reached max limit of saved moves
         
-        handles.saved_moves=saved_moves+1; %increase number of saved moves
+        handles.saved_moves=saved_moves+1; %increase counter of saved moves
         
     else % delete one move from the beginning
         
         handles.lastmove(1:handles.N_undo-1,:)=handles.lastmove(2:handles.N_undo,:);
         handles.saved_moves=handles.N_undo;
     end
-    % add new mamory entry:
+    
+    % add new memory entry:
     
     handles.lastmove{handles.saved_moves,1}=pos; % mp position in data units
     handles.lastmove{handles.saved_moves,2}='added'; % this mp was added
@@ -688,7 +689,7 @@ if get(handles.mark, 'Value') == 1 %if it's possible to mark mps
     handles.lastmove{ handles.saved_moves,1}=pos(1,1); % pos of mp
     handles.lastmove{ handles.saved_moves,2}='removed'; %removed mp: because the mp_callback was activated by removing an existing mp
     handles.lastmove{ handles.saved_moves,3}=no1; %which icecore
-    [mptype,othermarks]=determine_mptype_from_shape(hObject);%< solve this
+    [mptype,othermarks]=determine_mptype_from_shape(hObject, handles, no1);%< solve this
     handles.lastmove{ handles.saved_moves,4}=mptype+10*othermarks;
     
     % acquire the current series of mps
@@ -842,6 +843,7 @@ else
     linewidth=[6,6,6,4,4,2,1];
     colors=[greytone; redtone; bluetone; greytone; bluetone; greentone; greentone];
     bar_height=[0.93;0.93;0.93;0.88;0.88;0.85;0.85];
+    
 
     for i=1:length(mptypes)
         mp_subset=mp(mp(:,2)==mptypes(i),1);
@@ -1334,7 +1336,8 @@ function delindx = check_mp_click_inches_conversion(mp,P,x_axis)
 % P : point of click
 % x_axis: X_axis handle
 [min_dist,closest_idx]=min(abs(mp(:,1)-P));
-t=mp(closest_idx,2);
+
+mptype=mp(closest_idx,2);
 min_X=x_axis.XLim(1);
 max_X=x_axis.XLim(2);
 
@@ -1342,13 +1345,13 @@ set(x_axis,'units','inch');
 X_inch=get(x_axis,'Position');
 set(x_axis,'units','normalized');
 X_inch=X_inch(3);% X_axis width in inches
-if t==7
+if mptype==7
     LW=1;
-elseif t==6
+elseif mptype==6
     LW=2;
-elseif t==2 | t==5
+elseif mptype==2 | mptype==5
     LW=4;
-elseif t==1 | t==3 | t==4
+elseif mptype==1 | mptype==3 | mptype==4
     LW=6;
 else
     LW=NaN;  % no mp was clicked
@@ -1356,7 +1359,9 @@ else
     return;
 end
 LW_inch=LW/72; % width of mp marker in inches
+
 tol_x=(max_X-min_X)/X_inch*LW_inch; %width of mp bar in data units
+
 if min_dist<tol_x
     delindx=closest_idx;
 else
@@ -1445,7 +1450,7 @@ else
     return;
 end
 
-function [mptype,othermarks]=determine_mptype_from_shape(hObject)
+function [mptype,othermarks]=determine_mptype_from_shape(hObject, handles, no1)
 % colors for each mp type
 greytone = 0.8*[1 1 1];
 redtone = 0.85*[1 0 0];
@@ -1459,10 +1464,14 @@ greentone_2 = 0.8 * [0.5 1 0.5];
 
 othermarks=0;
 
-if isstruct(hObject)
-    'clicking on curve'
-    mptype = 3;
-elseif hObject.Type=='line'  %#ok<BDSCA>
+if isstruct(hObject) % if clicking ondata line instead of mp
+    mp = handles.mp{no1};
+    xpos=hObject.XData(1,1); %position of click in data units
+    % find the index of the closest mp to delete: 
+    delindx=check_mp_click_inches_conversion(mp,xpos,handles.bigax(no1));
+    mptype = mp(delindx,2);
+
+elseif hObject.Type=='line'  %#ok<BDSCA> %if clicking on mp
     if hObject.LineWidth==6
         if hObject.Color == greytone
             mptype=1;
