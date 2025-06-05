@@ -297,7 +297,7 @@ end
 sides = [{'right'} {'left'}];
 for i = 1:N
     
-    handles.tickax{i,1} = axes('position', [ax_left_edge_pos, bottom_edge_pos+2*ax_vert_spacing+ax_xlabel_H+(i-1)*(ax_H+ax_vert_spacing) ax_width ax_species_H(i)], 'nextplot', 'add', 'color', 'none', 'xcolor', 'k', 'ylim', [0 1], 'box', 'off', 'fontsize', font1, 'yaxislocation', 'left', 'xaxislocation', 'bottom', '', 'off', 'fontweight', 'bold');
+    handles.tickax{i,1} = axes('position', [ax_left_edge_pos, bottom_edge_pos+2*ax_vert_spacing+ax_xlabel_H+(i-1)*(ax_H+ax_vert_spacing) ax_width ax_species_H(i)], 'nextplot', 'add', 'color', 'none', 'xcolor', 'k', 'ylim', [0 1], 'box', 'off', 'fontsize', font1, 'yaxislocation', 'left', 'xaxislocation', 'bottom', 'hittest', 'off', 'fontweight', 'bold');
     handles.plotax{i,1} = axes('position', [ax_left_edge_pos, bottom_edge_pos+2*ax_vert_spacing+ax_xlabel_H+(i-1)*(ax_H+ax_vert_spacing) ax_width ax_species_H(i)], 'nextplot', 'replacechildren', 'visible', 'off', 'hittest', 'off');
     for j = 1:N_species(i)
         species_yax_ypos=bottom_edge_pos+2*ax_vert_spacing+ax_xlabel_H+(i-1)*(ax_H+ax_vert_spacing)+(j-1)*(1-species_overlap_H)*ax_species_H(i);
