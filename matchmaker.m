@@ -260,7 +260,8 @@ for i = 1:N
         'ButtonDownFcn', ['matchmaker(''axesclick_Callback'',gcbo,[],guidata(gcbo),' num2str(i) ')'],...
         'hittest','on');
     set(handles.bigax(i) ,'interactions',[])
-    handles.bigax2(i) = axes('position', [ax_left_edge_pos, main_ax_y_pos , ax_width, ax_H-ax_xlabel_H], 'nextplot', 'add', 'visible', 'off', 'hittest', 'off', 'clipping', 'on', 'ylim', [0 1]);
+    handles.bigax2(i) = axes('position', [ax_left_edge_pos, main_ax_y_pos , ax_width, ax_H-ax_xlabel_H], 'nextplot', 'add', 'visible', 'off',...
+        'hittest', 'off', 'clipping', 'on', 'ylim', [0 1]);
     handles.name(i) = text(buttons_left_edge_pos, primary_button_column_ypos,...
         files.core{fileno(i)}, 'VerticalAlignment', 'top', 'HorizontalAlignment', 'left', 'Fontsize', font2, 'fontweight', 'bold', 'parent', dummyax);
     handles.minx(i) = uicontrol('units', 'normalized', ...
@@ -296,7 +297,7 @@ end
 sides = [{'right'} {'left'}];
 for i = 1:N
     
-    handles.tickax{i,1} = axes('position', [ax_left_edge_pos, bottom_edge_pos+2*ax_vert_spacing+ax_xlabel_H+(i-1)*(ax_H+ax_vert_spacing) ax_width ax_species_H(i)], 'nextplot', 'add', 'color', 'none', 'xcolor', 'k', 'ylim', [0 1], 'box', 'off', 'fontsize', font1, 'yaxislocation', 'left', 'xaxislocation', 'bottom', 'hittest', 'off', 'fontweight', 'bold');
+    handles.tickax{i,1} = axes('position', [ax_left_edge_pos, bottom_edge_pos+2*ax_vert_spacing+ax_xlabel_H+(i-1)*(ax_H+ax_vert_spacing) ax_width ax_species_H(i)], 'nextplot', 'add', 'color', 'none', 'xcolor', 'k', 'ylim', [0 1], 'box', 'off', 'fontsize', font1, 'yaxislocation', 'left', 'xaxislocation', 'bottom', '', 'off', 'fontweight', 'bold');
     handles.plotax{i,1} = axes('position', [ax_left_edge_pos, bottom_edge_pos+2*ax_vert_spacing+ax_xlabel_H+(i-1)*(ax_H+ax_vert_spacing) ax_width ax_species_H(i)], 'nextplot', 'replacechildren', 'visible', 'off', 'hittest', 'off');
     for j = 1:N_species(i)
         species_yax_ypos=bottom_edge_pos+2*ax_vert_spacing+ax_xlabel_H+(i-1)*(ax_H+ax_vert_spacing)+(j-1)*(1-species_overlap_H)*ax_species_H(i);
@@ -555,15 +556,16 @@ guidata(handles.fig, handles)
 %--- Function for adding new mps:
 
 function axesclick_Callback(hObject, handles, no1)
-
+'axesclick_Callback'
 if get(handles.mark, 'Value') == 1 % it it's possible to mark
     type = get(hObject,'type'); % get the type of surface you clicked on
-    if strcmp(type,'axes') %white area click
+    if strcmp(type,'axes'); %white-area click
+        'white area'
         pos = get(handles.bigax(no1), 'currentpoint'); % click x-pos norm. units
         ypos = pos(1,2);% y pos in norm. units
-        
-    elseif strcmp(type,'line') %line click : could be a free spot on the datacurve or an existing mp on that curve
 
+    elseif strcmp(type,'line') %line click : could be a free spot on the datacurve or an existing mp on that curve
+        'line click'
         temp_pos=get(gcf, 'CurrentPoint'); %click x pos norm. units
         ypos = temp_pos(1,2); % y pos in norm. units
         
@@ -652,14 +654,17 @@ end
 %deleting an mp found in proximity
 
 function mpclick_Callback(hObject, handles, no1)
+'mpclick_Callback'
 if get(handles.mark, 'Value') == 1 %if it's possible to mark mps
     
-    try %if clicking on white area
+    try %if clicking on mp
+        'mp'
         type=get(hObject,'type'); 
         pos = get(handles.bigax(no1), 'currentpoint');
         ypos_true=pos(1,2);
         
     catch 
+        'line'
         % if it's a data line you are clicking on, then the hObject is a
         % different structure:
         type=(hObject.Type); %#ok<*NASGU>
@@ -758,7 +763,7 @@ end
 
 %---
 
-function curve = plotcurve(handles, no1, no2)
+function plotcurve(handles, no1, no2)
 if no2 == 0
     no2 = 1:handles.N_species(no1);
 end
@@ -788,18 +793,18 @@ for j = no2
     % Final index range
     idx = startIdx:endIdx;
     if isempty(idx)
-        curve = plot(0, 0, 'parent', handles.plotax{no1,j}, 'hittest', 'off');
+        plot(0, 0, 'parent', handles.plotax{no1,j}, 'hittest', 'off');
     else
         plotdepth = depth(idx);
         plotdata = data(idx);
-        curve = plot(offset+plotdepth, plotdata, 'color', handles.colours{no1}(handles.selectedspecs{no1}(j),:), 'linewidth', 1.5, 'parent', handles.plotax{no1,j}, 'hittest', 'off');
+        plot(offset+plotdepth, plotdata,...
+            'color', handles.colours{no1}(handles.selectedspecs{no1}(j),:),...
+            'linewidth', 1.5, 'parent', handles.plotax{no1,j},...
+            'hittest', 'off', 'PickableParts','none');
     end
     set([handles.spec{no1, j} handles.offset{no1, j} handles.autoy{no1, j} handles.logy{no1, j} handles.miny{no1, j} handles.maxy{no1, j}], 'Backgroundcolor', 'w', 'Foregroundcolor', handles.colours{no1}(handles.selectedspecs{no1}(j),:));
     set(handles.tickax{no1, j}, 'ycolor', handles.colours{no1}(handles.selectedspecs{no1}(j),:));
     
-    % the curves are set to be "clickable":
-    set(curve,'hittest', 'on','PickableParts','visible','ButtonDownFcn',['matchmaker(''axesclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ')'],'parent',handles.plotax{no1,j});
-
 end
 
 %--- Plot the mps, in the current viewing window between depth_min and depth_max
@@ -838,12 +843,14 @@ else
     colors=[greytone; redtone; bluetone; greytone; bluetone; greentone; greentone];
     bar_height=[0.93;0.93;0.93;0.88;0.88;0.85;0.85];
     
-
     for i=1:length(mptypes)
         mp_subset=mp(mp(:,2)==mptypes(i),1);
         depth_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
         if ~isempty(depth_subset)
-            plot((mp_subset(depth_subset)*[1 1])', repmat([0.01+othermarks*0.5 bar_height(i)]', 1, length(depth_subset)), 'linewidth', linewidth(i), 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', [' matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ');']);
+            plot((mp_subset(depth_subset)*[1 1])', repmat([0.01+othermarks*0.5 bar_height(i)]', 1, length(depth_subset)), 'linewidth', linewidth(i), 'color', colors(i,:),...
+                'parent', handles.bigax2(no1),...
+                'ButtonDownFcn', [' matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ');'],...
+                'UserData',mptypes(i));
         end
     end
     %number the "thick" bars:
@@ -885,7 +892,8 @@ else
                    mp_subset=mp_2(mp_2(:,2)==mptypes(i),1);
                    depth_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
                    if ~isempty(depth_subset)
-                       plot((mp_subset(depth_subset)*[1 1])', repmat([0.01 bar_height(i)]', 1, length(depth_subset)), 'linewidth', linewidth(i), 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ');']);
+                       plot((mp_subset(depth_subset)*[1 1])', repmat([0.01 bar_height(i)]', 1, length(depth_subset)), 'linewidth', linewidth(i), 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ');'],...
+                           'UserData',mptypes(i));
                    end
                end
                %number the "thick" bars:
@@ -913,8 +921,6 @@ if length(handles.mp1_idx{str2double(get(handles.masterno, 'string'))})<2
 else
     set(handles.evaluate, 'Enable', 'on');
 end
-
-
 
 
 %---
@@ -1178,10 +1184,10 @@ for i = 1:handles.N
         
         if strcmp(a{end},b{end}) %if they are called the same
             disp('The primary and secondary matchfile are called the same. This can cause conflicts.');
-            disp(['Saving others-matchfile as ' handles.matchfile_others{i}(1:end-4) '_others.mat']);
+            disp(['Saving secondary matchfile as ' handles.matchfile_others{i}(1:end-4) '_secondary.mat']);
             
-            save(['matchfiles' filesep handles.matchfile_others{i}(1:end-4) '_others.mat' ], 'mp', '-MAT');%,'save mp_2'
-            copyfile(['matchfiles/' handles.matchfile_others{i}(1:end-4) '_others.mat'   ], output_dir); % save backup
+            save(['matchfiles' filesep handles.matchfile_others{i}(1:end-4) '_secondary.mat' ], 'mp', '-MAT');%,'save mp_2'
+            copyfile(['matchfiles/' handles.matchfile_others{i}(1:end-4) '_secondary.mat'   ], output_dir); % save backup
         else
             save(['matchfiles' filesep handles.matchfile_others{i} ], 'mp', '-MAT');%,'save mp_2'
             copyfile(['matchfiles/' handles.matchfile_bis{i} ], output_dir); % save backup
@@ -1322,6 +1328,7 @@ end
 %---
 
 function delindx = check_mp_click_inches_conversion(mp,P,x_axis)
+'delindx'
 % this function checks whether a point clicked is close enough to an existing mp to delete it.
 % it works by converting the linewidth of the mp bar from inches to data units,
 % and setting this as a tolerance distance for the deletion of the mp.
@@ -1354,7 +1361,7 @@ else
 end
 LW_inch=LW/72; % width of mp marker in inches
 
-tol_x=(max_X-min_X)/X_inch*LW_inch; %width of mp bar in data units
+tol_x=(max_X-min_X)/X_inch*LW_inch; %width of mp bar in data units 0.7=factor suggested by sune
 
 if min_dist<tol_x
     delindx=closest_idx;
@@ -1466,52 +1473,55 @@ if isstruct(hObject) % if clicking ondata line instead of mp
     mptype = mp(delindx,2);
 
 elseif hObject.Type=='line'  %#ok<BDSCA> %if clicking on mp
-    if hObject.LineWidth==6
-        if hObject.Color == greytone
-            mptype=1;
-        elseif hObject.Color == redtone
-                mptype=3;
-        elseif hObject.Color == bluetone
-                    mptype=4;
-        elseif hObject.Color == greytone_2
-            mptype=1;
-            othermarks=1;
-        elseif hObject.Color == redtone_2
-                mptype=3;
-                othermarks=1;
-        elseif hObject.Color == bluetone_2
-                    mptype=4;
-                    othermarks=1;
-        end
-    elseif hObject.LineWidth==4
-        if hObject.Color == greytone
-            mptype=2;
-        elseif hObject.Color == bluetone
-            mptype=5;
-        elseif hObject.Color == greytone_2
-            mptype=2;
-            othermarks=1;
-        elseif hObject.Color == bluetone_2
-                    mptype=5;
-                    othermarks=1;
-        end
-    elseif hObject.LineWidth==2
-        if hObject.Color == greentone
-            mptype=6;
-        elseif hObject.Color == greentone_2
-            mptype=6;
-            othermarks=1;
-        end
-    elseif hObject.LineWidth==1
-        if hObject.Color == greentone
-            mptype=7;
-        elseif hObject.Color == greentone_2
-            mptype=7;
-            othermarks=1;
-        end
-    else
-        return
-    end
+    
+    mptype = get(hObject,'UserData');
+    
+%     if hObject.LineWidth==6
+%         if hObject.Color == greytone
+%             mptype=1;
+%         elseif hObject.Color == redtone
+%                 mptype=3;
+%         elseif hObject.Color == bluetone
+%                     mptype=4;
+%         elseif hObject.Color == greytone_2
+%             mptype=1;
+%             othermarks=1;
+%         elseif hObject.Color == redtone_2
+%                 mptype=3;
+%                 othermarks=1;
+%         elseif hObject.Color == bluetone_2
+%                     mptype=4;
+%                     othermarks=1;
+%         end
+%     elseif hObject.LineWidth==4
+%         if hObject.Color == greytone
+%             mptype=2;
+%         elseif hObject.Color == bluetone
+%             mptype=5;
+%         elseif hObject.Color == greytone_2
+%             mptype=2;
+%             othermarks=1;
+%         elseif hObject.Color == bluetone_2
+%                     mptype=5;
+%                     othermarks=1;
+%         end
+%     elseif hObject.LineWidth==2
+%         if hObject.Color == greentone
+%             mptype=6;
+%         elseif hObject.Color == greentone_2
+%             mptype=6;
+%             othermarks=1;
+%         end
+%     elseif hObject.LineWidth==1
+%         if hObject.Color == greentone
+%             mptype=7;
+%         elseif hObject.Color == greentone_2
+%             mptype=7;
+%             othermarks=1;
+%         end
+%     else
+%         return
+%     end
 else
     return
 end
