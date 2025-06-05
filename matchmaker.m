@@ -1330,6 +1330,7 @@ function delindx = check_mp_click_inches_conversion(mp,P,x_axis)
 % mp : set of mp to search
 % P : point of click
 % x_axis: X_axis handle
+
 [min_dist,closest_idx]=min(abs(mp(:,1)-P));
 
 mptype=mp(closest_idx,2);
@@ -1338,8 +1339,9 @@ max_X=x_axis.XLim(2);
 
 set(x_axis,'units','inch');
 X_inch=get(x_axis,'Position');
-set(x_axis,'units','normalized');
 X_inch=X_inch(3);% X_axis width in inches
+
+set(x_axis,'units','normalized');
 if mptype==7
     LW=1;
 elseif mptype==6
@@ -1355,7 +1357,7 @@ else
 end
 LW_inch=LW/72; % width of mp marker in inches
 
-tol_x=(max_X-min_X)/X_inch*LW_inch; %width of mp bar in data units 0.7=factor suggested by sune
+tol_x=(max_X-min_X)/X_inch*LW_inch; %width of mp bar in data units 
 
 if min_dist<tol_x
     delindx=closest_idx;
