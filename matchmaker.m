@@ -556,27 +556,27 @@ guidata(handles.fig, handles)
 %--- Function for adding new mps:
 
 function axesclick_Callback(hObject, handles, no1)
-'axesclick_Callback'
 if get(handles.mark, 'Value') == 1 % it it's possible to mark
     type = get(hObject,'type'); % get the type of surface you clicked on
     if strcmp(type,'axes'); %white-area click
-        'white area'
         pos = get(handles.bigax(no1), 'currentpoint'); % click x-pos norm. units
         ypos = pos(1,2);% y pos in norm. units
 
     elseif strcmp(type,'line') %line click : could be a free spot on the datacurve or an existing mp on that curve
-        'line click'
         temp_pos=get(gcf, 'CurrentPoint'); %click x pos norm. units
         ypos = temp_pos(1,2); % y pos in norm. units
         
         parent=get(hObject,'parent');
         pos=get(parent,'CurrentPoint'); %click x-pos in data units (m)
-        
+    else
+        disp('unhandled object type');
+    end
         % check if clicked spot is on an existing mp
         mp = handles.mp{no1}; %all mps of this ice core
         
         click_pos_object.XData=pos;
         click_pos_object.Type=type;
+        
         if get(handles.othermarks, 'Value')==0 | (ypos>=0.5 && get(handles.othermarks, 'Value')==1) 
             mp = handles.mp{no1}; %delete mp of this ice core
         elseif get(handles.othermarks, 'Value')==1 && ypos<0.5
@@ -591,9 +591,7 @@ if get(handles.mark, 'Value') == 1 % it it's possible to mark
             return;
         end
         
-    else
-        disp('unhandled object type');
-    end
+
     
     pos = 0.001*round(1000*pos(1,1)); %adjust precision to be 1 mm
     
@@ -654,17 +652,14 @@ end
 %deleting an mp found in proximity
 
 function mpclick_Callback(hObject, handles, no1)
-'mpclick_Callback'
 if get(handles.mark, 'Value') == 1 %if it's possible to mark mps
     
     try %if clicking on mp
-        'mp'
         type=get(hObject,'type'); 
         pos = get(handles.bigax(no1), 'currentpoint');
         ypos_true=pos(1,2);
         
     catch 
-        'line'
         % if it's a data line you are clicking on, then the hObject is a
         % different structure:
         type=(hObject.Type); %#ok<*NASGU>
@@ -1328,7 +1323,6 @@ end
 %---
 
 function delindx = check_mp_click_inches_conversion(mp,P,x_axis)
-'delindx'
 % this function checks whether a point clicked is close enough to an existing mp to delete it.
 % it works by converting the linewidth of the mp bar from inches to data units,
 % and setting this as a tolerance distance for the deletion of the mp.
