@@ -101,21 +101,23 @@ for i = 1:N
     end
     handles.matchfile{i} = files.matchfile{fileno(i)};
     handles.core{i} = files.core{fileno(i)};
+    
+    %check if mp contains mptypes>10 (compatibility of oder versions)
     handles.mp{i} = mp;
     
     % try finding a secondary set of mps (if specified in init_file)
     try
-        try %#ok<*TRYNC> %in the init_file it may be called matchfile_bis or matchfile_others
-            files.matchfile_others{fileno(i)}=files.matchfile_bis{fileno(i)};
+        try %#ok<*TRYNC> %in the init_file it may be called matchfile_bis or matchfile_secondary
+            files.matchfile_secondary{fileno(i)}=files.matchfile_bis{fileno(i)};
         end
-        mp_2=load(['matchfiles' filesep files.matchfile_others{fileno(i)}]);
-        disp(['Loading secondary(others): matchfiles' filesep files.matchfile_others{fileno(i)},' ...']);
+        mp_2=load(['matchfiles' filesep files.matchfile_secondary{fileno(i)}]);
+        disp(['Loading secondary: matchfiles' filesep files.matchfile_secondary{fileno(i)},' ...']);
         
         mp_2=mp_2.mp;
         handles.mp_2{i}=mp_2;
-        handles.matchfile_others{i} = files.matchfile_others{fileno(i)};
+        handles.matchfile_secondary{i} = files.matchfile_secondary{fileno(i)};
     catch
-        disp(['Matchfile_others file for ' files.core{fileno(i)} ' not found. Program will continue without.']);
+        disp(['Matchfile_secondary file for ' files.core{fileno(i)} ' not found. Program will continue without.']);
         mp_2=zeros(1,2); 
         handles.mp_2{i}=zeros(1,2);
     end
@@ -193,32 +195,45 @@ handles.evaluate = uicontrol('units', 'normalized', ...
     'callback', 'matchmaker(''evaluate_Callback'',gcbo,[],guidata(gcbo), ''button'')', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', ...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.evaluate,'position');
-handles.mark = uicontrol('units', 'normalized', ...
+handles.edit = uicontrol('units', 'normalized', ...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
-    'string', 'Mark ?', 'style', 'togglebutton', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 0, ...
+    'string', 'Edit markers', 'style', 'togglebutton', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 0, ...
     'Tooltip', 'Activate mp adding/removing. (M)',...
+    'callback','matchmaker(''edit_marks_callback'',gcbo,[],guidata(gcbo), 0)',...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
-p_neighbour=get(handles.mark,'position');
+
+
+p_neighbour=get(handles.edit,'position');
 handles.dummymark = uicontrol('units', 'normalized', ...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
-    'string', 'Dummies?', 'style', 'togglebutton', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 0, ...
+    'string', 'Dummies?', 'style', 'radio', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 0, ...
     'Tooltip', 'Change color to blue (type 4,5). Requires Mark+Second_order. (D)',...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.dummymark,'position');
 handles.annual_lrs =    uicontrol('units', 'normalized',...
     'Tooltip', ['Activate annual layers add/remove (type 6 right click, type 7 double-right click.).' 10 ' Requires Mark + Second_order. (G)'],...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
-    'string', 'Annual layers?', 'style', 'togglebutton',...
+    'string', 'Annual layers?', 'style', 'radio',...
     'callback', 'matchmaker(''annual_lrs_Callback'',gcbo,[],guidata(gcbo))', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 0, 'Selected', 'off',...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
+
+% Get all the handles to everything we want to set in a single array.
+handles.radiogroup = [handles.dummymark, handles.annual_lrs];
+% Set them all disabled. They can only be enabled if pressing the edit
+% marks button
+set(handles.radiogroup, 'Enable', 'off');
+
 p_neighbour=get(handles.annual_lrs,'position');
-handles.othermarks = uicontrol('units', 'normalized', ...
+handles.secondary_marks = uicontrol('units', 'normalized', ...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
-    'string', 'Others?', 'style', 'togglebutton', ...
+    'string', 'Show secondary', 'style', 'togglebutton', ...
     'Tooltip', 'Show secondary matchfile. (O)',...
-    'callback', 'matchmaker(''othermarks_Callback'',gcbo,[],guidata(gcbo), 0)', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 0, ...
+    'callback', 'matchmaker(''secondary_marks_Callback'',gcbo,[],guidata(gcbo), 0)', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 0, ...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
-p_neighbour=get(handles.othermarks,'position');
+
+
+
+p_neighbour=get(handles.secondary_marks,'position');
 handles.plotmp2 = uicontrol('units', 'normalized', ...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
     'string', '2nd order?', 'style', 'togglebutton', ...
@@ -403,13 +418,13 @@ update_yminmax(hObject, handles, no1, no2); % The view has changed, so update th
 
 %---
 
-function othermarks_Callback(~, handles, keyboardcall)
+function secondary_marks_Callback(~, handles, keyboardcall)
 if keyboardcall == 1
-    state = get(handles.othermarks, 'Value');
+    state = get(handles.secondary_marks, 'Value');
     if state == 1
-        set(handles.othermarks, 'Value', 0);
+        set(handles.secondary_marks, 'Value', 0);
     else
-        set(handles.othermarks, 'Value', 1);
+        set(handles.secondary_marks, 'Value', 1);
     end
 end
 for i = 1:handles.N
@@ -556,7 +571,7 @@ guidata(handles.fig, handles)
 %--- Function for adding new mps:
 
 function axesclick_Callback(hObject, handles, no1)
-if get(handles.mark, 'Value') == 1 % it it's possible to mark
+if get(handles.edit, 'Value') == 1 % it it's possible to mark
     type = get(hObject,'type'); % get the type of surface you clicked on
     if strcmp(type,'axes'); %white-area click
         pos = get(handles.bigax(no1), 'currentpoint'); % click x-pos norm. units
@@ -577,9 +592,9 @@ if get(handles.mark, 'Value') == 1 % it it's possible to mark
         click_pos_object.XData=pos;
         click_pos_object.Type=type;
         
-        if get(handles.othermarks, 'Value')==0 | (ypos>=0.5 && get(handles.othermarks, 'Value')==1) 
+        if get(handles.secondary_marks, 'Value')==0 | (ypos>=0.5 && get(handles.secondary_marks, 'Value')==1) 
             mp = handles.mp{no1}; %delete mp of this ice core
-        elseif get(handles.othermarks, 'Value')==1 && ypos<0.5
+        elseif get(handles.secondary_marks, 'Value')==1 && ypos<0.5
             mp = handles.mp_2{no1}; %delete mp_2 of this ice core
         end
         
@@ -603,12 +618,12 @@ if get(handles.mark, 'Value') == 1 % it it's possible to mark
     mp_2 = handles.mp_2{no1};
     
     % distinguish if click is on top or lower half of axis, and update mp
-    if get(handles.othermarks, 'Value')==0 | (ypos>=0.5 && get(handles.othermarks, 'Value')==1)  %#ok<*OR2>
+    if get(handles.secondary_marks, 'Value')==0 | (ypos>=0.5 && get(handles.secondary_marks, 'Value')==1)  %#ok<*OR2>
         mp = [mp; pos mptype];% amplitudes];
-        othermarks=0;
-    elseif get(handles.othermarks, 'Value')==1 && ypos<0.5
+        secondary_marks=0;
+    elseif get(handles.secondary_marks, 'Value')==1 && ypos<0.5
         mp_2=[mp_2;pos mptype];
-        othermarks=1;
+        secondary_marks=1;
     end
     
     handles.mp{no1} = sortrows(mp);
@@ -638,7 +653,7 @@ if get(handles.mark, 'Value') == 1 % it it's possible to mark
     handles.lastmove{handles.saved_moves,1}=pos; % mp position in data units
     handles.lastmove{handles.saved_moves,2}='added'; % this mp was added
     handles.lastmove{handles.saved_moves,3}=no1; % this mp was clicked on the icecore no1
-    handles.lastmove{handles.saved_moves,4}=mptype+10*othermarks; % this mp has type mptype
+    handles.lastmove{handles.saved_moves,4}=mptype+10*secondary_marks; % this mp has type mptype
     
 
     %replot everything and trigger save button
@@ -652,7 +667,7 @@ end
 %deleting an mp found in proximity
 
 function mpclick_Callback(hObject, handles, no1)
-if get(handles.mark, 'Value') == 1 %if it's possible to mark mps
+if get(handles.edit, 'Value') == 1 %if it's possible to mark mps
     
     try %if clicking on mp
         type=get(hObject,'type'); 
@@ -687,24 +702,24 @@ if get(handles.mark, 'Value') == 1 %if it's possible to mark mps
     handles.lastmove{ handles.saved_moves,1}=pos(1,1); % pos of mp
     handles.lastmove{ handles.saved_moves,2}='removed'; %removed mp: because the mp_callback was activated by removing an existing mp
     handles.lastmove{ handles.saved_moves,3}=no1; %which icecore
-    [mptype,othermarks]=determine_mptype_from_shape(hObject, handles, no1);%< solve this
-    handles.lastmove{ handles.saved_moves,4}=mptype+10*othermarks;
+    [mptype,secondary_marks]=determine_mptype_from_shape(hObject, handles, no1);%< solve this
+    handles.lastmove{ handles.saved_moves,4}=mptype+10*secondary_marks;
     
     % acquire the current series of mps
     mp = handles.mp{no1};
     mp_2=handles.mp_2{no1};
     
     % check if clicking on bottom or lower half of screen
-    if get(handles.othermarks, 'Value')==0 | (ypos_true>=0.5 && get(handles.othermarks, 'Value')==1)
+    if get(handles.secondary_marks, 'Value')==0 | (ypos_true>=0.5 && get(handles.secondary_marks, 'Value')==1)
         delindx=check_mp_click_inches_conversion(mp,pos(1,1),handles.bigax(no1));
         delindx_2=[];
-    elseif get(handles.othermarks, 'Value')==1 && ypos_true<0.5
+    elseif get(handles.secondary_marks, 'Value')==1 && ypos_true<0.5
         delindx=[];
         delindx_2=check_mp_click_inches_conversion(mp_2,pos(1,1),handles.bigax(no1));
     end
     
     % if more than one mp in a close spot. 
-    if length(delindx)>1 && get(handles.othermarks, 'Value') == 1
+    if length(delindx)>1 && get(handles.secondary_marks, 'Value') == 1
         [~, order] = sort(mp(delindx,2));
         pos = get(handles.bigax(no1), 'currentpoint');
         if pos(1,2)>0.5
@@ -712,7 +727,7 @@ if get(handles.mark, 'Value') == 1 %if it's possible to mark mps
         else
             delindx = delindx(order(2));
         end
-    elseif length(delindx_2)>1 && get(handles.othermarks, 'Value') == 1
+    elseif length(delindx_2)>1 && get(handles.secondary_marks, 'Value') == 1
         [~, order] = sort(mp_2(delindx_2,2));
         
         pos = get(handles.bigax(no1), 'currentpoint');
@@ -830,7 +845,7 @@ xlim = get(handles.bigax(no1), 'xlim');
 if isempty(mp)
     return
 else
-    othermarks = get(handles.othermarks, 'Value'); %logical value to decide whether to plot full screen or only top half
+    secondary_marks = get(handles.secondary_marks, 'Value'); %logical value to decide whether to plot full screen or only top half
  
    % plot all mps within xlim(1) and xlim(2)
     mptypes=[1,3,4,2,5,6,7];
@@ -842,22 +857,22 @@ else
         mp_subset=mp(mp(:,2)==mptypes(i),1);
         depth_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
         if ~isempty(depth_subset)
-            plot((mp_subset(depth_subset)*[1 1])', repmat([0.01+othermarks*0.5 bar_height(i)]', 1, length(depth_subset)), 'linewidth', linewidth(i), 'color', colors(i,:),...
+            plot((mp_subset(depth_subset)*[1 1])', repmat([0.01+secondary_marks*0.5 bar_height(i)]', 1, length(depth_subset)), 'linewidth', linewidth(i), 'color', colors(i,:),...
                 'parent', handles.bigax2(no1),...
                 'ButtonDownFcn', [' matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ');'],...
                 'UserData',mptypes(i));
         end
     end
-    %number the "thick" bars:
-    mptypes_thick=[1,3,4];
-    mp_thick = mp(ismember(mp(:,2),mptypes_thick),1);
-    depth_subset_thick = find(mp_thick>=xlim(1) & mp_thick<=xlim(2));
-    text(mp_thick(depth_subset_thick), (bar_height(1)+bar_height(1)/15)*ones(length(depth_subset_thick),1), num2str(depth_subset_thick), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
+    %number the "primary" bars:
+    mptypes_primary=[1,3,4];
+    mp_primary = mp(ismember(mp(:,2),mptypes_primary),1);
+    depth_subset_primary = find(mp_primary>=xlim(1) & mp_primary<=xlim(2));
+    text(mp_primary(depth_subset_primary), (bar_height(1)+bar_height(1)/15)*ones(length(depth_subset_primary),1), num2str(depth_subset_primary), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
     
-    %keep track of the plotted thick mps for the evaluate function:
-    if ~isempty(depth_subset_thick)
-        handles.mp1_idx{no1} = depth_subset_thick;
-        handles.mp1_depth{no1} = mp_thick(depth_subset_thick);
+    %keep track of the plotted primary mps for the evaluate function:
+    if ~isempty(depth_subset_primary)
+        handles.mp1_idx{no1} = depth_subset_primary;
+        handles.mp1_depth{no1} = mp_primary(depth_subset_primary);
     else
         handles.mp1_idx{no1} = 0;
         handles.mp1_depth{no1} = [];        
@@ -865,17 +880,17 @@ else
     
     %green layers numbering
     mp_green = mp(ismember(mp(:,2),[6,7]),1);
-    if ~isempty(depth_subset_thick) 
-        % number only after the left-most thick bar
-        depth_subset_green = find(mp_green>=mp_thick(depth_subset_thick(1),1) & mp_green<=xlim(2));
+    if ~isempty(depth_subset_primary) 
+        % number only after the left-most primary bar
+        depth_subset_green = find(mp_green>=mp_primary(depth_subset_primary(1),1) & mp_green<=xlim(2));
     else
         %number all
         depth_subset_green = find(mp_green>=xlim(1) & mp_green<=xlim(2));
     end
     text(mp_green(depth_subset_green), (bar_height(end)+bar_height(1)/15)*ones(length(depth_subset_green),1), num2str((1:length(depth_subset_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
     
-    % Same procedure for the "other/mp_2" dataset
-    if othermarks
+    % Same procedure for the "secondary_/mp_2" dataset
+    if secondary_marks
         if ~isempty(mp_2)
             
                % plot all mps within xlim(1) and xlim(2)
@@ -891,16 +906,16 @@ else
                            'UserData',mptypes(i));
                    end
                end
-               %number the "thick" bars:
-               mptypes_thick=[1,3,4];
-               mp_thick = mp_2(ismember(mp_2(:,2),mptypes_thick),1);
-               depth_subset_thick = find(mp_thick>=xlim(1) & mp_thick<=xlim(2));
-               text(mp_thick(depth_subset_thick), (bar_height(1)+bar_height(1)/8)*ones(length(depth_subset_thick),1), num2str(depth_subset_thick), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
+               %number the "primary" bars:
+               mptypes_primary=[1,3,4];
+               mp_primary = mp_2(ismember(mp_2(:,2),mptypes_primary),1);
+               depth_subset_primary = find(mp_primary>=xlim(1) & mp_primary<=xlim(2));
+               text(mp_primary(depth_subset_primary), (bar_height(1)+bar_height(1)/8)*ones(length(depth_subset_primary),1), num2str(depth_subset_primary), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
 
                mp_2_green = mp_2(ismember(mp_2(:,2),[6,7]),1);
             
-             if ~isempty(depth_subset_thick) %green layers numbering
-                    depth_subset_green = find(mp_2_green>=mp_thick(depth_subset_thick(1),1) & mp_2_green<=xlim(2));
+             if ~isempty(depth_subset_primary) %green layers numbering
+                    depth_subset_green = find(mp_2_green>=mp_primary(depth_subset_primary(1),1) & mp_2_green<=xlim(2));
                 else
                     depth_subset_green = find(mp_2_green>=xlim(1) & mp_2_green<=xlim(2));
              end
@@ -952,9 +967,10 @@ if ~isempty(key)
                 set(handles.annual_lrs, 'Value', 1);
             end
         case {109, 77}  %m, M
-            set(handles.mark, 'value', get(handles.mark, 'value')==0);
+            edit_marks_callback(hObject,handles,1);
+%             set(handles.edit, 'value', get(handles.edit, 'value')==0);
         case {111, 79}   %o, O
-            othermarks_Callback(hObject, handles, 1);
+            secondary_marks_Callback(hObject, handles, 1);
         case {115, 83}  %s, S
             if strcmp(get(handles.save, 'enable'), 'on')
                 save_Callback(hObject, handles);
@@ -974,7 +990,7 @@ if ~isempty(key)
                 'M  = Toggle "Mark ?" button on/off'
                 'D  = Toggle "Dummy ?" button on/off'
                 'G = Toggle "Annual layers?" button on/off'
-                'O  = Toggle "Other ?" button on/off'
+                'O  = Toggle "secondary ?" button on/off'
                 '2  = Toggle "2nd order" button on/off'             
                 'X  = Exit'
                 'U  = Undo'});
@@ -1034,7 +1050,7 @@ if strcmp(identify, 'button')
     if isfield(handles, 'evaluatefigurehandle') %if evaluate was already open
             matchmaker_evaluate('evalreuse', handles.evaluatefigurehandle, [], handles.mp, handles.mp_2, handles.core, masterno, handles.mp1_idx{masterno});
     else %open new evaluate window
-            matchmaker_evaluate('evalopen', handles.fig, [], handles.mp, handles.mp_2, handles.core, masterno, handles.mp1_idx{masterno}, handles.othermarks);
+            matchmaker_evaluate('evalopen', handles.fig, [], handles.mp, handles.mp_2, handles.core, masterno, handles.mp1_idx{masterno}, handles.Secondarymarks);
     end
 elseif strcmp(identify, 'opening_evaluate')
     evalhandles = handles; % the input argument 'handles' is the handles of the evaluate window.
@@ -1175,17 +1191,17 @@ for i = 1:handles.N
         mp=handles.mp_2{i}; % save secondary dataset
         
         a=split(handles.matchfile{i},'/');
-        b=split(handles.matchfile_others{i},'/');
+        b=split(handles.matchfile_secondary{i},'/');
         
         if strcmp(a{end},b{end}) %if they are called the same
             disp('The primary and secondary matchfile are called the same. This can cause conflicts.');
-            disp(['Saving secondary matchfile as ' handles.matchfile_others{i}(1:end-4) '_secondary.mat']);
+            disp(['Saving secondary matchfile as ' handles.matchfile_secondary{i}(1:end-4) '_secondary.mat']);
             
-            save(['matchfiles' filesep handles.matchfile_others{i}(1:end-4) '_secondary.mat' ], 'mp', '-MAT');%,'save mp_2'
-            copyfile(['matchfiles/' handles.matchfile_others{i}(1:end-4) '_secondary.mat'   ], output_dir); % save backup
+            save(['matchfiles' filesep handles.matchfile_secondary{i}(1:end-4) '_secondary.mat' ], 'mp', '-MAT');%,'save mp_2'
+            copyfile(['matchfiles/' handles.matchfile_secondary{i}(1:end-4) '_secondary.mat'   ], output_dir); % save backup
         else
-            save(['matchfiles' filesep handles.matchfile_others{i} ], 'mp', '-MAT');%,'save mp_2'
-            copyfile(['matchfiles/' handles.matchfile_bis{i} ], output_dir); % save backup
+            save(['matchfiles' filesep handles.matchfile_secondary{i} ], 'mp', '-MAT');%,'save mp_2'
+            copyfile(['matchfiles/' handles.matchfile_secondary{i} ], output_dir); % save backup
         end
     end
 end
@@ -1250,7 +1266,7 @@ if and(~isnan(saved_moves),saved_moves>0)
     
     no1=handles.lastmove{saved_moves,3}; %retrieve ice core
     
-    if get(handles.mark, 'Value') == 1
+    if get(handles.edit, 'Value') == 1
         if strcmp(handles.lastmove{saved_moves,2},'added') % an added mp will be removed
             if handles.lastmove{saved_moves,4}<10
                 idx = find(handles.mp{no1}(:,1)==handles.lastmove{saved_moves,1});
@@ -1447,7 +1463,7 @@ else
     return;
 end
 
-function [mptype,othermarks]=determine_mptype_from_shape(hObject, handles, no1)
+function [mptype,secondary_marks]=determine_mptype_from_shape(hObject, handles, no1)
 % colors for each mp type
 greytone = 0.8*[1 1 1];
 redtone = 0.85*[1 0 0];
@@ -1459,7 +1475,7 @@ redtone_2 = 0.85*[1 0.5 0.5];
 bluetone_2 = 0.85*[0.5 0.5 1];
 greentone_2 = 0.8 * [0.5 1 0.5];
 
-othermarks=0;
+secondary_marks=0;
 
 if isstruct(hObject) % if clicking ondata line instead of mp
     mp = handles.mp{no1};
@@ -1481,13 +1497,13 @@ elseif hObject.Type=='line'  %#ok<BDSCA> %if clicking on mp
 %                     mptype=4;
 %         elseif hObject.Color == greytone_2
 %             mptype=1;
-%             othermarks=1;
+%             secondary_marks=1;
 %         elseif hObject.Color == redtone_2
 %                 mptype=3;
-%                 othermarks=1;
+%                 secondary_marks=1;
 %         elseif hObject.Color == bluetone_2
 %                     mptype=4;
-%                     othermarks=1;
+%                     secondary_marks=1;
 %         end
 %     elseif hObject.LineWidth==4
 %         if hObject.Color == greytone
@@ -1496,24 +1512,24 @@ elseif hObject.Type=='line'  %#ok<BDSCA> %if clicking on mp
 %             mptype=5;
 %         elseif hObject.Color == greytone_2
 %             mptype=2;
-%             othermarks=1;
+%             secondary_marks=1;
 %         elseif hObject.Color == bluetone_2
 %                     mptype=5;
-%                     othermarks=1;
+%                     secondary_marks=1;
 %         end
 %     elseif hObject.LineWidth==2
 %         if hObject.Color == greentone
 %             mptype=6;
 %         elseif hObject.Color == greentone_2
 %             mptype=6;
-%             othermarks=1;
+%             secondary_marks=1;
 %         end
 %     elseif hObject.LineWidth==1
 %         if hObject.Color == greentone
 %             mptype=7;
 %         elseif hObject.Color == greentone_2
 %             mptype=7;
-%             othermarks=1;
+%             secondary_marks=1;
 %         end
 %     else
 %         return
@@ -1521,3 +1537,23 @@ elseif hObject.Type=='line'  %#ok<BDSCA> %if clicking on mp
 else
     return
 end
+
+%--
+
+function  edit_marks_callback(~,handles,keyboardcall)
+if keyboardcall == 1
+    state = get(handles.edit, 'Value');
+    if state == 1
+        set(handles.edit, 'Value', 0);
+    else
+        set(handles.edit, 'Value', 1);
+    end
+end
+if get(handles.edit,'Value')==1
+    set(handles.radiogroup,'Enable','on');
+else
+    set(handles.radiogroup,'Enable','off');
+    
+end
+
+
