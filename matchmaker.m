@@ -708,7 +708,9 @@ if get(handles.edit, 'Value') == 1 %if it's possible to mark mps
     handles.lastmove{ handles.saved_moves,1}=pos(1,1); % pos of mp
     handles.lastmove{ handles.saved_moves,2}='removed'; %removed mp: because the mp_callback was activated by removing an existing mp
     handles.lastmove{ handles.saved_moves,3}=no1; %which icecore
-    [mptype,secondary_marks]=determine_mptype_from_shape(hObject, handles, no1);%< solve this
+    userdata = get(hObject,'UserData');
+    [mptype]=userdata(1);
+    [secondary_marks]=userdata(2);
     handles.lastmove{ handles.saved_moves,4}=mptype+10*secondary_marks;
     
     % acquire the current series of mps
@@ -866,7 +868,7 @@ else
             plot((mp_subset(depth_subset)*[1 1])', repmat([0.01+secondary_marks*0.5 bar_height(i)]', 1, length(depth_subset)), 'linewidth', linewidth(i), 'color', colors(i,:),...
                 'parent', handles.bigax2(no1),...
                 'ButtonDownFcn', [' matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ');'],...
-                'UserData',mptypes(i));
+                'UserData',[mptypes(i),secondary_marks]);
         end
     end
     
@@ -929,7 +931,7 @@ else
                 depth_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
                 if ~isempty(depth_subset) & show_mp(i)
                     plot((mp_subset(depth_subset)*[1 1])', repmat([0.01 bar_height(i)]', 1, length(depth_subset)), 'linewidth', linewidth(i), 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ');'],...
-                        'UserData',mptypes(i));
+                        'UserData',[mptypes(i),secondary_marks]);
                 end
             end
             %number the "primary" bars:
@@ -1503,81 +1505,6 @@ elseif temp_mark & strcmp(get(handles.temp_mark, 'Enable'),'on')
     end
 else
     return;
-end
-
-function [mptype,secondary_marks]=determine_mptype_from_shape(hObject, handles, no1)
-% colors for each mp type
-greytone = 0.8*[1 1 1];
-redtone = 0.85*[1 0 0];
-bluetone = 0.85*[0 0 1];
-greentone = 0.7 * [0 1 0];
-
-greytone_2 = 0.9*[1 1 1];
-redtone_2 = 0.85*[1 0.5 0.5];
-bluetone_2 = 0.85*[0.5 0.5 1];
-greentone_2 = 0.8 * [0.5 1 0.5];
-
-secondary_marks=0;
-
-if isstruct(hObject) % if clicking ondata line instead of mp
-    mp = handles.mp{no1};
-    xpos=hObject.XData(1,1); %position of click in data units
-    % find the index of the closest mp to delete:
-    delindx=check_mp_click_inches_conversion(mp,xpos,handles.bigax(no1));
-    mptype = mp(delindx,2);
-    
-elseif hObject.Type=='line'  %#ok<BDSCA> %if clicking on mp
-    
-    mptype = get(hObject,'UserData');
-    
-    %     if hObject.LineWidth==6
-    %         if hObject.Color == greytone
-    %             mptype=1;
-    %         elseif hObject.Color == redtone
-    %                 mptype=3;
-    %         elseif hObject.Color == bluetone
-    %                     mptype=4;
-    %         elseif hObject.Color == greytone_2
-    %             mptype=1;
-    %             secondary_marks=1;
-    %         elseif hObject.Color == redtone_2
-    %                 mptype=3;
-    %                 secondary_marks=1;
-    %         elseif hObject.Color == bluetone_2
-    %                     mptype=4;
-    %                     secondary_marks=1;
-    %         end
-    %     elseif hObject.LineWidth==4
-    %         if hObject.Color == greytone
-    %             mptype=2;
-    %         elseif hObject.Color == bluetone
-    %             mptype=5;
-    %         elseif hObject.Color == greytone_2
-    %             mptype=2;
-    %             secondary_marks=1;
-    %         elseif hObject.Color == bluetone_2
-    %                     mptype=5;
-    %                     secondary_marks=1;
-    %         end
-    %     elseif hObject.LineWidth==2
-    %         if hObject.Color == greentone
-    %             mptype=6;
-    %         elseif hObject.Color == greentone_2
-    %             mptype=6;
-    %             secondary_marks=1;
-    %         end
-    %     elseif hObject.LineWidth==1
-    %         if hObject.Color == greentone
-    %             mptype=7;
-    %         elseif hObject.Color == greentone_2
-    %             mptype=7;
-    %             secondary_marks=1;
-    %         end
-    %     else
-    %         return
-    %     end
-else
-    return
 end
 
 %--
