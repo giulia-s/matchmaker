@@ -869,6 +869,7 @@ else
                 'UserData',mptypes(i));
         end
     end
+    
     %number the "primary" bars:
     mptypes_primary=[1,3,4];
     mp_primary = mp(ismember(mp(:,2),mptypes_primary),1);
@@ -895,6 +896,24 @@ else
     end
     if 1-get(handles.hide_minor_mp,'Value')
         text(mp_green(depth_subset_green), (bar_height(end)+bar_height(1)/15)*ones(length(depth_subset_green),1), num2str((1:length(depth_subset_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+    end
+    
+    %check if any mps have wrong types and create a warning    
+    not_allowed_mp=mp(~ismember(mp(:,2),mptypes),:);
+    
+    if ~isempty(not_allowed_mp)
+        L=length(not_allowed_mp);
+        d = msgbox({...
+        'Not allowed mp types in the matchfile of:',handles.name(no1).String,...
+        'Problem for matchpoints (depth,type):',...
+        num2str(not_allowed_mp), ...
+        'The program will continue without displaying them, although they will be preserved when saving.',...
+        'In the future: to compare secondary sets of mps on the same ice core, create a secondary matchfile (see user guide).'});
+        uiwait(d);
+        
+        mp=mp(ismember(mp(:,2),mptypes),:);
+        handles.mp{no1} = mp; %update the mp dataset to remove the unnecessary mps
+        handles.not_allowed_mp{no1}=not_allowed_mp; % they are preserved here and saved at the end
     end
     % Same procedure for the "secondary_/mp_2" dataset
     if secondary_marks
@@ -1181,6 +1200,10 @@ for i = 1:handles.N
         disp('   (this error does not influence the saving procedure itself)');
     end
     mp = handles.mp{i};
+    if isfield(handles,'not_allowed_mp') % if the helpdlg box from plotmp was triggered at the start
+        mp=[mp;handles.not_allowed_mp{i}];
+        mp=sortrows(mp);
+    end
     
     % Over-write mp files
     save(['matchfiles' filesep handles.matchfile{i}], 'mp', '-MAT');
@@ -1607,4 +1630,14 @@ for i = 1:handles.N
 end
 guidata(hObject, handles);
 
-
+function create_secondary(hObject,handles,no1, not_allowed_mp)
+'here'
+hObject,handles,no1, not_allowed_mp
+    handles.mp_2{no1} = not_allowed_mp;
+    if ~isfield(handles,'matchfile_secondary') 
+        handles.matchfile_secondary{no1}=handles.matchfile{no1};
+    elseif isempty(handles.matchfile_secondary{no1})
+        handles.matchfile_secondary{no1}=handles.matchfile{no1};
+    end
+    delete(gcf);
+guidata(hObject, handles);
