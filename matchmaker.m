@@ -579,16 +579,13 @@ guidata(handles.fig, handles)
 %--- Function for adding new mps:
 
 function axesclick_Callback(hObject, handles, no1)
-'entering axesclick'
 if get(handles.edit, 'Value') == 1 % it it's possible to edit mps
     type = get(hObject,'type'); % get the type of surface you clicked on
     if strcmp(type,'axes') %white-area click
-        'a'
         pos = get(handles.bigax(no1), 'currentpoint'); % click x-pos norm. units
         ypos = pos(1,2);% y pos in norm. units
         
     elseif strcmp(type,'line') %line click : could be a free spot on the datacurve or an existing mp on that curve
-        'b'
         temp_pos=get(gcf, 'CurrentPoint'); %click x pos norm. units
         ypos = temp_pos(1,2); % y pos in norm. units
         
@@ -614,7 +611,6 @@ if get(handles.edit, 'Value') == 1 % it it's possible to edit mps
     del_idx=check_mp_click_inches_conversion(mp,pos(1,1),handles.bigax(no1));
     
     if ~isempty(del_idx)
-        'entering if del_idx'
         mpclick_Callback(click_pos_object, handles, no1);
         return;
     end
@@ -678,7 +674,6 @@ end
 %deleting an mp found in proximity
 
 function mpclick_Callback(hObject, handles, no1)
-'entering mpclick'
 if get(handles.edit, 'Value') == 1 %if it's possible to mark mps
     
     try %if clicking on mp
@@ -730,32 +725,6 @@ if get(handles.edit, 'Value') == 1 %if it's possible to mark mps
     elseif get(handles.secondary_marks, 'Value')==1 && ypos_true<0.5
         delindx=[];
         delindx_2=check_mp_click_inches_conversion(mp_2,pos(1,1),handles.bigax(no1));
-    end
-    
-    % if more than one mp in a close spot.
-    'here'
-    if length(delindx)>1 && get(handles.secondary_marks, 'Value') == 1
-        'a'
-        [~, order] = sort(mp(delindx,2));
-        pos = get(handles.bigax(no1), 'currentpoint');
-        if pos(1,2)>0.5
-            delindx = delindx(order(1));
-        else
-            delindx = delindx(order(2));
-        end
-    elseif length(delindx_2)>1 && get(handles.secondary_marks, 'Value') == 1
-        'b'
-        [~, order] = sort(mp_2(delindx_2,2));
-        
-        pos = get(handles.bigax(no1), 'currentpoint');
-        ypos=get(gcf, 'CurrentPoint');
-        ypos=ypos(1,2);
-        
-        if ypos>0.5
-            delindx_2 = delindx_2(order(1));
-        else
-            delindx_2 = delindx_2(order(2));
-        end
     end
     
     % remove the identified mps:
