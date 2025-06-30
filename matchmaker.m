@@ -212,14 +212,14 @@ handles.ref_mark = uicontrol('units', 'normalized', ...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.ref_mark,'position');
 handles.temp_mark =    uicontrol('units', 'normalized',...
-    'Tooltip', ['Edit type 2(click),5(r-click) (T)'],...
+    'Tooltip', 'Edit type 2(click),5(r-click) (T)',...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, 5/4*button_L, button_H],...
     'string', 'Temporary mps', 'style', 'radio',...
     'callback', 'matchmaker(''temp_mark_Callback'',gcbo,[],guidata(gcbo))', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 0, 'Selected', 'off',...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.temp_mark,'position');
 handles.annual_mark =    uicontrol('units', 'normalized',...
-    'Tooltip', ['Edit type 6(click),7(r-click) (Y)'],...
+    'Tooltip', 'Edit type 6(click),7(r-click) (Y)',...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, 5/4*button_L, button_H],...
     'string', 'Years mps', 'style', 'radio',...
     'callback', 'matchmaker(''annual_mark_Callback'',gcbo,[],guidata(gcbo))', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 0, 'Selected', 'off',...
@@ -579,13 +579,16 @@ guidata(handles.fig, handles)
 %--- Function for adding new mps:
 
 function axesclick_Callback(hObject, handles, no1)
+'entering axesclick'
 if get(handles.edit, 'Value') == 1 % it it's possible to edit mps
     type = get(hObject,'type'); % get the type of surface you clicked on
-    if strcmp(type,'axes'); %white-area click
+    if strcmp(type,'axes') %white-area click
+        'a'
         pos = get(handles.bigax(no1), 'currentpoint'); % click x-pos norm. units
         ypos = pos(1,2);% y pos in norm. units
         
     elseif strcmp(type,'line') %line click : could be a free spot on the datacurve or an existing mp on that curve
+        'b'
         temp_pos=get(gcf, 'CurrentPoint'); %click x pos norm. units
         ypos = temp_pos(1,2); % y pos in norm. units
         
@@ -599,17 +602,19 @@ if get(handles.edit, 'Value') == 1 % it it's possible to edit mps
     
     click_pos_object.XData=pos;
     click_pos_object.Type=type;
+    click_pos_object.UserData=type;
     
     if get(handles.secondary_marks, 'Value')==0 | (ypos>=0.5 && get(handles.secondary_marks, 'Value')==1)
-        mp = handles.mp{no1}; %delete mp of this ice core
+        mp = handles.mp{no1}; %load mp of this ice core
     elseif get(handles.secondary_marks, 'Value')==1 && ypos<0.5
-        mp = handles.mp_2{no1}; %delete mp_2 of this ice core
+        mp = handles.mp_2{no1}; %load mp_2 of this ice core
     end
     
     %identify if there is an mp to delete
     del_idx=check_mp_click_inches_conversion(mp,pos(1,1),handles.bigax(no1));
     
     if ~isempty(del_idx)
+        'entering if del_idx'
         mpclick_Callback(click_pos_object, handles, no1);
         return;
     end
@@ -673,6 +678,7 @@ end
 %deleting an mp found in proximity
 
 function mpclick_Callback(hObject, handles, no1)
+'entering mpclick'
 if get(handles.edit, 'Value') == 1 %if it's possible to mark mps
     
     try %if clicking on mp
@@ -727,7 +733,9 @@ if get(handles.edit, 'Value') == 1 %if it's possible to mark mps
     end
     
     % if more than one mp in a close spot.
+    'here'
     if length(delindx)>1 && get(handles.secondary_marks, 'Value') == 1
+        'a'
         [~, order] = sort(mp(delindx,2));
         pos = get(handles.bigax(no1), 'currentpoint');
         if pos(1,2)>0.5
@@ -736,6 +744,7 @@ if get(handles.edit, 'Value') == 1 %if it's possible to mark mps
             delindx = delindx(order(2));
         end
     elseif length(delindx_2)>1 && get(handles.secondary_marks, 'Value') == 1
+        'b'
         [~, order] = sort(mp_2(delindx_2,2));
         
         pos = get(handles.bigax(no1), 'currentpoint');
@@ -1280,7 +1289,6 @@ if isfield(handles, 'evaluatefigurehandle')
     delete(handles.evaluatefigurehandle)
 end
 delete(handles.fig)
-warning('on', 'MATLAB:Axes:NegativeDataInLogAxis');
 
 %---
 
@@ -1378,20 +1386,22 @@ function delindx = check_mp_click_inches_conversion(mp,P,x_axis)
 % and setting this as a tolerance distance for the deletion of the mp.
 
 % mp : set of mp to search
-% P : point of click
+% P : point of click in data units
 % x_axis: X_axis handle
 
-[min_dist,closest_idx]=min(abs(mp(:,1)-P));
-
-mptype=mp(closest_idx,2);
 min_X=x_axis.XLim(1);
 max_X=x_axis.XLim(2);
+ab_data_units=max_X-min_X;
 
 set(x_axis,'units','inch');
-X_inch=get(x_axis,'Position');
-X_inch=X_inch(3);% X_axis width in inches
-
+ab_inch=get(x_axis,'Position');
+ab_inch=ab_inch(3);% x_axis width in inches
 set(x_axis,'units','normalized');
+
+K = ab_data_units / ab_inch; %conversion factor between data units and inches
+
+[min_dist,closest_idx]=min(abs(mp(:,1)-P));
+mptype=mp(closest_idx,2);
 if mptype==7
     LW=1;
 elseif mptype==6
@@ -1405,9 +1415,11 @@ else
     delindx=[];
     return;
 end
-LW_inch=LW/72; % width of mp marker in inches
+LW_inch=LW/72; % width of mp marker in inches according to MATLAB documentation
 
-tol_x=(max_X-min_X)/X_inch*LW_inch; %width of mp bar in data units
+LW_data_units =LW_inch * K;
+
+tol_x=LW_data_units/2;
 
 if min_dist<tol_x
     delindx=closest_idx;
@@ -1475,13 +1487,6 @@ selectiontype = get(handles.fig, 'selectiontype');
 ref_mark = get(handles.ref_mark, 'Value');
 annual_mark = get(handles.annual_mark, 'Value');
 temp_mark = get(handles.temp_mark, 'Value');
-
-'e'
-get(handles.ref_mark, 'Enable')
-ref_mark & strcmp(get(handles.ref_mark, 'Enable'),'on')
-get(handles.temp_mark, 'Enable')
-temp_mark & strcmp(get(handles.temp_mark, 'Enable'),'on')
-get(handles.annual_mark, 'Enable')
 
 if ref_mark & strcmp(get(handles.ref_mark, 'Enable'),'on')
     if strcmp(selectiontype, 'normal') %click
@@ -1558,8 +1563,7 @@ end
 guidata(hObject, handles);
 
 function create_secondary(hObject,handles,no1, not_allowed_mp)
-'here'
-hObject,handles,no1, not_allowed_mp
+
     handles.mp_2{no1} = not_allowed_mp;
     if ~isfield(handles,'matchfile_secondary') 
         handles.matchfile_secondary{no1}=handles.matchfile{no1};
