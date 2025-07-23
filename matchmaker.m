@@ -318,11 +318,12 @@ for i = 1:N
     
 end
 sides = [{'right'} {'left'}];
+% BUTTONS FOR EACH SPECIES
 for i = 1:N
     
     handles.tickax{i,1} = axes('position', [ax_left_edge_pos, bottom_edge_pos+2*ax_vert_spacing+ax_xlabel_H+(i-1)*(ax_H+ax_vert_spacing) ax_width ax_species_H(i)], 'nextplot', 'add', 'color', 'none', 'xcolor', 'k', 'ylim', [0 1], 'box', 'off', 'fontsize', font1, 'yaxislocation', 'left', 'xaxislocation', 'bottom', 'hittest', 'off', 'fontweight', 'bold');
     handles.plotax{i,1} = axes('position', [ax_left_edge_pos, bottom_edge_pos+2*ax_vert_spacing+ax_xlabel_H+(i-1)*(ax_H+ax_vert_spacing) ax_width ax_species_H(i)], 'nextplot', 'replacechildren', 'visible', 'off', 'hittest', 'off');
-    % BUTTONS FOR EACH SPECIES
+    
     for j = 1:N_species(i)
         
         species_yax_ypos=bottom_edge_pos+2*ax_vert_spacing+ax_xlabel_H+(i-1)*(ax_H+ax_vert_spacing)+(j-1)*(1-species_overlap_H)*ax_species_H(i);
@@ -392,6 +393,7 @@ for i = 1:N
         plotcurve(handles, i, j);
     end
     
+    %plots all mp for the first time
     handles = plotmp(handles, i);
     
     update_yminmax(handles.fig, handles, i, 0); % Update the y-scaling
@@ -831,6 +833,7 @@ if isfield(handles,'mp_2')
 end
 % collect current depth limits
 xlim = get(handles.bigax(no1), 'xlim');
+too_large_flag=0;
 
 if isempty(mp)
     return
@@ -844,9 +847,16 @@ else
     bar_height=[0.93;0.93;0.93;0.88;0.88;0.85;0.85];
     
     for i=1:length(mptypes)
+        i
         mp_subset=mp(mp(:,2)==mptypes(i),1);
         depth_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
-        if ~isempty(depth_subset) & show_mp(i)
+        if length(depth_subset)>100
+            i
+            d = msgbox({'The amount of matchpoints to display is very large. Please set x-limits to be smaller.'});
+            too_large_flag=1;
+            break
+        end
+        if ~isempty(depth_subset) & show_mp(i) & ~too_large_flag
             plot((mp_subset(depth_subset)*[1 1])', repmat([0.01+secondary_marks*0.5 bar_height(i)]', 1, length(depth_subset)), 'linewidth', linewidth(i), 'color', colors(i,:),...
                 'parent', handles.bigax2(no1),...
                 'ButtonDownFcn', [' matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ');'],...
@@ -861,7 +871,7 @@ else
     text(mp_primary(depth_subset_primary), (bar_height(1)+bar_height(1)/15)*ones(length(depth_subset_primary),1), num2str(depth_subset_primary), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
     
     %keep track of the plotted primary mps for the evaluate function:
-    if ~isempty(depth_subset_primary)
+    if ~isempty(depth_subset_primary) & ~too_large_flag
         handles.mp1_idx{no1} = depth_subset_primary;
         handles.mp1_depth{no1} = mp_primary(depth_subset_primary);
     else
@@ -871,7 +881,7 @@ else
     
     %green layers numbering
     mp_green = mp(ismember(mp(:,2),[6,7]),1);
-    if ~isempty(depth_subset_primary)
+    if ~isempty(depth_subset_primary) & ~too_large_flag
         % number only after the left-most primary bar
         depth_subset_green = find(mp_green>=mp_primary(depth_subset_primary(1),1) & mp_green<=xlim(2));
     else
@@ -900,7 +910,7 @@ else
         handles.not_allowed_mp{no1}=not_allowed_mp; % they are preserved here and saved at the end
     end
     % Same procedure for the "secondary_/mp_2" dataset
-    if secondary_marks
+    if secondary_marks & ~too_large_flag
         if ~isempty(mp_2)
             
             % plot all mps within xlim(1) and xlim(2)
