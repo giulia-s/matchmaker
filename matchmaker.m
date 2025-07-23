@@ -973,6 +973,8 @@ if ~isempty(key)
             end
         case {116, 84}  %t, T
             temp_mark_Callback(hObject, handles, 1)
+        case {117, 85}  %u,U
+            undo_Callback(hObject, handles)
         case {120, 88}  %x, X
             exit_Callback(hObject, handles);
         case {121, 89}  %y, Y
