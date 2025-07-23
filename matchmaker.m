@@ -236,7 +236,8 @@ handles.hide_minor_mp = uicontrol('units', 'normalized', ...
     'string', 'Hide minor mps', 'style', 'togglebutton', ...
     'Tooltip', 'Hide minor mp, i.e. types 2,5,6,7. (H)',...
     'callback', 'matchmaker(''hide_minor_mp_Callback'',gcbo,[],guidata(gcbo),0)', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 0, 'Selected', 'off', ...
-    'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
+    'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))',...
+    'value',1);
 p_neighbour=get(handles.hide_minor_mp,'position');
 handles.secondary_marks = uicontrol('units', 'normalized', ...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
@@ -271,7 +272,7 @@ handles.exit = uicontrol('units', 'normalized', ...
 handles.N_undo=1000; % how many moves are saved in memory
 handles.lastmoves=cell(handles.N_undo,1);
 
-
+% BUTTONS FOR EACH ICE CORE
 for i = 1:N
     
     main_ax_y_pos=bottom_edge_pos+2*ax_vert_spacing+ax_xlabel_H+(i-1)*(ax_H+ax_vert_spacing);
@@ -321,6 +322,7 @@ for i = 1:N
     
     handles.tickax{i,1} = axes('position', [ax_left_edge_pos, bottom_edge_pos+2*ax_vert_spacing+ax_xlabel_H+(i-1)*(ax_H+ax_vert_spacing) ax_width ax_species_H(i)], 'nextplot', 'add', 'color', 'none', 'xcolor', 'k', 'ylim', [0 1], 'box', 'off', 'fontsize', font1, 'yaxislocation', 'left', 'xaxislocation', 'bottom', 'hittest', 'off', 'fontweight', 'bold');
     handles.plotax{i,1} = axes('position', [ax_left_edge_pos, bottom_edge_pos+2*ax_vert_spacing+ax_xlabel_H+(i-1)*(ax_H+ax_vert_spacing) ax_width ax_species_H(i)], 'nextplot', 'replacechildren', 'visible', 'off', 'hittest', 'off');
+    % BUTTONS FOR EACH SPECIES
     for j = 1:N_species(i)
         
         species_yax_ypos=bottom_edge_pos+2*ax_vert_spacing+ax_xlabel_H+(i-1)*(ax_H+ax_vert_spacing)+(j-1)*(1-species_overlap_H)*ax_species_H(i);
@@ -1183,7 +1185,9 @@ for i = 1:handles.N
     end
     mp = handles.mp{i};
     if isfield(handles,'not_allowed_mp') % if the helpdlg box from plotmp was triggered at the start
-        mp=[mp;handles.not_allowed_mp{i}];
+        try
+            mp=[mp;handles.not_allowed_mp{i}];
+        end
         mp=sortrows(mp);
     end
     
@@ -1256,7 +1260,7 @@ for i = 1:length(fileno)
     sett.xlim(fileno(i),:) = get(handles.bigax(i), 'xlim');
     sett.specs{fileno(i)} = handles.selectedspecs{i};
 end
-save('matchmaker_sett.mat', 'sett');
+save('matchmaker_sett.mat', 'sett'); %Saves xlim and the displayed species so they are re-loaded next time you open the program
 if isfield(handles, 'evaluatefigurehandle')
     delete(handles.evaluatefigurehandle)
 end
