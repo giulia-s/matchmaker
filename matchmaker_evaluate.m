@@ -6,7 +6,7 @@ switch nargin
     case {0, 1, 2}% Only for development purposes
         disp('MATCHMAKER_EVALUATE needs input arguments, and is designed to be called from MATCHMAKER.');
     case {3, 4, 5, 6, 7, 8, 9}
-        
+
         eval([char(varargin{1}) '(varargin{[2 4:nargin]})']);
     otherwise
         disp('Wrong number of arguments when calling matchmaker_evaluate.m');

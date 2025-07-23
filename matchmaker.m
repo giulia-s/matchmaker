@@ -1067,7 +1067,7 @@ if strcmp(identify, 'button')
     if isfield(handles, 'evaluatefigurehandle') %if evaluate was already open
         matchmaker_evaluate('evalreuse', handles.evaluatefigurehandle, [], handles.mp, handles.mp_2, handles.core, masterno, handles.mp1_idx{masterno});
     else %open new evaluate window
-        matchmaker_evaluate('evalopen', handles.fig, [], handles.mp, handles.mp_2, handles.core, masterno, handles.mp1_idx{masterno}, handles.Secondarymarks);
+        matchmaker_evaluate('evalopen', handles.fig, [], handles.mp, handles.mp_2, handles.core, masterno, handles.mp1_idx{masterno}, handles.secondary_marks);
     end
 elseif strcmp(identify, 'opening_evaluate')
     evalhandles = handles; % the input argument 'handles' is the handles of the evaluate window.
