@@ -847,12 +847,11 @@ else
     bar_height=[0.93;0.93;0.93;0.88;0.88;0.85;0.85];
     
     for i=1:length(mptypes)
-        i
+
         mp_subset=mp(mp(:,2)==mptypes(i),1);
         depth_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
         if length(depth_subset)>100
-            i
-            d = msgbox({'The amount of matchpoints to display is very large. Please set x-limits to be smaller.'});
+            
             too_large_flag=1;
             break
         end
@@ -868,8 +867,11 @@ else
     mptypes_primary=[1,3,4];
     mp_primary = mp(ismember(mp(:,2),mptypes_primary),1);
     depth_subset_primary = find(mp_primary>=xlim(1) & mp_primary<=xlim(2));
+    if ~too_large_flag
     text(mp_primary(depth_subset_primary), (bar_height(1)+bar_height(1)/15)*ones(length(depth_subset_primary),1), num2str(depth_subset_primary), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
-    
+    else
+    text(mp_primary(depth_subset_primary(1)), (bar_height(1)+bar_height(1)/15), 'The amount of matchpoints to display is very large. Please set x-limits to be smaller.', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');       
+    end
     %keep track of the plotted primary mps for the evaluate function:
     if ~isempty(depth_subset_primary) & ~too_large_flag
         handles.mp1_idx{no1} = depth_subset_primary;
