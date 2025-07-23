@@ -4,7 +4,7 @@ function matchmaker(varargin)
 % (Originally released as v2.04, 27 July 2011, Sune Olander Rasmussen)
 % MATCHMAKER syntax : matchmaker(filenames, datafileID, numberofpanels);
 %    filenames        Name of .m file containing a list of data and matchpoint file names (try 'files_main')
-%    datafileID       Vector of length N indicating which datafiles from "filenames" that should be used
+%    datafileID       Vector of length N indicating which init_file_name from "filenames" that should be used
 %    numberofpanels   Vector of length N determining the number of data sub-panels in each data window
 %
 % Example : matchmaker('files_main', [2 3], [1 4]);
@@ -34,9 +34,9 @@ end
 
 %--- Opens GUI and set the appearance of buttons, axes, etc:
 
-function open_request(datafiles, fileno, N_species)
+function open_request(init_file_name, fileno, N_species)
 try
-    eval(datafiles);
+    eval(init_file_name);
 catch
     disp('ERROR in Matchmaker : File name file could not be read.');
     return;
@@ -47,12 +47,12 @@ if size(fileno) ~= size(N_species)
     return;
 end
 
-handles.datafiles=datafiles;
+handles.init_file_name=init_file_name;
 
 % GUI window
 handles.fig = figure('units','normalized',...
     'outerposition', [0.025 0.075 0.85 0.85], ...%initial dimensions upon opening
-    'name', ['Matchmaker - ',datafiles],...
+    'name', ['Matchmaker - ',init_file_name],...
     'CloseRequestFcn', 'matchmaker(''exit_Callback'',gcbo,[],guidata(gcbo))',...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))',...
     'nextplot', 'add', 'color', 0.9*[1 1 1], 'pointer', 'cross',...
@@ -375,9 +375,11 @@ for i = 1:N
             'callback', ['matchmaker(''change_color_Callback'',gcbo,[],guidata(gcbo),' num2str(i) ',' num2str(j) ')'], 'fontname', 'default', 'fontsize', font1, 'fontweight', 'normal', 'horizontalalignment', 'center', 'enable', 'on', 'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
         
     end
+    if isequal(sett.command_line_info,{handles.init_file_name;handles.fileno})
     set([handles.tickax{i,:} handles.plotax{i,:} handles.bigax(i) handles.bigax2(i)], 'xlim', sett.xlim(fileno(i),:)); % Set the x limits according to the last values
     set(handles.minx(i), 'string', num2str(sett.xlim(fileno(i),1)));
     set(handles.maxx(i), 'string', num2str(sett.xlim(fileno(i),2)));
+    end
 end
 for i = 1:N
     axes(handles.bigax2(i));
@@ -1157,7 +1159,7 @@ figure(handles.fig);
 function save_Callback(~, handles)
 
 % Setting up the back-up folder
-datafile=handles.datafiles;
+datafile=handles.init_file_name;
 
 if ~exist(['matchfiles/matchfiles_backup/' datafile '/' ],'dir')
     mkdir(['matchfiles/matchfiles_backup/' datafile '/' ]); % create backup folder with datafile name
@@ -1214,7 +1216,7 @@ for i = 1:handles.N
         end
     end
 end
-copyfile([datafile '.m'], output_dir); % save datafiles in backup folder
+copyfile([datafile '.m'], output_dir); % save init_file_name in backup folder
 disp(['Output directory: ','/',output_dir]);
 set(handles.save, 'enable', 'off');
 
@@ -1259,7 +1261,9 @@ load('matchmaker_sett.mat');
 for i = 1:length(fileno)
     sett.xlim(fileno(i),:) = get(handles.bigax(i), 'xlim');
     sett.specs{fileno(i)} = handles.selectedspecs{i};
+    
 end
+sett.command_line_info={handles.init_file_name;handles.fileno};
 save('matchmaker_sett.mat', 'sett'); %Saves xlim and the displayed species so they are re-loaded next time you open the program
 if isfield(handles, 'evaluatefigurehandle')
     delete(handles.evaluatefigurehandle)
@@ -1431,7 +1435,7 @@ guidata(hObject, handles);
 
 % Save new colors of data-species
 colours=handles.colours{no1};
-eval(handles.datafiles); %load file names of icecores to be able to access the datafile
+eval(handles.init_file_name); %load file names of icecores to be able to access the datafile
 save(['data' filesep files.datafile{handles.fileno(no1)}],'colours','-append'); %save new colors in datafile
 
 if color_activated_save==1 %if save was activated only by the color button
