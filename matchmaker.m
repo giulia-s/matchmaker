@@ -26,6 +26,7 @@ switch nargin
     case 3
         eval('open_request(varargin{1:3})');
     case {4, 5, 6, 7}
+
         eval([char(varargin{1}) '(varargin{[2 4:nargin]})']);
     otherwise
         disp('Wrong number of arguments when calling matchmaker.m');
@@ -160,6 +161,7 @@ button_L = (1-ax_left_edge_pos)/N_buttons;
 small_button_L=button_L/2;
 button_x_spacing =0.001;
 
+%BOTTOM LINE BUTTONS
 dummyax = axes('position', [0 0 1 1], 'xlim', [0 1], 'ylim', [0 1], 'visible', 'off', 'nextplot', 'add');
 handles.title = text(buttons_left_edge_pos, bottom_edge_pos,...
     'MATCHMAKER', 'VerticalAlignment', 'bottom', 'HorizontalAlignment', 'left', 'Fontsize', font2, 'fontweight', 'bold', 'parent', dummyax);
@@ -201,28 +203,26 @@ handles.edit = uicontrol('units', 'normalized', ...
     'Tooltip', 'Activate MatchPoint adding/removing. (E)',...
     'callback','matchmaker(''edit_marks_callback'',gcbo,[],guidata(gcbo), 0)',...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
-
-
 p_neighbour=get(handles.edit,'position');
 handles.ref_mark = uicontrol('units', 'normalized', ...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
     'string', 'Reference mps', 'style', 'radio', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 1, ...
     'Tooltip', 'Edit type 1(click),3(shift-click),4(r-click) (R)',...
-    'callback','matchmaker(''ref_mark_Callback'',gcbo,[],guidata(gcbo))',...
+    'callback','matchmaker(''ref_mark_Callback'',gcbo,[],guidata(gcbo), 0)',...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.ref_mark,'position');
 handles.temp_mark =    uicontrol('units', 'normalized',...
     'Tooltip', 'Edit type 2(click),5(r-click) (T)',...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
     'string', 'Thin mps', 'style', 'radio',...
-    'callback', 'matchmaker(''temp_mark_Callback'',gcbo,[],guidata(gcbo))', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 0, 'Selected', 'off',...
+    'callback','matchmaker(''temp_mark_Callback'',gcbo,[],guidata(gcbo), 0)',...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.temp_mark,'position');
 handles.annual_mark =    uicontrol('units', 'normalized',...
     'Tooltip', 'Edit type 6(click),7(r-click) (Y)',...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
     'string', 'Years mps', 'style', 'radio',...
-    'callback', 'matchmaker(''annual_mark_Callback'',gcbo,[],guidata(gcbo))', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 0, 'Selected', 'off',...
+    'callback', 'matchmaker(''annual_mark_Callback'',gcbo,[],guidata(gcbo),0)',...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 % Get all the handles to everything we want to set in a single array.
 handles.radiogroup = [handles.ref_mark, handles.annual_mark, handles.temp_mark];
@@ -235,7 +235,7 @@ handles.hide_minor_mp = uicontrol('units', 'normalized', ...
     'position', [p_neighbour(1)+p_neighbour(3) + button_x_spacing, bottom_edge_pos, button_L, button_H],...
     'string', 'Hide minor mps', 'style', 'togglebutton', ...
     'Tooltip', 'Hide minor mp, i.e. types 2,5,6,7. (H)',...
-    'callback', 'matchmaker(''hide_minor_mp_Callback'',gcbo,[],guidata(gcbo))', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 0, 'Selected', 'off', ...
+    'callback', 'matchmaker(''hide_minor_mp_Callback'',gcbo,[],guidata(gcbo),0)', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'value', 0, 'Selected', 'off', ...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 p_neighbour=get(handles.hide_minor_mp,'position');
 handles.secondary_marks = uicontrol('units', 'normalized', ...
@@ -579,7 +579,6 @@ guidata(handles.fig, handles)
 %--- Function for adding new mps:
 
 function axesclick_Callback(hObject, handles, no1)
-'axesclick'
 if get(handles.edit, 'Value') == 1 % it it's possible to edit mps
     type = get(hObject,'type'); % get the type of surface you clicked on
     if strcmp(type,'axes') %white-area click
@@ -675,7 +674,6 @@ end
 %deleting an mp found in proximity
 
 function mpclick_Callback(hObject, handles, no1)
-'mpclick'
 if get(handles.edit, 'Value') == 1 %if it's possible to mark mps
     
     try %if clicking on mp
@@ -1434,22 +1432,7 @@ if color_activated_save==1 %if save was activated only by the color button
     set(handles.save, 'enable', 'off'); %put if off again
 end
 
-%--Annual layer callback
-function annual_mark_Callback(hObject, handles, keyboardcall)
-set(handles.radiogroup, 'Value',0);
-if keyboardcall == 1
-    
-    state = get(handles.annual_mark, 'Value');
-    if state == 1
-        set(handles.annual_mark, 'Value', 0);
-    else
-        set(handles.annual_mark, 'Value', 1);
-    end
-end
-for i = 1:handles.N
-    handles = plotmp(handles, i);
-end
-guidata(hObject, handles);
+
 
 %
 
@@ -1487,6 +1470,7 @@ end
 %--
 
 function  edit_marks_callback(~,handles,keyboardcall)
+
 if keyboardcall == 1
     state = get(handles.edit, 'Value');
     if state == 1
@@ -1504,6 +1488,7 @@ end
 
 %--Ref layer callback
 function ref_mark_Callback(hObject, handles, keyboardcall)
+
 set(handles.radiogroup, 'Value', 0);
 if keyboardcall == 1
     state = get(handles.ref_mark, 'Value');
@@ -1513,6 +1498,9 @@ if keyboardcall == 1
         set(handles.ref_mark, 'Value', 1);
     end
 end
+if keyboardcall == 0
+    set(handles.ref_mark, 'Value', 1);
+end
 for i = 1:handles.N
     handles = plotmp(handles, i);
 end
@@ -1520,6 +1508,7 @@ guidata(hObject, handles);
 
 %--Temp mp callback
 function temp_mark_Callback(hObject, handles, keyboardcall)
+
 set(handles.radiogroup, 'Value', 0);
 if keyboardcall == 1
     state = get(handles.temp_mark, 'Value');
@@ -1529,10 +1518,34 @@ if keyboardcall == 1
         set(handles.temp_mark, 'Value', 1);
     end
 end
+if keyboardcall == 0
+    set(handles.temp_mark, 'Value', 1);
+end
 for i = 1:handles.N
     handles = plotmp(handles, i);
 end
 guidata(hObject, handles);
+
+%--Annual layer callback
+function annual_mark_Callback(hObject, handles, keyboardcall)
+set(handles.radiogroup, 'Value',0);
+if keyboardcall == 1
+    
+    state = get(handles.annual_mark, 'Value');
+    if state == 1
+        set(handles.annual_mark, 'Value', 0);
+    else
+        set(handles.annual_mark, 'Value', 1);
+    end
+end
+if keyboardcall == 0
+    set(handles.annual_mark, 'Value', 1);
+end
+for i = 1:handles.N
+    handles = plotmp(handles, i);
+end
+guidata(hObject, handles);
+
 
 function create_secondary(hObject,handles,no1, not_allowed_mp)
 
