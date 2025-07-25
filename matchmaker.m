@@ -902,6 +902,8 @@ else
     
     %green layers numbering
     mp_green = mp(ismember(mp(:,2),[6,7]),1);
+    n_green_intervals=[];
+    
     if ~isempty(depth_subset_primary) 
         % number only after the left-most primary bar
         depth_subset_green = find(mp_green>=mp_primary(depth_subset_primary(1),1) & mp_green<=xlim(2));
@@ -914,6 +916,8 @@ else
     else
         %number all
         depth_subset_green = find(mp_green>=xlim(1) & mp_green<=xlim(2));
+        n_green_intervals(1)=1;
+        n_green_intervals(2)=length(depth_subset_green);
     end
     
             too_many_mp_flag=0;
