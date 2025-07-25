@@ -616,7 +616,11 @@ if get(handles.edit, 'Value') == 1 % it it's possible to edit mps
     end
     
     %identify if there is an mp to delete
-    del_idx=check_mp_click_inches_conversion(mp,pos(1,1),handles.bigax(no1));
+    if ~isempty(mp)
+        del_idx=check_mp_click_inches_conversion(mp,pos(1,1),handles.bigax(no1));
+    else
+        del_idx=[];
+    end
     
     if ~isempty(del_idx)
         mpclick_Callback(click_pos_object, handles, no1);
