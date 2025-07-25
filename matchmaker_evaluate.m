@@ -240,9 +240,11 @@ end
 %---
 
 function plotcurves(handles)
+
 lowmp = str2double(get(handles.lowmp, 'string'));
 highmp = str2double(get(handles.highmp, 'string'));
-idx1 = lowmp : highmp;
+idx_display = lowmp : highmp;
+
 cla(handles.ax(1));
 cla(handles.ax(2));
 
@@ -250,7 +252,7 @@ colours = [{'b'} {'g'} {'r'} {'c'} {'m'} {'k'}];
 
 mp_master = handles.mp{handles.masterno};
 mp_master_thick = mp_master(ismember(mp_master(:,2),[1,3,4]),:);
-
+% 
 if isfield(handles,'mp_2')
     mp_master_2 = handles.mp_2{handles.masterno};
     if sum(mp_master_2)==0
@@ -266,7 +268,7 @@ if isfield(handles,'mp_2')
 else
     othermarks=0;
 end
-
+% 
 if othermarks % if mp_2 is a field
     if ~isempty(temp_idx_2) & length(temp_idx_2)>1 % if mp_2 is a field, there is enough mp_2, and it's more than one mp
         lowmp_2=temp_idx_2(1);
@@ -277,49 +279,54 @@ if othermarks % if mp_2 is a field
         othermarks=0; %don't evaluate mp_2
     end
 end
-
-if length(idx1) < 2
+% 
+if length(idx_display) < 2
     return
 end
-
+% 
 deltadepth=cell(length(setdiff(1:handles.N, handles.masterno)),1);
 deltadepth_2=cell(length(setdiff(1:handles.N, handles.masterno)),1);
 
 for i = setdiff(1:handles.N, handles.masterno) % all cores, excluding master_no
+% 
     mp = handles.mp{i};
     mp_2 = handles.mp_2{i};
     if length(mp(:,1))>=2
         mp_thick = mp(ismember(mp(:,2),[1,3,4]),:);      
-
-        idx_test=1:idx1(end);
-        logical_array_master=ismember(mp_master_thick(idx_test,2),[1,3]);
-        logical_array=ismember(mp_thick(idx_test,2),[1,3]);
-        idx_sure = intersect( idx_test(logical_array_master & logical_array), idx1);
-        
+% 
+        idx_evaluate=1:idx_display(end);
+%         
+%         %only types 1 and 3 are used for evaluation
+        logical_array_master=ismember(mp_master_thick(idx_evaluate,2),[1,3]);
+        logical_array=ismember(mp_thick(idx_evaluate,2),[1,3]);
+%         
+        idx_sure = intersect( idx_evaluate(logical_array_master & logical_array), idx_display);
+% 
+%         
         if othermarks
             mp_thick_2 = mp_2(ismember(mp_2(:,2),[1,3,4]),:);
             i2=min(length(mp_thick_2),highmp_2);
             
-            idx_test=1:i2;
-            logical_array_master=ismember(mp_master_thick_2(idx_test,2),[1,3]);
-            logical_array=ismember(mp_thick_2(idx_test,2),[1,3]);
-            idx_sure_2 = intersect( idx_test(logical_array_master & logical_array), idx2);
-
+            idx_evaluate=1:i2;
+            logical_array_master=ismember(mp_master_thick_2(idx_evaluate,2),[1,3]);
+            logical_array=ismember(mp_thick_2(idx_evaluate,2),[1,3]);
+            idx_sure_2 = intersect( idx_evaluate(logical_array_master & logical_array), idx2);
+% 
         end
-        
+%         
         if length(idx_sure) == 1
             disp('Not enough first order matchpoints on screen (blue type 4 matchpoints do not count)');
         else %calculating the steps for the right-side plot
-
+% 
             if length(idx_sure) == 2
                 deltadepth{i} = [mp_master_thick(idx_sure(1), 1), diff(mp_thick(idx_sure, 1));...
                                  mp_thick(idx_sure(2), 1), diff(mp_thick(idx_sure, 1))];
-
+% 
             else
                 deltadepth{i} = stepit([mp_master_thick(idx_sure(2:end), 1), diff(mp_thick(idx_sure, 1))./diff(mp_master_thick(idx_sure, 1))]);
                 deltadepth{i}(1,1) = mp_master_thick(idx_sure(1), 1);
             end
-            
+%             
             if othermarks
                 if length(idx_sure_2) == 2
                     deltadepth_2{i} = [mp_master_thick_2(idx_sure_2(1), 1), diff(mp_thick_2(idx_sure_2, 1));...
@@ -329,37 +336,38 @@ for i = setdiff(1:handles.N, handles.masterno) % all cores, excluding master_no
                     deltadepth_2{i}(1,1) = mp_master_thick_2(idx_sure_2(1), 1);
                 end
             end
-            
-            %right-side plot
-
+%             
+%             %right-side plot
+% 
             plot(deltadepth{i}(:,1), deltadepth{i}(:,2), 'DisplayName',handles.core{i},...
                 'color', colours{i}, 'linewidth', 2, 'parent', handles.ax(2));
             if othermarks
                 plot(deltadepth_2{i}(:,1), deltadepth_2{i}(:,2),'-.' ,'DisplayName',[handles.core{i} ' others'],...
                     'color', colours{i}, 'linewidth', 1, 'parent', handles.ax(2));
             end
-            
-            %left-side plot
+%             
+%             %left-side plot
             plotdiff = get(handles.diff, 'Value'); %if button "depth diff" is toggled
             if plotdiff
                 handles.ax(1).YLabel.String = 'arb.units';
             else
                 handles.ax(1).YLabel.String ='m';
             end
-            
-            offset = mean(mp_thick(idx1, 1) - mp_master_thick(idx1, 1));
-            
-
-            plot(mp_master_thick(idx1, 1), mp_thick(idx1, 1)-plotdiff*(mp_master_thick(idx1, 1)+offset),...
-                'HandleVisibility','off',...
-                'marker','o','MarkerFaceColor','none', 'color', colours{i}, 'Linewidth', 1, 'parent', handles.ax(1), 'hittest', 'off');
-            plot(mp_master_thick(idx_sure, 1), mp_thick(idx_sure, 1)-plotdiff*(mp_master_thick(idx_sure, 1)+offset),'-',...
+%             
+            offset = mean(mp_thick(idx_display, 1) - mp_master_thick(idx_display, 1));% 
+%             
+             plot(mp_master_thick(idx_sure, 1), mp_thick(idx_sure, 1)-plotdiff*(mp_master_thick(idx_sure, 1)+offset),'-',...
                 'DisplayName',handles.core{i},...
                 'marker','o','MarkerFaceColor',colours{i}, 'color', colours{i}, 'Linewidth', 2, 'parent', handles.ax(1), 'hittest', 'off');
+            p=plot(mp_master_thick(idx_display, 1), mp_thick(idx_display, 1)-plotdiff*(mp_master_thick(idx_display, 1)+offset),'-',...%problem:handlevisibility makes is also invisible to cla!
+                 'DisplayName', [handles.core{i} ' (blue mps)'],...
+                 'marker','o','MarkerFaceColor','none', 'color', colours{i}, 'Linewidth', 1, 'parent', handles.ax(1), 'hittest', 'off');
+           
+%             
             if othermarks
                 offset_2 = mean(mp_thick_2(idx2, 1) - mp_master_thick_2(idx2, 1));
                 plot(mp_master_thick_2(i2, 1), mp_thick_2(i2, 1)-plotdiff*(mp_master_thick_2(i2, 1)+offset_2),...
-                    'HandleVisibility','off',...
+                 'DisplayName', [handles.core{i} ' (blue mps)'],...
                     'marker','o','MarkerFaceColor','none', 'color', colours{i}, 'Linewidth', 1, 'parent', handles.ax(1), 'hittest', 'off');
                 plot(mp_master_thick_2(idx_sure_2, 1), mp_thick_2(idx_sure_2, 1)-plotdiff*(mp_master_thick_2(idx_sure_2, 1)+offset_2),'-.',...
                     'DisplayName',[handles.core{i} ' others'],...
@@ -371,9 +379,9 @@ end
 
 h_lgd = legend(handles.ax(2));
 set(h_lgd, 'box', 'off');
-axes(handles.ax(1))
 h_lgd = legend(handles.ax(1));
 set(h_lgd, 'box', 'off');
+set(p,'HandleVisibility','on'); %otherwise cla won't clear this curve
 
 
 
