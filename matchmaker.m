@@ -1325,9 +1325,8 @@ if keyboardcall
 end
 if get(handles.hide_minor_mp,'Value')
     set([handles.temp_mark, handles.annual_mark], 'Enable', 'off');
-else
-    set([handles.temp_mark, handles.annual_mark], 'Enable', 'on');
-    
+elseif ~get(handles.hide_minor_mp,'Value') & get(handles.edit,'Value')
+    set([handles.temp_mark, handles.annual_mark], 'Enable', 'on');  
 end
 for i = 1:handles.N
     handles = plotmp(handles, i);
