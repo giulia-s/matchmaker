@@ -382,6 +382,10 @@ for i = 1:N
     set([handles.tickax{i,:} handles.plotax{i,:} handles.bigax(i) handles.bigax2(i)], 'xlim', sett.xlim(fileno(i),:)); % Set the x limits according to the last values
     set(handles.minx(i), 'string', num2str(sett.xlim(fileno(i),1)));
     set(handles.maxx(i), 'string', num2str(sett.xlim(fileno(i),2)));
+    else
+    set([handles.tickax{i,:} handles.plotax{i,:} handles.bigax(i) handles.bigax2(i)], 'xlim', [0 100]); % Set the x limits according to the last values
+    set(handles.minx(i), 'string', 0);
+    set(handles.maxx(i), 'string', 100);   
     end
 end
 for i = 1:N
@@ -907,13 +911,14 @@ else
     if ~isempty(depth_subset_primary) 
         % number only after the left-most primary bar
         depth_subset_green = find(mp_green>=mp_primary(depth_subset_primary(1),1) & mp_green<=xlim(2));
-        n_green_intervals(1)=1;
-        [~,i_ref]=min(abs(mp_primary(depth_subset_primary,1) - mp_green(depth_subset_green(1)) ));
-        for n=2:length(depth_subset_primary)-i_ref+1
-            n_green_intervals(n)=length(find(mp_green>=mp_primary(depth_subset_primary(i_ref),1) & mp_green<=mp_primary(depth_subset_primary(i_ref+n-1),1)));
+        if ~isempty(depth_subset_green) 
+            n_green_intervals(1)=1;
+            [~,i_ref]=min(abs(mp_primary(depth_subset_primary,1) - mp_green(depth_subset_green(1)) ));
+            for n=2:length(depth_subset_primary)-i_ref+1
+                n_green_intervals(n)=length(find(mp_green>=mp_primary(depth_subset_primary(i_ref),1) & mp_green<=mp_primary(depth_subset_primary(i_ref+n-1),1)));
+            end
+            n_green_intervals(end+1)=length(depth_subset_green);
         end
-        n_green_intervals(end+1)=length(depth_subset_green);
-        
     else
         %number all
         depth_subset_green = find(mp_green>=xlim(1) & mp_green<=xlim(2));
