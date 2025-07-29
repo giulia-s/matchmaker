@@ -841,7 +841,7 @@ end
 xlim = get(handles.bigax(no1), 'xlim');
 
 N_max_MP=100; %set an arbitrary max number of mp that is possible to display
-N_max_mp_green=500; %set an arbitrary max number of green mp that is possible to display
+N_max_mp_green=150; %set an arbitrary max number of green mp that is possible to display
 
 if isempty(mp)
     return
@@ -908,10 +908,11 @@ else
         % number only after the left-most primary bar
         depth_subset_green = find(mp_green>=mp_primary(depth_subset_primary(1),1) & mp_green<=xlim(2));
         n_green_intervals(1)=1;
-        for n=2:length(depth_subset_primary)
-            n_green_intervals(n)=length(find(mp_green>=mp_primary(depth_subset_primary(1),1) & mp_green<=mp_primary(depth_subset_primary(n),1)));
+        [~,i_ref]=min(abs(mp_primary(depth_subset_primary,1) - mp_green(depth_subset_green(1)) ));
+        for n=2:length(depth_subset_primary)-i_ref+1
+            n_green_intervals(n)=length(find(mp_green>=mp_primary(depth_subset_primary(i_ref),1) & mp_green<=mp_primary(depth_subset_primary(i_ref+n-1),1)));
         end
-        n_green_intervals(n+1)=length(depth_subset_green);
+        n_green_intervals(end+1)=length(depth_subset_green);
         
     else
         %number all
@@ -927,16 +928,20 @@ else
                     too_many_mp_flag=2;
             end
                 
-            if too_many_mp_flag==1
-                text(mp_green(depth_subset_green(1)), (bar_height(end)+bar_height(1)/10), 'Too many Year bars to diplay NUMBERS...Please set xlim to be smaller', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
-                for n=n_green_intervals
-                    text(mp_green(depth_subset_green(n)), (bar_height(end)+bar_height(1)/15), num2str(n), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
-                end
-            elseif too_many_mp_flag==2
+            if too_many_mp_flag==1 | too_many_mp_flag==2
 
-                text(mp_green(depth_subset_green(1)), (bar_height(end)+bar_height(1)/15), 'Too many Year bars to diplay AT ALL...Please set xlim to be smaller', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
-            elseif 1-get(handles.hide_minor_mp,'Value') & too_many_mp_flag==0    
-                text(mp_green(depth_subset_green), (bar_height(end)+bar_height(1)/8)*ones(length(depth_subset_green),1), num2str((1:length(depth_subset_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+                for n=1:length(n_green_intervals)
+
+                    text(mp_green(depth_subset_green(n_green_intervals(n))), (bar_height(end)+bar_height(1)/15), num2str(n_green_intervals(n)), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+                end
+                if too_many_mp_flag==2
+                    text(mp_green(depth_subset_green(1)), (bar_height(end)+bar_height(1)/10), 'Too many Years to display...Please set x-lim to be smaller', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+                elseif too_many_mp_flag==1
+                    text(mp_green(depth_subset_green(1)), (bar_height(end)+bar_height(1)/10), 'Too many green numbers to display...Please set x-lim to be smaller', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+                end
+                
+            elseif 1-get(handles.hide_minor_mp,'Value') & too_many_mp_flag==0
+                text(mp_green(depth_subset_green), (bar_height(end)+bar_height(1)/15)*ones(length(depth_subset_green),1), num2str((1:length(depth_subset_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
             end
             too_many_mp_flag=0;
     
