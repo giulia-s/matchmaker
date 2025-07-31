@@ -915,7 +915,8 @@ else
     % plot all mps within xlim(1) and xlim(2)
     mptypes=[1,3,4,2,5,6,7];
     show_mp = [1,1,1,1-get(handles.hide_minor_mp,'Value'),1-get(handles.hide_minor_mp,'Value'),1-get(handles.hide_minor_mp,'Value'),1-get(handles.hide_minor_mp,'Value')];%if minor_mp button is toggled
-    linewidth=[6,6,6,4,4,2,1];
+    linewidth=[6,6,6,4,4,2,2];
+    linetype={'-','-','-','-','-','-','-.'};
     colors=[greytone; redtone; bluetone; greytone; bluetone; greentone; greentone];
     bar_height=[0.93;0.93;0.93;0.88;0.88;0.85;0.85];
     
@@ -934,7 +935,8 @@ else
         end
         
         if ~isempty(depth_subset) & show_mp(i) & ~too_many_mp_flag
-            plot((mp_subset(depth_subset)*[1 1])', repmat([0.01+secondary_marks*0.5 bar_height(i)]', 1, length(depth_subset)), 'linewidth', linewidth(i), 'color', colors(i,:),...
+            plot((mp_subset(depth_subset)*[1 1])', repmat([0.01+secondary_marks*0.5 bar_height(i)]', 1, length(depth_subset)),...
+                linetype{i},'linewidth', linewidth(i), 'color', colors(i,:),...
                 'parent', handles.bigax2(no1),...
                 'ButtonDownFcn', [' matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ');'],...
                 'UserData',[mptypes(i),secondary_marks]);
