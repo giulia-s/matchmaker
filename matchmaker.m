@@ -252,6 +252,7 @@ handles.thin_mark =    uicontrol('units', 'normalized',...
     'position', [axis_left_xpos+(Buttonnumber-1)*(button_L+button_x_spacing), y0, button_L, button_H2],...
     'Tooltip', 'Edit type 2(click),5(r-click) (T)',...
     'string', 'Thin mps', 'style', 'radio', 'Backgroundcolor', figcol, ...
+    'value',0,...
     'callback','matchmaker(''temp_mark_Callback'',gcbo,[],guidata(gcbo), 0)',...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 
@@ -260,6 +261,7 @@ handles.annual_mark =    uicontrol('units', 'normalized',...
     'position', [axis_left_xpos+(Buttonnumber-1)*(button_L+button_x_spacing), y0, button_L, button_H2],...
     'Tooltip', 'Edit type 6(click),7(r-click) (Y)',...
     'string', 'Years', 'style', 'radio', 'Backgroundcolor', figcol, ...
+    'value',0,...
     'callback', 'matchmaker(''annual_mark_Callback'',gcbo,[],guidata(gcbo),0)',...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 % Get all the handles to everything we want to set in a single array.
@@ -1608,7 +1610,7 @@ thin_mark = get(handles.thin_mark, 'Value');
 if ref_mark & strcmp(get(handles.ref_mark, 'Enable'),'on')
     if strcmp(selectiontype, 'normal') %click
         mptype = 1;
-    elseif strcmp(selectiontype, 'extend') %alt click
+    elseif strcmp(selectiontype, 'extend') %shift-click
         mptype = 3;
     elseif strcmp(selectiontype, 'alt')  %right click
         mptype=4;
@@ -1618,12 +1620,16 @@ elseif annual_mark & strcmp(get(handles.annual_mark, 'Enable'),'on')
         mptype = 6;
     elseif strcmp(selectiontype, 'alt')  %rightclick
         mptype=7;
+    elseif strcmp(selectiontype, 'extend') %shift-click
+        mptype = 7;
     end
 elseif thin_mark & strcmp(get(handles.thin_mark, 'Enable'),'on')
     if strcmp(selectiontype, 'normal') %click
         mptype = 2;
-    elseif strcmp(selectiontype, 'alt')  %rightclick
+    elseif strcmp(selectiontype, 'alt')  %right-click
         mptype=5;
+    elseif strcmp(selectiontype, 'extend') %shift-click
+        mptype = 5;
     end
 else
     return;
