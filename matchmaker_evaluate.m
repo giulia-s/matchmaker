@@ -356,22 +356,29 @@ for i = setdiff(1:handles.N, handles.masterno) % all cores, excluding master_no
 %             
             offset = mean(mp_thick(idx_display, 1) - mp_master_thick(idx_display, 1));% 
 %             
-             plot(mp_master_thick(idx_sure, 1), mp_thick(idx_sure, 1)-plotdiff*(mp_master_thick(idx_sure, 1)+offset),'-',...
+
+            
+            l1=plot(mp_master_thick(idx_sure, 1), mp_thick(idx_sure, 1)-plotdiff*(mp_master_thick(idx_sure, 1)+offset),'-',...
                 'DisplayName',handles.core{i},...
-                'marker','o','MarkerFaceColor',colours{i}, 'color', colours{i}, 'Linewidth', 2, 'parent', handles.ax(1), 'hittest', 'off');
-            p=plot(mp_master_thick(idx_display, 1), mp_thick(idx_display, 1)-plotdiff*(mp_master_thick(idx_display, 1)+offset),'-',...%problem:handlevisibility makes is also invisible to cla!
-                 'DisplayName', [handles.core{i} ' (blue mps)'],...
-                 'marker','o','MarkerFaceColor','none', 'color', colours{i}, 'Linewidth', 1, 'parent', handles.ax(1), 'hittest', 'off');
-           
+                'marker','o','MarkerFaceColor',colours{i}, 'color', colours{i}, 'Linewidth', 2, 'parent', handles.ax(1));
+            l2=plot(mp_master_thick(idx_display, 1), mp_thick(idx_display, 1)-plotdiff*(mp_master_thick(idx_display, 1)+offset),':', 'color', colours{i},...
+                'DisplayName', [handles.core{i} ' (blue mps)'],...
+                'handlevisibility','on','parent', handles.ax(1));
+            for j=1:length(idx_display)
+                p=scatter(mp_master_thick(idx_display(j), 1), mp_thick(idx_display(j), 1)-plotdiff*(mp_master_thick(idx_display(j), 1)+offset),...%problem:handlevisibility makes is also invisible to cla!
+                 'handlevisibility','on',...
+                 'marker','o','MarkerFaceColor','none', 'MarkerEdgeColor', colours{i},  'parent', handles.ax(1),...
+                 'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo,[],guidata(gcbo))','Tag', num2str(idx_display(j)));
+            end
 %             
             if othermarks
                 offset_2 = mean(mp_thick_2(idx2, 1) - mp_master_thick_2(idx2, 1));
                 plot(mp_master_thick_2(i2, 1), mp_thick_2(i2, 1)-plotdiff*(mp_master_thick_2(i2, 1)+offset_2),...
                  'DisplayName', [handles.core{i} ' (blue mps)'],...
-                    'marker','o','MarkerFaceColor','none', 'color', colours{i}, 'Linewidth', 1, 'parent', handles.ax(1), 'hittest', 'off');
+                    'marker','o','MarkerFaceColor','none', 'color', colours{i}, 'Linewidth', 1, 'parent', handles.ax(1), 'hittest', 'on');
                 plot(mp_master_thick_2(idx_sure_2, 1), mp_thick_2(idx_sure_2, 1)-plotdiff*(mp_master_thick_2(idx_sure_2, 1)+offset_2),'-.',...
                     'DisplayName',[handles.core{i} ' others'],...
-                    'marker','o','MarkerFaceColor',colours{i},'color', colours{i}, 'Linewidth', 2, 'parent', handles.ax(1), 'hittest', 'off');
+                    'marker','o','MarkerFaceColor',colours{i},'color', colours{i}, 'Linewidth', 2, 'parent', handles.ax(1), 'hittest', 'on');
             end   
         end
     end
@@ -379,8 +386,8 @@ end
 
 h_lgd = legend(handles.ax(2));
 set(h_lgd, 'box', 'off');
-h_lgd = legend(handles.ax(1));
-set(h_lgd, 'box', 'off');
+h_lgd = legend(handles.ax(1))
+set(h_lgd, 'box', 'off','String',{handles.core{i} [handles.core{i} ' (blue mps)']});
 set(p,'HandleVisibility','on'); %otherwise cla won't clear this curve
 
 
@@ -389,6 +396,7 @@ set(p,'HandleVisibility','on'); %otherwise cla won't clear this curve
 function mpclick_Callback(hObject, handles)
 id = get(hObject, 'tag');
 set(handles.info, 'string', id);
+
 mpmaster = handles.mp{handles.masterno};
 mp_master_thick = mpmaster(ismember(mpmaster(:,2),[1,3,4]),1);
 mp_master_thin = mpmaster(ismember(mpmaster(:,2),[2,5]), 1);
@@ -399,9 +407,9 @@ if isfield(handles, 'indicatorline')
     end
 end
 if ismember(pos, mp_master_thin)
-    handles.indicatorline = plot([pos pos], get(handles.ax(2), 'ylim')+[1e-3 -1e-3], ':k', 'parent', handles.ax(2));
+    handles.indicatorline = plot([pos pos], get(handles.ax(2), 'ylim')+[1e-3 -1e-3], ':k','DisplayName',['Match point ID=', num2str(id)], 'parent', handles.ax(2));
 else
     pos = mp_master_thick(pos);
-    handles.indicatorline = plot([pos pos], get(handles.ax(2), 'ylim')+[1e-3 -1e-3], ':k', 'parent', handles.ax(2));
+    handles.indicatorline = plot([pos pos], get(handles.ax(2), 'ylim')+[1e-3 -1e-3], ':k','DisplayName',['Match point ID=', num2str(id)],'parent', handles.ax(2));
 end
 guidata(handles.fig, handles);

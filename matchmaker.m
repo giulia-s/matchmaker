@@ -121,8 +121,9 @@ for i = 1:N
         handles.matchfile_secondary{i} = files.matchfile_secondary{fileno(i)};
     catch
         disp(['Matchfile_secondary file for ' files.core{fileno(i)} ' not found. Program will continue without.']);
-        mp_2=zeros(1,2);
-        handles.mp_2{i}=zeros(1,2);
+        mp_2=[];
+        handles.mp_2{i}=[];
+        
     end
     
     if length(sett.specs{fileno(i)}) == N_species(i)
@@ -1359,6 +1360,16 @@ for i = 1:handles.N
         mp=handles.mp_2{i}; % save secondary dataset
         
         a=split(handles.matchfile{i},'/');
+        if ~isfield(handles,'matchfile_secondary') %if none of the cores was provided wit a secondary matchfile
+            for j = 1:handles.N
+                a_temp=split(handles.matchfile{j},'/');
+                handles.matchfile_secondary{j}=[a_temp{end}(1:end-4) '_secondary.mat'];
+            end
+        end
+        if isempty(handles.matchfile_secondary{i}) %if any one of the cores was provided wit a secondary matchfile
+            handles.matchfile_secondary{i}=['test_' num2str(i) '.mat'];
+        end
+        
         b=split(handles.matchfile_secondary{i},'/');
         
         if strcmp(a{end},b{end}) %if they are called the same
