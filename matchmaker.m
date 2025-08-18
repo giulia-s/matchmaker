@@ -292,7 +292,7 @@ handles.secondary_marks = uicontrol('units', 'normalized', ...
 Buttonnumber = Buttonnumber+1;
 handles.undo = uicontrol('units', 'normalized',...
     'position', [axis_left_xpos+(Buttonnumber-1)*(button_L+button_x_spacing), y0, button_L, button_H2],...
-    'string', 'Undo', 'style', 'pushbutton', 'Backgroundcolor', butcol, ...
+    'string', 'Undo', 'style', 'pushbutton', 'Backgroundcolor', butcol,'enable','off', ...
     'Tooltip', ['Cancels new mp and Re-adds removed mp.' 10 ' (U)'],...
     'callback', 'matchmaker(''undo_Callback'',gcbo,[],guidata(gcbo))', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center',...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
@@ -651,7 +651,7 @@ guidata(handles.fig, handles)
 %--- Function for adding new mps:
 
 function axesclick_Callback(hObject, handles, no1)
-if get(handles.edit, 'Value') == 1 % it it's possible to edit mps
+if get(handles.edit, 'Value') == 1 % if it's possible to edit mps
     type = get(hObject,'type'); % get the type of surface you clicked on
     if strcmp(type,'axes') %white-area click
         pos = get(handles.bigax(no1), 'currentpoint'); % click x-pos norm. units
@@ -716,10 +716,14 @@ if get(handles.edit, 'Value') == 1 % it it's possible to edit mps
     
     try % see if memory is already allocated
         saved_moves=handles.saved_moves;
+
     catch
         saved_moves=0; %initialize saved_moves
         handles.saved_moves=saved_moves;
+
     end
+    set(handles.undo,'enable','on');
+
     
     if saved_moves<handles.N_undo % if not reached max limit of saved moves
         
@@ -772,6 +776,8 @@ if get(handles.edit, 'Value') == 1 %if it's possible to mark mps
         saved_moves=0;
         handles.saved_moves=saved_moves;
     end
+    set(handles.undo,'enable','on');
+
     
     % undo update:
     if saved_moves<handles.N_undo %if not yet reached max saved moves
@@ -805,7 +811,9 @@ if get(handles.edit, 'Value') == 1 %if it's possible to mark mps
     
     % remove the identified mps:
     mp = mp(setdiff(1:length(mp(:,1)), delindx),:);
+    if ~isempty(mp_2)
     mp_2 = mp_2(setdiff(1:length(mp_2(:,1)), delindx_2),:);
+    end
     
     %update handles:
     handles.mp{no1} = mp;
@@ -910,7 +918,7 @@ N_max_mp_green=150; %set an arbitrary max number of green mp that is possible to
 if isempty(mp)
     return
 else
-    too_many_mp_flag=0;
+    handles.too_many_mp_flag=0;
     
     secondary_marks = get(handles.secondary_marks, 'Value'); %logical value to decide whether to plot full screen or only top half
     % plot all mps within xlim(1) and xlim(2)
@@ -922,20 +930,20 @@ else
     bar_height=[0.93;0.93;0.93;0.88;0.88;0.85;0.85];
     
     for i=1:length(mptypes)
-%         too_many_mp_flag=0;
+%         handles.too_many_mp_flag=0;
         mp_subset=mp(mp(:,2)==mptypes(i),1);
         depth_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
         if mptypes(i)  <6
                 if length(depth_subset)>N_max_MP %arbitrary limit of mp to display, prevents loading too slowly     
-                    too_many_mp_flag=1;
+                    handles.too_many_mp_flag=1;
                 end
         elseif mptypes(i) >=6
                 if length(depth_subset)>N_max_mp_green %arbitrary limit of mp to display, prevents loading too slowly     
-                    too_many_mp_flag=1;
+                    handles.too_many_mp_flag=1;
                 end
         end
         
-        if ~isempty(depth_subset) & show_mp(i) & ~too_many_mp_flag
+        if ~isempty(depth_subset) & show_mp(i) & ~handles.too_many_mp_flag
             plot((mp_subset(depth_subset)*[1 1])', repmat([0.01+secondary_marks*0.5 bar_height(i)]', 1, length(depth_subset)),...
                 linetype{i},'linewidth', linewidth(i), 'color', colors(i,:),...
                 'parent', handles.bigax2(no1),...
@@ -948,11 +956,11 @@ else
     mptypes_primary=[1,3,4];
     mp_primary = mp(ismember(mp(:,2),mptypes_primary),1);
     depth_subset_primary = find(mp_primary>=xlim(1) & mp_primary<=xlim(2));
-    too_many_mp_flag=0;
+    handles.too_many_mp_flag=0;
     if length(depth_subset_primary)>N_max_MP %arbitrary limit of mp to display, prevents loading too slowly     
-        too_many_mp_flag=1;
+        handles.too_many_mp_flag=1;
     end
-    if ~too_many_mp_flag 
+    if ~handles.too_many_mp_flag 
         text(mp_primary(depth_subset_primary), (bar_height(1)+bar_height(1)/15)*ones(length(depth_subset_primary),1), num2str(depth_subset_primary), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
     else
         text( xlim(1), (bar_height(1)+bar_height(1)/15), 'The amount of matchpoints to display is very large. Please set x-limits to be smaller.', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');       
@@ -988,29 +996,29 @@ else
         n_green_intervals(2)=length(depth_subset_green);
     end
     
-            too_many_mp_flag=0;
+            handles.too_many_mp_flag=0;
             if length(depth_subset_green)>N_max_MP & length(depth_subset_green)<=N_max_mp_green %arbitrary limit of mp to display, prevents loading too slowly
-                    too_many_mp_flag=1;
+                    handles.too_many_mp_flag=1;
             elseif length(depth_subset_green)>N_max_mp_green %arbitrary limit of mp to display, prevents loading too slowly
-                    too_many_mp_flag=2;
+                    handles.too_many_mp_flag=2;
             end
                 
-            if too_many_mp_flag==1 | too_many_mp_flag==2
+            if handles.too_many_mp_flag==1 | handles.too_many_mp_flag==2
 
                 for n=1:length(n_green_intervals)
 
                     text(mp_green(depth_subset_green(n_green_intervals(n))), (bar_height(end)+bar_height(1)/15), num2str(n_green_intervals(n)), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
                 end
-                if too_many_mp_flag==2
+                if handles.too_many_mp_flag==2
                     text(mp_green(depth_subset_green(1)), (bar_height(end)+bar_height(1)/7), 'Not enough space for all annuals. Zoom in to show annuals.', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
-                elseif too_many_mp_flag==1
+                elseif handles.too_many_mp_flag==1
                     text(mp_green(depth_subset_green(1)), (bar_height(end)+bar_height(1)/7), 'Not enough space to label annuals. Zoom in to show count', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
                 end
                 
-            elseif 1-get(handles.hide_minor_mp,'Value') & too_many_mp_flag==0
+            elseif 1-get(handles.hide_minor_mp,'Value') & handles.too_many_mp_flag==0
                 text(mp_green(depth_subset_green), (bar_height(end)+bar_height(1)/15)*ones(length(depth_subset_green),1), num2str((1:length(depth_subset_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
             end
-            too_many_mp_flag=0;
+            handles.too_many_mp_flag=0;
     
     %check if any mps have wrong types and create a warning    
     not_allowed_mp=mp(~ismember(mp(:,2),mptypes),:);
@@ -1032,7 +1040,7 @@ else
     % Same procedure for the "secondary_/mp_2" dataset
     
     if secondary_marks
-        too_many_mp_flag=0;
+        handles.too_many_mp_flag=0;
         
         if ~isempty(mp_2)
             
@@ -1042,13 +1050,13 @@ else
             colors=[greytone_2; redtone_2; bluetone_2; greytone_2; bluetone_2; greentone_2; greentone_2];
             bar_height=[0.93;0.93;0.93;0.88;0.88;0.85;0.85]/2; %half height
             for i=1:length(mptypes)
-%                 too_many_mp_flag=0;
+%                 handles.too_many_mp_flag=0;
                 mp_subset=mp_2(mp_2(:,2)==mptypes(i),1);
                 depth_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
                 if length(depth_subset)>N_max_MP %arbitrary limit of mp to display, prevents loading too slowly
-                    too_many_mp_flag=1;
+                    handles.too_many_mp_flag=1;
                 end
-                if ~isempty(depth_subset) & show_mp(i) & ~too_many_mp_flag
+                if ~isempty(depth_subset) & show_mp(i) & ~handles.too_many_mp_flag
                     plot((mp_subset(depth_subset)*[1 1])', repmat([0.01 bar_height(i)]', 1, length(depth_subset)), 'linewidth', linewidth(i), 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ');'],...
                         'UserData',[mptypes(i),secondary_marks]);
                 end
@@ -1058,9 +1066,9 @@ else
             mp_primary = mp_2(ismember(mp_2(:,2),mptypes_primary),1);
             depth_subset_primary = find(mp_primary>=xlim(1) & mp_primary<=xlim(2));
             if length(depth_subset_primary)>N_max_MP     
-                    too_many_mp_flag=1;
+                    handles.too_many_mp_flag=1;
             end
-            if ~too_many_mp_flag
+            if ~handles.too_many_mp_flag
                 text(mp_primary(depth_subset_primary), (bar_height(1)+bar_height(1)/8)*ones(length(depth_subset_primary),1), num2str(depth_subset_primary), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
             else
                text(xlim(1), (bar_height(1)+bar_height(1)/15), 'The amount of matchpoints to display is very large. Please set x-limits to be smaller.', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');       
@@ -1075,25 +1083,26 @@ else
                 depth_subset_green = find(mp_2_green>=xlim(1) & mp_2_green<=xlim(2));
             end
             
-            too_many_mp_flag=0;
+            handles.too_many_mp_flag=0;
             if length(depth_subset_green)>N_max_MP & length(depth_subset_green)<=N_max_mp_green %arbitrary limit of mp to display, prevents loading too slowly
-                    too_many_mp_flag=1;
+                    handles.too_many_mp_flag=1;
             elseif length(depth_subset_green)>N_max_mp_green %arbitrary limit of mp to display, prevents loading too slowly
-                    too_many_mp_flag=2;
+                    handles.too_many_mp_flag=2;
             end
                 
-            if too_many_mp_flag==1
+            if handles.too_many_mp_flag==1
                  text(mp_2_green(depth_subset_green(1)), (bar_height(end)+bar_height(1)/15), 'Too many Year bars to diplay AT ALL...Please set xlim to be smaller', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone_2);
-            elseif too_many_mp_flag==2
+            elseif handles.too_many_mp_flag==2
                 text(mp_2_green(depth_subset_green(1)), (bar_height(end)+bar_height(1)/15), 'Too many Year bars to diplay TEXT...Please set xlim to be smaller', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone_2);
-            elseif 1-get(handles.hide_minor_mp,'Value') & too_many_mp_flag==0    
+            elseif 1-get(handles.hide_minor_mp,'Value') & handles.too_many_mp_flag==0    
                 text(mp_2_green(depth_subset_green), (bar_height(end)+bar_height(1)/8)*ones(length(depth_subset_green),1), num2str((1:length(depth_subset_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone_2);
             end
-            too_many_mp_flag=0;
+            handles.too_many_mp_flag=0;
         end
     end
     
-end
+    end
+   
 
 if length(handles.mp1_idx{str2double(get(handles.masterno, 'string'))})<2
     set(handles.evaluate, 'Enable', 'off');
@@ -1448,9 +1457,11 @@ catch e
 end
 
 if saved_moves<1
+   	set(handles.undo,'enable','off');
     disp('Undo : no move in memory');
-end
+    set(handles.save,'enable','off');
 
+end
 if and(~isnan(saved_moves),saved_moves>0)
     
     no1=handles.lastmove{saved_moves,3}; %retrieve ice core
