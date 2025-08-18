@@ -15,7 +15,7 @@ warning('off');
 
 %---
 
-function evalopen(matchmakerfighandle, mp, mp_2, core, masterno, current_mp_1, othermarks)
+function evalopen(matchmakerfighandle, mp, mp_2, core, masterno, current_mp_1, secondary_set_flag)
 
 for i = 1:length(mp)
     mp_thick = mp{i}(ismember(mp{i}(:,2),[1,3,4]),1);
@@ -37,7 +37,7 @@ handles.fig = figure('units','normalized',...
 handles.matchmakerfighandle = matchmakerfighandle;
 handles.mp = mp;
 handles.mp_2=mp_2;
-handles.othermarks=othermarks;
+handles.secondary_set_flag=secondary_set_flag;
 handles.core = core;
 handles.masterno = masterno;
 handles.N = length(mp);
@@ -247,6 +247,8 @@ idx_display = lowmp : highmp;
 
 cla(handles.ax(1));
 cla(handles.ax(2));
+h_lgd = legend(handles.ax(1));
+set(h_lgd, 'box', 'off');
 
 colours = [{'b'} {'g'} {'r'} {'c'} {'m'} {'k'}];
 
@@ -256,27 +258,27 @@ mp_master_thick = mp_master(ismember(mp_master(:,2),[1,3,4]),:);
 if isfield(handles,'mp_2')
     mp_master_2 = handles.mp_2{handles.masterno};
     if sum(mp_master_2)==0
-        othermarks=0;
+        secondary_set_flag=0;
     else
         mp_master_thick_2 = mp_master_2(ismember(mp_master_2(:,2),[1,3,4]),:);
 
         % identify mp_2 within x_min and x_max
         temp_idx_2=find(mp_master_thick_2(:,1)>=handles.matchmakerfighandle.CurrentAxes.XLim(1)...
         & mp_master_thick_2(:,1)<=handles.matchmakerfighandle.CurrentAxes.XLim(2));
-        othermarks=1;
+        secondary_set_flag=1;
     end
 else
-    othermarks=0;
+    secondary_set_flag=0;
 end
 % 
-if othermarks % if mp_2 is a field
+if secondary_set_flag % if mp_2 is a field
     if ~isempty(temp_idx_2) & length(temp_idx_2)>1 % if mp_2 is a field, there is enough mp_2, and it's more than one mp
         lowmp_2=temp_idx_2(1);
         highmp_2=temp_idx_2(end);
         idx2 = lowmp_2:highmp_2;
-        othermarks=1;
+        secondary_set_flag=1;
     else
-        othermarks=0; %don't evaluate mp_2
+        secondary_set_flag=0; %don't evaluate mp_2
     end
 end
 % 
@@ -287,8 +289,16 @@ end
 deltadepth=cell(length(setdiff(1:handles.N, handles.masterno)),1);
 deltadepth_2=cell(length(setdiff(1:handles.N, handles.masterno)),1);
 
+k_lgd=0;
+if secondary_set_flag
+    n_lgd=3;
+else
+    n_lgd=2;
+end
+
 for i = setdiff(1:handles.N, handles.masterno) % all cores, excluding master_no
-% 
+    k_lgd=k_lgd+1;
+    
     mp = handles.mp{i};
     mp_2 = handles.mp_2{i};
     if length(mp(:,1))>=2
@@ -303,7 +313,7 @@ for i = setdiff(1:handles.N, handles.masterno) % all cores, excluding master_no
         idx_sure = intersect( idx_evaluate(logical_array_master & logical_array), idx_display);
 % 
 %         
-        if othermarks
+        if secondary_set_flag
             mp_thick_2 = mp_2(ismember(mp_2(:,2),[1,3,4]),:);
             i2=min(length(mp_thick_2),highmp_2);
             
@@ -327,7 +337,7 @@ for i = setdiff(1:handles.N, handles.masterno) % all cores, excluding master_no
                 deltadepth{i}(1,1) = mp_master_thick(idx_sure(1), 1);
             end
 %             
-            if othermarks
+            if secondary_set_flag
                 if length(idx_sure_2) == 2
                     deltadepth_2{i} = [mp_master_thick_2(idx_sure_2(1), 1), diff(mp_thick_2(idx_sure_2, 1));...
                                         mp_thick_2(idx_sure_2(2), 1), diff(mp_thick_2(idx_sure_2, 1))];
@@ -341,9 +351,9 @@ for i = setdiff(1:handles.N, handles.masterno) % all cores, excluding master_no
 % 
             plot(deltadepth{i}(:,1), deltadepth{i}(:,2), 'DisplayName',handles.core{i},...
                 'color', colours{i}, 'linewidth', 2, 'parent', handles.ax(2));
-            if othermarks
-                plot(deltadepth_2{i}(:,1), deltadepth_2{i}(:,2),'-.' ,'DisplayName',[handles.core{i} ' others'],...
-                    'color', colours{i}, 'linewidth', 1, 'parent', handles.ax(2));
+            if secondary_set_flag %right plot
+%                 plot(deltadepth_2{i}(:,1), deltadepth_2{i}(:,2),'-.' ,'DisplayName',[handles.core{i} ' others'],...
+%                     'color', colours{i}, 'linewidth', 1, 'parent', handles.ax(2));
             end
 %             
 %             %left-side plot
@@ -361,24 +371,30 @@ for i = setdiff(1:handles.N, handles.masterno) % all cores, excluding master_no
             l1=plot(mp_master_thick(idx_sure, 1), mp_thick(idx_sure, 1)-plotdiff*(mp_master_thick(idx_sure, 1)+offset),'-',...
                 'DisplayName',handles.core{i},...
                 'marker','o','MarkerFaceColor',colours{i}, 'color', colours{i}, 'Linewidth', 2, 'parent', handles.ax(1));
-            l2=plot(mp_master_thick(idx_display, 1), mp_thick(idx_display, 1)-plotdiff*(mp_master_thick(idx_display, 1)+offset),':', 'color', colours{i},...
+            l2=plot(mp_master_thick(idx_display, 1), mp_thick(idx_display, 1)-plotdiff*(mp_master_thick(idx_display, 1)+offset),'o:', 'color', colours{i},...
                 'DisplayName', [handles.core{i} ' (blue mps)'],...
                 'handlevisibility','on','parent', handles.ax(1));
+
             for j=1:length(idx_display)
                 p=scatter(mp_master_thick(idx_display(j), 1), mp_thick(idx_display(j), 1)-plotdiff*(mp_master_thick(idx_display(j), 1)+offset),...%problem:handlevisibility makes is also invisible to cla!
                  'handlevisibility','on',...
                  'marker','o','MarkerFaceColor','none', 'MarkerEdgeColor', colours{i},  'parent', handles.ax(1),...
                  'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo,[],guidata(gcbo))','Tag', num2str(idx_display(j)));
             end
-%             
-            if othermarks
+            %set legend items
+            h_lgd.String{n_lgd*k_lgd - (n_lgd-1)  }=handles.core{i};
+            h_lgd.String{n_lgd*k_lgd - (n_lgd-2)  }=[handles.core{i} ' (blue mps)'];
+            h_lgd.String(n_lgd*k_lgd - (n_lgd-2) +1 : end)=[];
+            
+            if secondary_set_flag %left plot
                 offset_2 = mean(mp_thick_2(idx2, 1) - mp_master_thick_2(idx2, 1));
-                plot(mp_master_thick_2(i2, 1), mp_thick_2(i2, 1)-plotdiff*(mp_master_thick_2(i2, 1)+offset_2),...
-                 'DisplayName', [handles.core{i} ' (blue mps)'],...
-                    'marker','o','MarkerFaceColor','none', 'color', colours{i}, 'Linewidth', 1, 'parent', handles.ax(1), 'hittest', 'on');
+%                 plot(mp_master_thick_2(i2, 1), mp_thick_2(i2, 1)-plotdiff*(mp_master_thick_2(i2, 1)+offset_2),...
+%                  'DisplayName', [handles.core{i} ' (blue mps)'],...
+%                     'marker','o','MarkerFaceColor','none', 'color', colours{i}, 'Linewidth', 1, 'parent', handles.ax(1), 'hittest', 'on');
                 plot(mp_master_thick_2(idx_sure_2, 1), mp_thick_2(idx_sure_2, 1)-plotdiff*(mp_master_thick_2(idx_sure_2, 1)+offset_2),'-.',...
-                    'DisplayName',[handles.core{i} ' others'],...
-                    'marker','o','MarkerFaceColor',colours{i},'color', colours{i}, 'Linewidth', 2, 'parent', handles.ax(1), 'hittest', 'on');
+                    'DisplayName',[handles.core{i} ' secondary set'],...
+                    'marker','o','MarkerFaceColor',colours{i},'color', colours{i}, 'markersize',3,'Linewidth', 1, 'parent', handles.ax(1), 'hittest', 'on');
+                h_lgd.String{n_lgd*k_lgd - (n_lgd-3)}=[handles.core{i} ' secondary set'];
             end   
         end
     end
@@ -386,8 +402,8 @@ end
 
 h_lgd = legend(handles.ax(2));
 set(h_lgd, 'box', 'off');
-h_lgd = legend(handles.ax(1))
-set(h_lgd, 'box', 'off','String',{handles.core{i} [handles.core{i} ' (blue mps)']});
+
+
 set(p,'HandleVisibility','on'); %otherwise cla won't clear this curve
 
 
