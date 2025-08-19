@@ -1469,8 +1469,7 @@ delete(handles.fig)
 
 %---
 
-function handles=undo_Callback(hObject, handles)
-
+function undo_Callback(hObject, handles)
 try
     saved_moves= handles.saved_moves;
 catch e
@@ -1543,7 +1542,7 @@ if and(~isnan(saved_moves),saved_moves>0)
             disp('error');
         end
     end
-    
+ 
 end
 
 %---
@@ -1556,6 +1555,8 @@ if strcmp(state,'on')
 else
     set(handles.save_fig,'Enable','on');
 end
+
+
 
 %---
 
