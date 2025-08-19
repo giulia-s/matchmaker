@@ -1693,11 +1693,9 @@ if keyboardcall == 1
     end
 end
 if get(handles.edit,'Value')==1
-    'test'
-    years_marks = get(handles.years_mark,'Enable')
-    if ~get(handles.hide_minor_mp,'Value') & strcmp(years_marks,'on')
+    if ~get(handles.hide_minor_mp,'Value') & strcmp(get(handles.years_mark,'Enable'),'on')
         set(handles.radiogroup,'Enable','on');
-    elseif ~get(handles.hide_minor_mp,'Value') & strcmp(years_marks,'off')
+    elseif ~get(handles.hide_minor_mp,'Value') & strcmp(get(handles.years_mark,'Enable'),'off')
         set(handles.thin_mark,'Enable','on');
         set(handles.ref_mark,'Enable','on');
     else
