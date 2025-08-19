@@ -258,15 +258,15 @@ handles.thin_mark =    uicontrol('units', 'normalized',...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 
 Buttonnumber = Buttonnumber+1;
-handles.annual_mark =    uicontrol('units', 'normalized',...
+handles.years_mark =    uicontrol('units', 'normalized',...
     'position', [axis_left_xpos+(Buttonnumber-1)*(button_L+button_x_spacing), y0, button_L, button_H2],...
     'Tooltip', 'Edit type 6(click),7(r-click) (Y)',...
     'string', 'Years', 'style', 'radio', 'Backgroundcolor', figcol, ...
     'value',0,...
-    'callback', 'matchmaker(''annual_mark_Callback'',gcbo,[],guidata(gcbo),0)',...
+    'callback', 'matchmaker(''years_mark_Callback'',gcbo,[],guidata(gcbo),0)',...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 % Get all the handles to everything we want to set in a single array.
-handles.radiogroup = [handles.ref_mark, handles.annual_mark, handles.thin_mark];
+handles.radiogroup = [handles.ref_mark, handles.years_mark, handles.thin_mark];
 % Disable them all. They can only be enabled if pressing the edit marks button
 set(handles.radiogroup, 'Enable', 'off');
 
@@ -981,7 +981,6 @@ else
     
     if N_green>N_max_MP & N_green<=N_max_mp_green %arbitrary limit of mp to display, prevents loading too slowly
             too_many_mp_green=2; %only display end-of-interval numbers
-            show_mp(6:7)=1;
     elseif N_green>N_max_mp_green %arbitrary limit of mp to display, prevents loading too slowly
             too_many_mp_green=1; %do not display any green bars and any numbers
             show_mp(6:7)=0;
@@ -993,6 +992,7 @@ else
         depth_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
         
         if ~isempty(depth_subset) & show_mp(i)
+
             plot((mp_subset(depth_subset)*[1 1])', repmat([0.01+secondary_marks*0.5 bar_height(i)]', 1, length(depth_subset)),...
                 linetype{i},'linewidth', linewidth(i), 'color', colors(i,:),...
                 'parent', handles.bigax2(no1),...
@@ -1002,23 +1002,26 @@ else
     end 
     
     %plot the warning messages and the numbers for the green bars only
-        if 1-get(handles.hide_minor_mp,'Value') % if the minor mp are visible
+        if 1-get(handles.hide_minor_mp,'Value') % if the minor mps are visible
         switch too_many_mp_green
             case 0 %label all bars with all numbers
                text(mp_green(depth_subset_green), (bar_height(end)+bar_height(1)/15)*ones(length(depth_subset_green),1), ...
                    num2str((1:length(depth_subset_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
-            case 2 %only display end-of-interval numbers
+            
+            case 1 %do not display any green bars and any numbers
+                text(mp_green(depth_subset_green(1)), (bar_height(end)*6.1/5), ...
+                    'Not enough space for all years. Please zoom in or press "Hide minor mp".', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+                for n=[1:length(n_green_intervals)] %plot the first and last interval numbers
+                    text(mp_green(depth_subset_green(n_green_intervals(n))), (bar_height(end)+bar_height(1)/15), num2str(n_green_intervals(n)), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+                end
+                    set(handles.years_mark,'enable','off');
+             case 2 %only display end-of-interval numbers
                 text(mp_green(depth_subset_green(1)), (bar_height(end)*6.1/5), ...
                     'Not enough space to label all numbers. Please zoom in.', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
                 for n=1:length(n_green_intervals) %plot the interval numbers
                     text(mp_green(depth_subset_green(n_green_intervals(n))), (bar_height(end)+bar_height(1)/15), num2str(n_green_intervals(n)), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
                 end
-            case 1 %do not display any green bars and any numbers
-                text(mp_green(depth_subset_green(1)), (bar_height(end)*6.1/5), ...
-                    'Not enough space for all years. Please zoom in.', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
-                for n=[1:length(n_green_intervals)] %plot the first and last interval numbers
-                    text(mp_green(depth_subset_green(n_green_intervals(n))), (bar_height(end)+bar_height(1)/15), num2str(n_green_intervals(n)), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
-                end
+                set(handles.years_mark,'enable','off');
         end
     end
     
@@ -1159,7 +1162,7 @@ if ~isempty(key)
         case {120, 88}  %x, X
             exit_Callback(hObject, handles);
         case {121, 89}  %y, Y
-            annual_mark_Callback(hObject,handles,1);
+            years_mark_Callback(hObject,handles,1);
         otherwise % If key not defined, show info window
             h_help = helpdlg({...
                 'Available keyboard commands:';
@@ -1419,9 +1422,9 @@ if keyboardcall
     set(handles.hide_minor_mp, 'value', get(handles.hide_minor_mp, 'value')==0);
 end
 if get(handles.hide_minor_mp,'Value') %if enabled
-    set([handles.thin_mark, handles.annual_mark], 'Enable', 'off');
+    set([handles.thin_mark, handles.years_mark], 'Enable', 'off');
 elseif ~get(handles.hide_minor_mp,'Value') & get(handles.edit,'Value') %if not enabled and editable
-    set([handles.thin_mark, handles.annual_mark], 'Enable', 'on');  
+    set([handles.thin_mark, handles.years_mark], 'Enable', 'on');  
 end
 
 handles.multiple_opening_indicator=1;
@@ -1646,7 +1649,7 @@ function mptype=determine_mptype_from_click(handles)
 
 selectiontype = get(handles.fig, 'selectiontype');
 ref_mark = get(handles.ref_mark, 'Value');
-annual_mark = get(handles.annual_mark, 'Value');
+years_mark = get(handles.years_mark, 'Value');
 thin_mark = get(handles.thin_mark, 'Value');
 
 if ref_mark & strcmp(get(handles.ref_mark, 'Enable'),'on')
@@ -1657,7 +1660,7 @@ if ref_mark & strcmp(get(handles.ref_mark, 'Enable'),'on')
     elseif strcmp(selectiontype, 'alt')  %right click
         mptype=4;
     end
-elseif annual_mark & strcmp(get(handles.annual_mark, 'Enable'),'on')
+elseif years_mark & strcmp(get(handles.years_mark, 'Enable'),'on')
     if strcmp(selectiontype, 'normal') %click
         mptype = 6;
     elseif strcmp(selectiontype, 'alt')  %rightclick
@@ -1690,9 +1693,13 @@ if keyboardcall == 1
     end
 end
 if get(handles.edit,'Value')==1
-    hide_minor = get(handles.hide_minor_mp,'Value');
-    if     ~hide_minor
+    'test'
+    years_marks = get(handles.years_mark,'Enable')
+    if ~get(handles.hide_minor_mp,'Value') & strcmp(years_marks,'on')
         set(handles.radiogroup,'Enable','on');
+    elseif ~get(handles.hide_minor_mp,'Value') & strcmp(years_marks,'off')
+        set(handles.thin_mark,'Enable','on');
+        set(handles.ref_mark,'Enable','on');
     else
         set(handles.ref_mark,'Enable','on');
     end
@@ -1745,20 +1752,20 @@ end
 handles.multiple_opening_indicator=0;
 guidata(hObject, handles);
 
-%--Annual layer callback
-function annual_mark_Callback(hObject, handles, keyboardcall)
+%--years layer callback
+function years_mark_Callback(hObject, handles, keyboardcall)
 set(handles.radiogroup, 'Value',0);
 if keyboardcall == 1
     
-    state = get(handles.annual_mark, 'Value');
+    state = get(handles.years_mark, 'Value');
     if state == 1
-        set(handles.annual_mark, 'Value', 0);
+        set(handles.years_mark, 'Value', 0);
     else
-        set(handles.annual_mark, 'Value', 1);
+        set(handles.years_mark, 'Value', 1);
     end
 end
 if keyboardcall == 0
-    set(handles.annual_mark, 'Value', 1);
+    set(handles.years_mark, 'Value', 1);
 end
 handles.multiple_opening_indicator=1;
 for i = 1:handles.N
