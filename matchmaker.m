@@ -446,6 +446,7 @@ for i = 1:N
 end
 handles.storeidx = [];
 guidata(handles.fig, handles);
+handles.multiple_opening_indicator=1; %refers to a feature in plot mp: if any of the panels has too many mp, the edit button is greyed
 for i = 1:N
     for j = 1:N_species(i)
         axes(handles.plotax{i,j});
@@ -457,6 +458,7 @@ for i = 1:N
     
     update_yminmax(handles.fig, handles, i, 0); % Update the y-scaling
 end
+handles.multiple_opening_indicator=0;
 
 
 set(handles.fig, 'HandleVisibility', 'callback');
@@ -507,9 +509,11 @@ if keyboardcall == 1
         set(handles.secondary_marks, 'Value', 1);
     end
 end
+handles.multiple_opening_indicator=1;
 for i = 1:handles.N
     plotmp(handles, i);
 end
+handles.multiple_opening_indicator=0;
 
 %---
 
@@ -651,7 +655,7 @@ guidata(handles.fig, handles)
 %--- Function for adding new mps:
 
 function axesclick_Callback(hObject, handles, no1)
-if get(handles.edit, 'Value') == 1 % if it's possible to edit mps
+if get(handles.edit, 'Value') == 1 & strcmp(get(handles.edit, 'Enable'),'on') %if editing is legal
     type = get(hObject,'type'); % get the type of surface you clicked on
     if strcmp(type,'axes') %white-area click
         pos = get(handles.bigax(no1), 'currentpoint'); % click x-pos norm. units
@@ -747,6 +751,7 @@ if get(handles.edit, 'Value') == 1 % if it's possible to edit mps
     handles = plotmp(handles, no1);
     set(handles.save, 'enable', 'on');
     guidata(hObject, handles);
+
 end
 
 %--- Function for deleting existing mps. Called either if clicking on
@@ -754,7 +759,7 @@ end
 %deleting an mp found in proximity
 
 function mpclick_Callback(hObject, handles, no1)
-if get(handles.edit, 'Value') == 1 %if it's possible to mark mps
+if get(handles.edit, 'Value') == 1 & strcmp(get(handles.edit, 'Enable'),'on') %if editing is legal
     
     try %if clicking on mp
         type=get(hObject,'type');
@@ -912,15 +917,17 @@ end
 % collect current depth limits
 xlim = get(handles.bigax(no1), 'xlim');
 
+scrsze = get(0, 'screensize');
+too_many_mp_green=0; %reset
 N_max_MP=100; %set an arbitrary max number of mp that is possible to display
-N_max_mp_green=150; %set an arbitrary max number of green mp that is possible to display
+N_max_mp_green=200; %set an arbitrary max number of green mp that is possible to display
 
 if isempty(mp)
     return
 else
-    handles.too_many_mp_flag=0;
     
     secondary_marks = get(handles.secondary_marks, 'Value'); %logical value to decide whether to plot full screen or only top half
+    
     % plot all mps within xlim(1) and xlim(2)
     mptypes=[1,3,4,2,5,6,7];
     show_mp = [1,1,1,1-get(handles.hide_minor_mp,'Value'),1-get(handles.hide_minor_mp,'Value'),1-get(handles.hide_minor_mp,'Value'),1-get(handles.hide_minor_mp,'Value')];%if minor_mp button is toggled
@@ -929,98 +936,102 @@ else
     colors=[greytone; redtone; bluetone; greytone; bluetone; greentone; greentone];
     bar_height=[0.93;0.93;0.93;0.88;0.88;0.85;0.85];
     
-    for i=1:length(mptypes)
-%         handles.too_many_mp_flag=0;
+    %number the "reference" bars:
+    mptypes_reference=[1,3,4];
+    mp_reference = mp(ismember(mp(:,2),mptypes_reference),1);
+    depth_subset_reference = find(mp_reference>=xlim(1) & mp_reference<=xlim(2));
+    
+    if length(depth_subset_reference)>N_max_MP %arbitrary limit of mp to display, prevents loading too slowly     
+        text( xlim(1), (bar_height(1)+bar_height(1)/15), 'The amount of matchpoints to display is very large. Please set x-limits to be smaller.', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');       
+        set(handles.edit, 'Enable', 'off'); 
+        show_mp(1:5)=0;
+    else
+        text(mp_reference(depth_subset_reference), (bar_height(1)+bar_height(1)/15)*ones(length(depth_subset_reference),1), num2str(depth_subset_reference), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k'); 
+         
+        if handles.multiple_opening_indicator==1 & strcmp(get(handles.edit, 'Enable'),'off') %if, during the plotting of multiple ice cores, another ice core had too many mps
+            set(handles.edit, 'Enable', 'off'); 
+        else 
+            set(handles.edit, 'Enable', 'on');
+        end
+    end
+    
+    %number the "years" bars:
+    mp_green = mp(ismember(mp(:,2),[6,7]),1);
+    n_green_intervals=[];
+    
+    if ~isempty(depth_subset_reference) 
+        % number only after the left-most reference bar
+        depth_subset_green = find(mp_green>=mp_reference(depth_subset_reference(1),1) & mp_green<=xlim(2));
+        N_green = length(find(mp_green>=xlim(1) & mp_green<=xlim(2)));
+        if ~isempty(depth_subset_green)
+            %evaluate how many green bars between the reference horizons
+            n_green_intervals(1)=1;
+            [~,i_ref]=min(abs(mp_reference(depth_subset_reference,1) - mp_green(depth_subset_green(1)) ));
+            for n=2:length(depth_subset_reference)-i_ref+1
+                n_green_intervals(n)=length(find(mp_green>=mp_reference(depth_subset_reference(i_ref),1) & mp_green<=mp_reference(depth_subset_reference(i_ref+n-1),1)));
+            end
+            n_green_intervals(end+1)=length(depth_subset_green);
+        end
+    else %number all green bars
+        depth_subset_green = find(mp_green>=xlim(1) & mp_green<=xlim(2));
+        N_green=length(depth_subset_green);
+        n_green_intervals(1)=1;
+        n_green_intervals(2)=length(depth_subset_green);
+    end
+    
+    if N_green>N_max_MP & N_green<=N_max_mp_green %arbitrary limit of mp to display, prevents loading too slowly
+            too_many_mp_green=2; %only display end-of-interval numbers
+            show_mp(6:7)=1;
+    elseif N_green>N_max_mp_green %arbitrary limit of mp to display, prevents loading too slowly
+            too_many_mp_green=1; %do not display any green bars and any numbers
+            show_mp(6:7)=0;
+    end
+
+    %plot the mp of each type
+    for i=1:length(mptypes) % for each type
         mp_subset=mp(mp(:,2)==mptypes(i),1);
         depth_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
-        if mptypes(i)  <6
-                if length(depth_subset)>N_max_MP %arbitrary limit of mp to display, prevents loading too slowly     
-                    handles.too_many_mp_flag=1;
-                end
-        elseif mptypes(i) >=6
-                if length(depth_subset)>N_max_mp_green %arbitrary limit of mp to display, prevents loading too slowly     
-                    handles.too_many_mp_flag=1;
-                end
-        end
         
-        if ~isempty(depth_subset) & show_mp(i) & ~handles.too_many_mp_flag
+        if ~isempty(depth_subset) & show_mp(i)
             plot((mp_subset(depth_subset)*[1 1])', repmat([0.01+secondary_marks*0.5 bar_height(i)]', 1, length(depth_subset)),...
                 linetype{i},'linewidth', linewidth(i), 'color', colors(i,:),...
                 'parent', handles.bigax2(no1),...
                 'ButtonDownFcn', [' matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ');'],...
                 'UserData',[mptypes(i),secondary_marks]);
         end
+    end 
+    
+    %plot the warning messages and the numbers for the green bars only
+        if 1-get(handles.hide_minor_mp,'Value') % if the minor mp are visible
+        switch too_many_mp_green
+            case 0 %label all bars with all numbers
+               text(mp_green(depth_subset_green), (bar_height(end)+bar_height(1)/15)*ones(length(depth_subset_green),1), ...
+                   num2str((1:length(depth_subset_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+            case 2 %only display end-of-interval numbers
+                text(mp_green(depth_subset_green(1)), (bar_height(end)*6.1/5), ...
+                    'Not enough space to label all numbers. Please zoom in.', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+                for n=1:length(n_green_intervals) %plot the interval numbers
+                    text(mp_green(depth_subset_green(n_green_intervals(n))), (bar_height(end)+bar_height(1)/15), num2str(n_green_intervals(n)), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+                end
+            case 1 %do not display any green bars and any numbers
+                text(mp_green(depth_subset_green(1)), (bar_height(end)*6.1/5), ...
+                    'Not enough space for all years. Please zoom in.', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+                for n=[1:length(n_green_intervals)] %plot the first and last interval numbers
+                    text(mp_green(depth_subset_green(n_green_intervals(n))), (bar_height(end)+bar_height(1)/15), num2str(n_green_intervals(n)), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
+                end
+        end
     end
     
-    %number the "primary" bars:
-    mptypes_primary=[1,3,4];
-    mp_primary = mp(ismember(mp(:,2),mptypes_primary),1);
-    depth_subset_primary = find(mp_primary>=xlim(1) & mp_primary<=xlim(2));
-    handles.too_many_mp_flag=0;
-    if length(depth_subset_primary)>N_max_MP %arbitrary limit of mp to display, prevents loading too slowly     
-        handles.too_many_mp_flag=1;
-    end
-    if ~handles.too_many_mp_flag 
-        text(mp_primary(depth_subset_primary), (bar_height(1)+bar_height(1)/15)*ones(length(depth_subset_primary),1), num2str(depth_subset_primary), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
-    else
-        text( xlim(1), (bar_height(1)+bar_height(1)/15), 'The amount of matchpoints to display is very large. Please set x-limits to be smaller.', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');       
-    end
-    %keep track of the plotted primary mps for the accordianize and evaluate function:
-    if ~isempty(depth_subset_primary) 
-        handles.mp1_idx{no1} = depth_subset_primary;
-        handles.mp1_depth{no1} = mp_primary(depth_subset_primary);
+    %keep track of the plotted reference mps for the accordianize and evaluate function:
+    if ~isempty(depth_subset_reference) 
+        handles.mp1_idx{no1} = depth_subset_reference;
+        handles.mp1_depth{no1} = mp_reference(depth_subset_reference);
     else
         handles.mp1_idx{no1} = 0;
         handles.mp1_depth{no1} = [];
     end
     
-    %green layers numbering
-    mp_green = mp(ismember(mp(:,2),[6,7]),1);
-    n_green_intervals=[];
-    
-    if ~isempty(depth_subset_primary) 
-        % number only after the left-most primary bar
-        depth_subset_green = find(mp_green>=mp_primary(depth_subset_primary(1),1) & mp_green<=xlim(2));
-        if ~isempty(depth_subset_green) 
-            n_green_intervals(1)=1;
-            [~,i_ref]=min(abs(mp_primary(depth_subset_primary,1) - mp_green(depth_subset_green(1)) ));
-            for n=2:length(depth_subset_primary)-i_ref+1
-                n_green_intervals(n)=length(find(mp_green>=mp_primary(depth_subset_primary(i_ref),1) & mp_green<=mp_primary(depth_subset_primary(i_ref+n-1),1)));
-            end
-            n_green_intervals(end+1)=length(depth_subset_green);
-        end
-    else
-        %number all
-        depth_subset_green = find(mp_green>=xlim(1) & mp_green<=xlim(2));
-        n_green_intervals(1)=1;
-        n_green_intervals(2)=length(depth_subset_green);
-    end
-    
-            handles.too_many_mp_flag=0;
-            if length(depth_subset_green)>N_max_MP & length(depth_subset_green)<=N_max_mp_green %arbitrary limit of mp to display, prevents loading too slowly
-                    handles.too_many_mp_flag=1;
-            elseif length(depth_subset_green)>N_max_mp_green %arbitrary limit of mp to display, prevents loading too slowly
-                    handles.too_many_mp_flag=2;
-            end
-                
-            if handles.too_many_mp_flag==1 | handles.too_many_mp_flag==2
-
-                for n=1:length(n_green_intervals)
-
-                    text(mp_green(depth_subset_green(n_green_intervals(n))), (bar_height(end)+bar_height(1)/15), num2str(n_green_intervals(n)), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
-                end
-                if handles.too_many_mp_flag==2
-                    text(mp_green(depth_subset_green(1)), (bar_height(end)+bar_height(1)/7), 'Not enough space for all annuals. Zoom in to show annuals.', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
-                elseif handles.too_many_mp_flag==1
-                    text(mp_green(depth_subset_green(1)), (bar_height(end)+bar_height(1)/7), 'Not enough space to label annuals. Zoom in to show count', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
-                end
-                
-            elseif 1-get(handles.hide_minor_mp,'Value') & handles.too_many_mp_flag==0
-                text(mp_green(depth_subset_green), (bar_height(end)+bar_height(1)/15)*ones(length(depth_subset_green),1), num2str((1:length(depth_subset_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone);
-            end
-            handles.too_many_mp_flag=0;
-    
-    %check if any mps have wrong types and create a warning    
+    % check if any mps have wrong types and create a warning    
     not_allowed_mp=mp(~ismember(mp(:,2),mptypes),:);
     
     if ~isempty(not_allowed_mp)
@@ -1037,67 +1048,66 @@ else
         handles.mp{no1} = mp; %update the mp dataset to remove the unnecessary mps
         handles.not_allowed_mp{no1}=not_allowed_mp; % they are preserved here and saved at the end
     end
-    % Same procedure for the "secondary_/mp_2" dataset
+    % Repeat the same procedure for the "secondary_/mp_2" dataset
     
     if secondary_marks
-        handles.too_many_mp_flag=0;
-        
+        too_many_mp_green=0;
         if ~isempty(mp_2)
-            
             % plot all mps within xlim(1) and xlim(2)
             mptypes=[1,3,4,2,5,6,7];
             linewidth=[6,6,6,4,4,2,1];
             colors=[greytone_2; redtone_2; bluetone_2; greytone_2; bluetone_2; greentone_2; greentone_2];
             bar_height=[0.93;0.93;0.93;0.88;0.88;0.85;0.85]/2; %half height
             for i=1:length(mptypes)
-%                 handles.too_many_mp_flag=0;
+%                 too_many_mp_flag=0;
                 mp_subset=mp_2(mp_2(:,2)==mptypes(i),1);
                 depth_subset=find(mp_subset>=xlim(1) & mp_subset<=xlim(2));
                 if length(depth_subset)>N_max_MP %arbitrary limit of mp to display, prevents loading too slowly
-                    handles.too_many_mp_flag=1;
+                    too_many_mp_green=1;
                 end
-                if ~isempty(depth_subset) & show_mp(i) & ~handles.too_many_mp_flag
+                if ~isempty(depth_subset) & show_mp(i) & ~too_many_mp_green
                     plot((mp_subset(depth_subset)*[1 1])', repmat([0.01 bar_height(i)]', 1, length(depth_subset)), 'linewidth', linewidth(i), 'color', colors(i,:), 'parent', handles.bigax2(no1), 'ButtonDownFcn', ['matchmaker(''mpclick_Callback'',gcbo,[],guidata(gcbo),' num2str(no1) ');'],...
                         'UserData',[mptypes(i),secondary_marks]);
                 end
             end
-            %number the "primary" bars:
-            mptypes_primary=[1,3,4];
-            mp_primary = mp_2(ismember(mp_2(:,2),mptypes_primary),1);
-            depth_subset_primary = find(mp_primary>=xlim(1) & mp_primary<=xlim(2));
-            if length(depth_subset_primary)>N_max_MP     
-                    handles.too_many_mp_flag=1;
+            %number the "reference" bars:
+            mptypes_reference=[1,3,4];
+            mp_reference = mp_2(ismember(mp_2(:,2),mptypes_reference),1);
+            depth_subset_reference = find(mp_reference>=xlim(1) & mp_reference<=xlim(2));
+            if length(depth_subset_reference)>N_max_MP     
+                    too_many_mp_green=1;
             end
-            if ~handles.too_many_mp_flag
-                text(mp_primary(depth_subset_primary), (bar_height(1)+bar_height(1)/8)*ones(length(depth_subset_primary),1), num2str(depth_subset_primary), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
+            if ~too_many_mp_green
+                text(mp_reference(depth_subset_reference), (bar_height(1)+bar_height(1)/8)*ones(length(depth_subset_reference),1), num2str(depth_subset_reference), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
             else
                text(xlim(1), (bar_height(1)+bar_height(1)/15), 'The amount of matchpoints to display is very large. Please set x-limits to be smaller.', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');       
+               set(handles.edit,'enable','off');
             end
             
             mp_2_green = mp_2(ismember(mp_2(:,2),[6,7]),1);
             
             
-            if ~isempty(depth_subset_primary) %green layers numbering
-                depth_subset_green = find(mp_2_green>=mp_primary(depth_subset_primary(1),1) & mp_2_green<=xlim(2));
+            if ~isempty(depth_subset_reference) %green layers numbering
+                depth_subset_green = find(mp_2_green>=mp_reference(depth_subset_reference(1),1) & mp_2_green<=xlim(2));
             else
                 depth_subset_green = find(mp_2_green>=xlim(1) & mp_2_green<=xlim(2));
             end
             
-            handles.too_many_mp_flag=0;
+            too_many_mp_green=0;
             if length(depth_subset_green)>N_max_MP & length(depth_subset_green)<=N_max_mp_green %arbitrary limit of mp to display, prevents loading too slowly
-                    handles.too_many_mp_flag=1;
+                    too_many_mp_green=1;
             elseif length(depth_subset_green)>N_max_mp_green %arbitrary limit of mp to display, prevents loading too slowly
-                    handles.too_many_mp_flag=2;
+                    too_many_mp_green=2;
             end
                 
-            if handles.too_many_mp_flag==1
+            if too_many_mp_green==1
                  text(mp_2_green(depth_subset_green(1)), (bar_height(end)+bar_height(1)/15), 'Too many Year bars to diplay AT ALL...Please set xlim to be smaller', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone_2);
-            elseif handles.too_many_mp_flag==2
+            elseif too_many_mp_green==2
                 text(mp_2_green(depth_subset_green(1)), (bar_height(end)+bar_height(1)/15), 'Too many Year bars to diplay TEXT...Please set xlim to be smaller', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone_2);
-            elseif 1-get(handles.hide_minor_mp,'Value') & handles.too_many_mp_flag==0    
+            elseif 1-get(handles.hide_minor_mp,'Value') & too_many_mp_green==0    
                 text(mp_2_green(depth_subset_green), (bar_height(end)+bar_height(1)/8)*ones(length(depth_subset_green),1), num2str((1:length(depth_subset_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', greentone_2);
             end
-            handles.too_many_mp_flag=0;
+            too_many_mp_green=0;
         end
     end
     
@@ -1184,6 +1194,7 @@ xlim = get(handles.bigax(masterno), 'xlim');
 mp_depth = handles.mp1_depth{masterno}([1 end]);
 frac = (mp_depth-xlim(1))./(xlim(2)-xlim(1));
 if length(mastermp) == 1
+    handles.multiple_opening_indicator=1;
     for i = setdiff(1:handles.N, masterno)
         mpi = handles.mp{i};
         if length(mpi)>=max(mastermp)
@@ -1196,7 +1207,9 @@ if length(mastermp) == 1
             handles = plotmp(handles, i);
         end
     end
+    handles.multiple_opening_indicator=0;
 else
+    handles.multiple_opening_indicator=1;
     for i = setdiff(1:handles.N, masterno)
         mpi = handles.mp{i};
         if length(mpi)>=max(mastermp)
@@ -1211,6 +1224,7 @@ else
             set(handles.maxx(i), 'string', num2str(newxlim(2)));
         end
     end
+    handles.multiple_opening_indicator=0;
 end
 guidata(handles.fig, handles); % Is it OK to have it outside the loop ???
 
@@ -1382,7 +1396,7 @@ for i = 1:handles.N
         b=split(handles.matchfile_secondary{i},'/');
         
         if strcmp(a{end},b{end}) %if they are called the same
-            disp('The primary and secondary matchfile are called the same. This can cause conflicts.');
+            disp('The reference and secondary matchfile are called the same. This can cause conflicts.');
             disp(['Saving secondary matchfile as ' handles.matchfile_secondary{i}(1:end-4) '_secondary.mat']);
             
             save(['matchfiles' filesep handles.matchfile_secondary{i}(1:end-4) '_secondary.mat' ], 'mp', '-MAT');%,'save mp_2'
@@ -1404,14 +1418,18 @@ function hide_minor_mp_Callback(hObject, handles, keyboardcall)
 if keyboardcall
     set(handles.hide_minor_mp, 'value', get(handles.hide_minor_mp, 'value')==0);
 end
-if get(handles.hide_minor_mp,'Value')
+if get(handles.hide_minor_mp,'Value') %if enabled
     set([handles.thin_mark, handles.annual_mark], 'Enable', 'off');
-elseif ~get(handles.hide_minor_mp,'Value') & get(handles.edit,'Value')
+elseif ~get(handles.hide_minor_mp,'Value') & get(handles.edit,'Value') %if not enabled and editable
     set([handles.thin_mark, handles.annual_mark], 'Enable', 'on');  
 end
+
+handles.multiple_opening_indicator=1;
 for i = 1:handles.N
     handles = plotmp(handles, i);
 end
+handles.multiple_opening_indicator=0;
+
 guidata(hObject, handles);
 
 %---
@@ -1561,7 +1579,7 @@ K = ab_data_units / ab_inch; %conversion factor between data units and inches
 [min_dist,closest_idx]=min(abs(mp(:,1)-P));
 mptype=mp(closest_idx,2);
 if mptype==7
-    LW=1;
+    LW=2;
 elseif mptype==6
     LW=2;
 elseif mptype==2 | mptype==5
@@ -1698,9 +1716,11 @@ end
 if keyboardcall == 0
     set(handles.ref_mark, 'Value', 1);
 end
+handles.multiple_opening_indicator=1;
 for i = 1:handles.N
     handles = plotmp(handles, i);
 end
+handles.multiple_opening_indicator=0;
 guidata(hObject, handles);
 
 %--Temp mp callback
@@ -1718,9 +1738,11 @@ end
 if keyboardcall == 0
     set(handles.thin_mark, 'Value', 1);
 end
+handles.multiple_opening_indicator=1;
 for i = 1:handles.N
     handles = plotmp(handles, i);
 end
+handles.multiple_opening_indicator=0;
 guidata(hObject, handles);
 
 %--Annual layer callback
@@ -1738,9 +1760,11 @@ end
 if keyboardcall == 0
     set(handles.annual_mark, 'Value', 1);
 end
+handles.multiple_opening_indicator=1;
 for i = 1:handles.N
     handles = plotmp(handles, i);
 end
+handles.multiple_opening_indicator=0;
 guidata(hObject, handles);
 
 
