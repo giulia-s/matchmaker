@@ -935,11 +935,11 @@ else
     
     bar_height=[0.93;0.93;0.93;0.88;0.88;0.85;0.85];
 
-    plot_mp_subfunction(handles, mp, xlim, colors, bar_height, no1, 0.01+secondary_marks*0.5)
+    handles = plot_mp_subfunction(handles, mp, xlim, colors, bar_height, no1, 0.01+secondary_marks*0.5);
     if secondary_marks
         % Repeat the same procedure for the "secondary_/mp_2" dataset
         bar_height=[0.93;0.93;0.93;0.88;0.88;0.85;0.85]/2; %half height
-        plot_mp_subfunction(handles, mp_2, xlim, colors, bar_height, no1, 0.01)
+        handles = plot_mp_subfunction(handles, mp_2, xlim, colors*115/100, bar_height, no1, 0.01);
     end
 
 end
@@ -1609,7 +1609,7 @@ function create_secondary(hObject,handles,no1, not_allowed_mp)
     delete(gcf);
 guidata(hObject, handles);
 
-function plot_mp_subfunction(handles, mp, xlim, colors, bar_height, no1, bottom_pos)
+function handles = plot_mp_subfunction(handles, mp, xlim, colors, bar_height, no1, bottom_pos)
 secondary_marks = get(handles.secondary_marks, 'Value'); %if the secondary set is shown
 
 if secondary_marks ==1 & bottom_pos>0.5
@@ -1638,7 +1638,7 @@ if ~isempty(mp)
     depth_subset_reference = find(mp_reference>=xlim(1) & mp_reference<=xlim(2));
     
     if length(depth_subset_reference)>N_max_MP %arbitrary limit of mp to display, prevents loading too slowly
-        text( xlim(1), (bar_height(1)+bar_height(1)/15), 'The amount of matchpoints to display is very large. Please set x-limits to be smaller.', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k');
+        text( xlim(1), (bar_height(1)+bar_height(1)/15), 'The amount of matchpoints to display is very large. Please set x-limits to be smaller.', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k', 'BackgroundColor', [1 1 1]);
         set(handles.edit, 'Enable', 'off');
         show_mp(1:5)=0;
     else
@@ -1709,15 +1709,15 @@ if ~isempty(mp)
                 end
             case 1 %do not display any green bars and any numbers
 
-                text(mp_green(depth_subset_green(1)), (bar_height(end)+bar_height(end)/10), ...
-                    'Not enough space for all years. Please zoom in or press "Hide minor mp".', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', colors(6,:));
+                text(mp_green(depth_subset_green(1)), (bar_height(end)-bar_height(end)/8), ...
+                    'Not enough space for all years. Please zoom in or press "Hide minor mp".', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', colors(6,:), 'BackgroundColor', [1 1 1]);
                 for n=[1:length(n_green_intervals)] %plot the first and last interval numbers
                     text(mp_green(depth_subset_green(n_green_intervals(n))), (bar_height(end)+bar_height(1)/15), num2str(n_green_intervals(n)), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', colors(6,:));
                 end
                 set(handles.years_mark,'enable','off');
             case 2 %only display end-of-interval numbers
-                text(mp_green(depth_subset_green(1)), (bar_height(end)+bar_height(end)/10), ...
-                    'Not enough space to label all numbers. Please zoom in.', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', colors(6,:));
+                text(mp_green(depth_subset_green(1)), (bar_height(end)-bar_height(end)/8), ...
+                    'Not enough space to label all numbers. Please zoom in.', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', colors(6,:), 'BackgroundColor', [1 1 1]);
                 for n=1:length(n_green_intervals) %plot the interval numbers
                     text(mp_green(depth_subset_green(n_green_intervals(n))), (bar_height(end)+bar_height(1)/15), num2str(n_green_intervals(n)), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', colors(6,:));
                 end
