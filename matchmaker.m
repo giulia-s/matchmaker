@@ -1610,7 +1610,8 @@ function create_secondary(hObject,handles,no1, not_allowed_mp)
 guidata(hObject, handles);
 
 function plot_mp_subfunction(handles, mp, xlim, colors, bar_height, no1, bottom_pos)
-secondary_marks = get(handles.secondary_marks, 'Value');
+secondary_marks = get(handles.secondary_marks, 'Value'); %if the secondary set is shown
+
 if secondary_marks ==1 & bottom_pos>0.5
     belonging_to_mp_set = 0;
 elseif secondary_marks ==1 & bottom_pos<0.5
@@ -1619,10 +1620,12 @@ else
     belonging_to_mp_set = 0;
 end
 
-if ~isempty(mp)
-    too_many_mp_green=0; %reset
+too_many_mp_green=0; %reset
     N_max_MP=100; %set an arbitrary max number of mp that is possible to display
     N_max_mp_green=200; %set an arbitrary max number of green mp that is possible to display
+
+if ~isempty(mp)
+    
     % plot all mps within xlim(1) and xlim(2)
     mptypes=[1,3,4,2,5,6,7];
     show_mp = [1,1,1,1-get(handles.hide_minor_mp,'Value'),1-get(handles.hide_minor_mp,'Value'),1-get(handles.hide_minor_mp,'Value'),1-get(handles.hide_minor_mp,'Value')];%if minor_mp button is toggled
@@ -1701,7 +1704,9 @@ if ~isempty(mp)
             case 0 %label all bars with all numbers
                 text(mp_green(depth_subset_green), (bar_height(end)+bar_height(1)/15)*ones(length(depth_subset_green),1), ...
                     num2str((1:length(depth_subset_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', colors(6,:));
-                set(handles.years_mark,'enable','on');
+                if strcmp(get(handles.edit, 'Enable'), 'on') & get(handles.edit, 'Value')==1
+                    set(handles.years_mark,'enable','on');
+                end
             case 1 %do not display any green bars and any numbers
 
                 text(mp_green(depth_subset_green(1)), (bar_height(end)+bar_height(end)/10), ...
@@ -1716,7 +1721,9 @@ if ~isempty(mp)
                 for n=1:length(n_green_intervals) %plot the interval numbers
                     text(mp_green(depth_subset_green(n_green_intervals(n))), (bar_height(end)+bar_height(1)/15), num2str(n_green_intervals(n)), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', colors(6,:));
                 end
-                set(handles.years_mark,'enable','on');
+                if strcmp(get(handles.edit, 'Enable'), 'on') & get(handles.edit, 'Value')==1
+                    set(handles.years_mark,'enable','on');
+                end
         end
     end
     
