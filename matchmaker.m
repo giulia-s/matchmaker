@@ -800,9 +800,7 @@ if get(handles.edit, 'Value') == 1 & strcmp(get(handles.edit, 'Enable'),'on') %i
     userdata = get(hObject,'UserData');
     [mptype]=userdata(1);
     [secondary_marks]=userdata(2);
-        'type removed'
-        userdata
-    mptype+10*secondary_marks
+
     handles.lastmove{ handles.saved_moves,4}=mptype+10*secondary_marks;
     
     % acquire the current series of mps
@@ -1249,8 +1247,7 @@ if get(handles.hide_minor_mp,'Value') %if enabled
     set([handles.thin_mark, handles.years_mark], 'Enable', 'off');
 elseif ~get(handles.hide_minor_mp,'Value') & get(handles.edit,'Value') %if not enabled and editable
     set([handles.thin_mark, handles.years_mark], 'Enable', 'on');  
-    'b'
-    'on'
+
 end
 
 handles.multiple_opening_indicator=1;
@@ -1709,15 +1706,12 @@ if ~isempty(mp)
             case 0 %label all bars with all numbers
                 text(mp_green(depth_subset_green), (bar_height(end)+bar_height(1)/15)*ones(length(depth_subset_green),1), ...
                     num2str((1:length(depth_subset_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', colors(6,:));
-               '2'
                 if strcmp(get(handles.edit, 'Enable'), 'on') & get(handles.edit, 'Value')==1
                     if handles.multiple_opening_indicator==1 & strcmp(get(handles.years_mark, 'Enable'),'off') %if, during the plotting of multiple ice cores, another ice core had too many year-mps
                     set(handles.years_mark, 'Enable', 'off');
-                    'off'
                     handles.too_many_years=1;
                     else
                     set(handles.years_mark, 'Enable', 'on');
-                    'on'
                     handles.too_many_years=0;
                     end
                 end
@@ -1732,8 +1726,6 @@ if ~isempty(mp)
                 end
                 set(handles.years_mark,'enable','off');
                 handles.too_many_years=1;
-                '1'
-                'off'
             case 2 %only display end-of-interval numbers
                 text(mp_green(depth_subset_green(1)), (bar_height(end)-bar_height(end)/8), ...
                     'Not enough space to label all numbers. Please zoom in.', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', colors(6,:), 'BackgroundColor', [1 1 1]);
@@ -1741,14 +1733,11 @@ if ~isempty(mp)
                     text(mp_green(depth_subset_green(n_green_intervals(n))), (bar_height(end)+bar_height(1)/15), num2str(n_green_intervals(n)), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', colors(6,:));
                 end
                 if strcmp(get(handles.edit, 'Enable'), 'on') & get(handles.edit, 'Value')==1
-                    '2'
                     if handles.multiple_opening_indicator==1 & strcmp(get(handles.years_mark, 'Enable'),'off') %if, during the plotting of multiple ice cores, another ice core had too many year-mps
                     set(handles.years_mark, 'Enable', 'off');
-                    'off'
                     handles.too_many_years=1;
                     else
                     set(handles.years_mark, 'Enable', 'on');
-                    'on'
                     handles.too_many_years=0;
                     end                    
                 end
