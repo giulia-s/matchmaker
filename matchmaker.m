@@ -120,10 +120,10 @@ for i = 1:N
         handles.mp_2{i}=mp_2;
         handles.matchfile_secondary{i} = files.matchfile_secondary{fileno(i)};
     catch
-        disp(['Matchfile_secondary file for ' files.core{fileno(i)} ' not found. Program will continue without.']);
+        disp(['Matchfile_secondary file for ' files.core{fileno(i)} ' not found. Program will continue by generating an apppropriate file, if needed, upon pressing Save.']);
         mp_2=[];
         handles.mp_2{i}=[];
-        
+       
     end
     
     if length(sett.specs{fileno(i)}) == N_species(i)
@@ -1217,7 +1217,7 @@ for i = 1:handles.N
             end
         end
         if isempty(handles.matchfile_secondary{i}) %if any one of the cores was provided wit a secondary matchfile
-            handles.matchfile_secondary{i}=['test_' num2str(i) '.mat'];
+            handles.matchfile_secondary{i}=['secondary_temp_' num2str(i) '.mat'];
         end
         
         b=split(handles.matchfile_secondary{i},'/');
