@@ -889,7 +889,10 @@ for j = no2
             'linewidth', 1.5, 'parent', handles.plotax{no1,j},...
             'hittest', 'off', 'PickableParts','none');
     end
-    set([handles.spec{no1, j} handles.color_change{no1, j} handles.offset{no1, j} handles.autoy{no1, j} handles.logy{no1, j} handles.miny{no1, j} handles.maxy{no1, j}], 'Foregroundcolor', handles.colours{no1}(handles.selectedspecs{no1}(j),:));
+    % uncomment this line if you would like the text to change color
+    % depending on the species
+    % set([handles.spec{no1, j} handles.color_change{no1, j} handles.offset{no1, j} handles.autoy{no1, j} handles.logy{no1, j} handles.miny{no1, j} handles.maxy{no1, j}], 'Foregroundcolor', handles.colours{no1}(handles.selectedspecs{no1}(j),:));
+    set([ handles.color_change{no1, j} handles.offset{no1, j} handles.autoy{no1, j} handles.logy{no1, j} handles.miny{no1, j} handles.maxy{no1, j}], 'Foregroundcolor', handles.colours{no1}(handles.selectedspecs{no1}(j),:));
     set(handles.tickax{no1, j}, 'ycolor', handles.colours{no1}(handles.selectedspecs{no1}(j),:));
     
 end
@@ -1611,6 +1614,7 @@ function create_secondary(hObject,handles,no1, not_allowed_mp)
 guidata(hObject, handles);
 
 function handles = plot_mp_subfunction(handles, mp, xlim, colors, bar_height, no1, bottom_pos)
+
 secondary_marks = get(handles.secondary_marks, 'Value'); %if the secondary set is shown
 
 if secondary_marks ==1 & bottom_pos>0.5
@@ -1746,13 +1750,27 @@ if ~isempty(mp)
     end
     
     %keep track of the plotted reference mps for the accordianize and evaluate function:
-    if ~isempty(depth_subset_reference)
-        handles.mp1_idx{no1} = depth_subset_reference;
-        handles.mp1_depth{no1} = mp_reference(depth_subset_reference);
-    else
-        handles.mp1_idx{no1} = 0;
-        handles.mp1_depth{no1} = [];
+    if bottom_pos>0.5 & secondary_marks
+        if ~isempty(depth_subset_reference)
+            handles.mp1_idx{no1} = depth_subset_reference;
+            handles.mp1_depth{no1} = mp_reference(depth_subset_reference);
+        else
+            handles.mp1_idx{no1}=0;
+            handles.mp1_depth{no1} = [];
+        end
+    elseif bottom_pos<0.5 & secondary_marks
+        handles.mp1_idx{no1} = handles.mp1_idx{no1};
+        handles.mp1_depth{no1} = handles.mp1_depth{no1};        
+    elseif bottom_pos<0.5 & ~secondary_marks
+        if ~isempty(depth_subset_reference)
+            handles.mp1_idx{no1} = depth_subset_reference;
+            handles.mp1_depth{no1} = mp_reference(depth_subset_reference);
+        else
+            handles.mp1_idx{no1}=0;
+            handles.mp1_depth{no1} = [];
+        end
     end
+    
     
     % check if any mps have wrong types and create a warning
     not_allowed_mp=mp(~ismember(mp(:,2),mptypes),:);
