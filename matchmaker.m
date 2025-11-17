@@ -545,6 +545,8 @@ end
 %---
 
 function xscale_Callback(hObject, handles, no, limit) % X-scaling edit-boxes callback
+
+
 if limit == 1
     value = get(handles.minx(no), 'string'); % Get input
 else
@@ -952,41 +954,42 @@ end
 %---
 
 function keypressed_Callback(hObject, handles) % Translate keypress to appropriate button actions.
-key = double(get(handles.fig, 'currentcharacter'));
-if ~isempty(key)
+symbol=char(get(handles.fig, 'currentcharacter'));%get value from keyboard
+
+if ~isempty(symbol)
     
-    switch key
-        case 28   %<-
+    switch symbol
+        case '←'  
             handles = move_Callback(hObject, handles, str2double(get(handles.masterno, 'string')), -1);
             accordianize_Callback(hObject, handles);
-        case 29  %->
+        case '→'  %->
             handles = move_Callback(hObject, handles, str2double(get(handles.masterno, 'string')), 1);
             accordianize_Callback(hObject, handles);
-        case {80, 112}   %p, P
+        case {'p','P'}   %p, P
             set(handles.fig, 'InvertHardcopy', 'on', 'paperunits', 'centimeters', 'paperorientation', 'landscape', 'papertype', 'A4', 'paperposition', [1 1 27.7 19], 'renderer', 'painters');
             %        print(handles.fig, '-dpsc2', '-r300', 'matchmaker.eps');
             print(handles.fig, '-dpsc2', '-noui', '-r300', 'matchmaker.eps');
-        case {97,65}    %a,A
+        case {'a','A'}    %a,A
             accordianize_Callback(hObject, handles);
-        case {101, 69}  %e, E
+        case {'e',' E'}  %e, E
             edit_marks_callback(hObject,handles,1);
-        case {104,72}  %h, H
+        case {'h',' H'}  %h, H
             hide_minor_mp_Callback(hObject, handles,1);
-        case {106,74}  %j, J
+        case {'j',' J'}  %j, J
             secondary_marks_Callback(hObject, handles,1);
-        case {114, 82}   %r, R
+        case {'r',' R'}   %r, R
             ref_mark_Callback(hObject, handles, 1);
-        case {115, 83}  %s, S
+        case {'s',' S'}  %s, S
             if strcmp(get(handles.save, 'enable'), 'on')
                 save_Callback(hObject, handles);
             end
-        case {116, 84}  %t, T
+        case {'t',' T'}  %t, T
             temp_mark_Callback(hObject, handles, 1)
-        case {117, 85}  %u,U
+        case {'u','U'}  %u,U
             undo_Callback(hObject, handles)
-        case {120, 88}  %x, X
+        case {'x',' X'}  %x, X
             exit_Callback(hObject, handles);
-        case {121, 89}  %y, Y
+        case {'y',' Y'}  %y, Y
             years_mark_Callback(hObject,handles,1);
         otherwise % If key not defined, show info window
             h_help = helpdlg({...
