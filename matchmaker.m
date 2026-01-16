@@ -1117,12 +1117,21 @@ end
 
 function accordianize_Callback(~, handles)
 masterno = str2double(get(handles.masterno, 'string'));
+if ~isfield(handles,'mp1_idx')
+    return
+end
+
 mastermp = handles.mp1_idx{masterno};
 if isempty(mastermp)
     return
 end
 xlim = get(handles.bigax(masterno), 'xlim');
-mp_depth = handles.mp1_depth{masterno}([1 end]);
+try
+    mp_depth = handles.mp1_depth{masterno}([1 end]);
+catch
+    return 
+end
+
 frac = (mp_depth-xlim(1))./(xlim(2)-xlim(1));
 if length(mastermp) == 1
     handles.multiple_opening_indicator=1;
