@@ -55,6 +55,7 @@ handles.fig = figure('units','normalized',...
     'name', ['Matchmaker - ',init_file_name],...
     'CloseRequestFcn', 'matchmaker(''exit_Callback'',gcbo,[],guidata(gcbo))',...
     'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))',...
+    'WindowKeyPressFcn', @get_event_data,...
     'nextplot', 'add', 'color', 0.9*[1 1 1], 'pointer', 'cross',...
     'Interruptible', 'off', 'Numbertitle', 'off',...
     'tag', 'matchmakermainwindow', 'integerhandle', 'off',...
@@ -667,6 +668,17 @@ update_yminmax(hObject, handles, no1, no2);
 
 %---
 
+function revY_Callback(hObject, handles, no1, no2)
+if get(handles.revy{no1, no2}, 'value') == 1
+    set([handles.plotax{no1, no2} handles.tickax{no1, no2}], 'ydir', 'reverse');
+else
+    set([handles.plotax{no1, no2} handles.tickax{no1, no2}], 'ydir', 'normal');
+end
+set(handles.tickax{no1, no2}, 'ylim', get(handles.plotax{no1, no2}, 'ylim'));
+update_yminmax(hObject, handles, no1, no2);
+
+%--
+
 function spec_Callback(hObject, handles, no1, no2)
 handles.selectedspecs{no1}(no2) = get(handles.spec{no1, no2}, 'Value');
 plotcurve(handles, no1, no2);
@@ -820,7 +832,11 @@ if get(handles.edit, 'Value') == 1 & strcmp(get(handles.edit, 'Enable'),'on') %i
     handles.lastmove{ handles.saved_moves,1}=pos(1,1); % pos of mp
     handles.lastmove{ handles.saved_moves,2}='removed'; %removed mp: because the mp_callback was activated by removing an existing mp
     handles.lastmove{ handles.saved_moves,3}=no1; %which icecore
-    userdata = get(hObject,'UserData');
+    try
+        userdata = get(hObject,'UserData');
+    catch
+       return;
+    end
     [mptype]=userdata(1);
     [secondary_marks]=userdata(2);
 
@@ -980,15 +996,16 @@ end
 %---
 
 function keypressed_Callback(hObject, handles) % Translate keypress to appropriate button actions.
-symbol=char(get(handles.fig, 'currentcharacter'));%get value from keyboard
+event=getappdata(0, 'LastKeyEvent');
+symbol=event.Key;
 
 if ~isempty(symbol)
     
     switch symbol
-        case '←'  
+        case {'leftarrow'}  
             handles = move_Callback(hObject, handles, str2double(get(handles.masterno, 'string')), -1);
             accordianize_Callback(hObject, handles);
-        case '→'  %->
+        case {'rightarrow'} %->
             handles = move_Callback(hObject, handles, str2double(get(handles.masterno, 'string')), 1);
             accordianize_Callback(hObject, handles);
         case {'p','P'}   %p, P
@@ -1019,6 +1036,8 @@ if ~isempty(symbol)
             exit_Callback(hObject, handles);
         case {'y',' Y'}  %y, Y
             years_mark_Callback(hObject,handles,1);
+        case {'shift'}
+            return;
         otherwise % If key not defined, show info window
             h_help = helpdlg({...
                 'Available keyboard commands:';
