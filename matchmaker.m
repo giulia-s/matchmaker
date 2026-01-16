@@ -1990,3 +1990,8 @@ else
 end
 end
 
+%---
+function get_event_data(~, evt)
+    setappdata(0, 'LastKeyEvent', evt);   % store on root so any scope can read
+
+
