@@ -1176,11 +1176,20 @@ if get(handles.stretchianize,'value')==1
     set(handles.stretchianize,'value',1)
     set(handles.edit,'enable','off')
     set(handles.accordianize,'enable','off')
+    set(handles.hide_minor_mp,'enable','off')
+    set(handles.undo,'enable','off')
+    set(handles.secondary_marks,'enable','off')
 else
     set(handles.stretchianize,'value',0)
     set(handles.edit,'enable','on')
     set(handles.accordianize,'enable','on')
+    set(handles.hide_minor_mp,'enable','on')
+    set(handles.undo,'enable','on')
+    set(handles.secondary_marks,'enable','on')
     accordianize_Callback(hObject, handles);
+    return
+end
+if ~isfield(handles,'mp1_idx')
     return
 end
 
