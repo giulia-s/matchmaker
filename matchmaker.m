@@ -1172,8 +1172,6 @@ guidata(handles.fig, handles); % Is it OK to have it outside the loop ???
 
 function stretchianize_Callback(hObject, handles)
 
-'behave'
-get(handles.stretchianize,'value')
 if get(handles.stretchianize,'value')==1
     set(handles.stretchianize,'value',1)
     set(handles.edit,'enable','off')
