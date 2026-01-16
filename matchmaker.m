@@ -1170,9 +1170,22 @@ guidata(handles.fig, handles); % Is it OK to have it outside the loop ???
 
 %---
 
-function stretchianize_Callback(~, handles)
+function stretchianize_Callback(hObject, handles)
 
-set(handles.stretchianize,'value',1)
+'behave'
+get(handles.stretchianize,'value')
+if get(handles.stretchianize,'value')==1
+    set(handles.stretchianize,'value',1)
+    set(handles.edit,'enable','off')
+    set(handles.accordianize,'enable','off')
+else
+    set(handles.stretchianize,'value',0)
+    set(handles.edit,'enable','on')
+    set(handles.accordianize,'enable','on')
+    accordianize_Callback(hObject, handles);
+    return
+end
+
 
 masterno = str2double(get(handles.masterno, 'string'));
 mastermp = handles.mp1_idx{masterno};
@@ -1225,8 +1238,10 @@ elseif length(mastermp) > 1 %stretchianize
 
             f_stretch=griddedInterpolant(mpi134_accordnan(1:N),mp_134_master(1:N),'linear','linear');
 
-            
-            handles.depth_stretch{i}{handles.depth_no{i}(handles.selectedspecs{i})}=f_stretch(handles.depth{i}{handles.depth_no{i}(handles.selectedspecs{i})});
+         
+            for j = 1:length(handles.selectedspecs{i}) % all species visible on the screen need to be stretched
+                handles.depth_stretch{i}{handles.depth_no{i}(handles.selectedspecs{i}(j))}=f_stretch(handles.depth{i}{handles.depth_no{i}(handles.selectedspecs{i}(j))});
+            end
             handles.mp_stretch{i}=handles.mp{i};
             handles.mp_stretch{i}(:,1)=f_stretch(handles.mp{i}(:,1));
 
@@ -1247,7 +1262,7 @@ elseif length(mastermp) > 1 %stretchianize
     handles.multiple_opening_indicator=0;
 end
 
-set(handles.stretchianize,'value',0)
+set(handles.edit, 'Enable', 'off');
 guidata(handles.fig, handles); % Is it OK to have it outside the loop ???
 
 %---
