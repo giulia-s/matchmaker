@@ -208,6 +208,13 @@ handles.accordianize = uicontrol('units', 'normalized', ...
     'callback', 'matchmaker(''accordianize_Callback'',gcbo,[],guidata(gcbo))', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
 
 Buttonnumber = Buttonnumber+1;
+handles.stretchianize = uicontrol('units', 'normalized', ...
+    'position', [axis_left_xpos+(Buttonnumber-1)*(button_L+button_x_spacing), y0, button_L, button_H2],...
+    'string', 'Stretch-ianize', 'style', 'togglebutton', 'Backgroundcolor', butcol,'value',0, ...
+    'Tooltip', ['Align all tiepoints.' 10 'Won''''t work in case of mp number mismatch.  (Spacebar)'],...
+    'callback', 'matchmaker(''stretchianize_Callback'',gcbo,[],guidata(gcbo))', 'fontname', 'default', 'fontsize', font1, 'fontweight', 'bold', 'horizontalalignment', 'center', 'KeyPressFcn', 'matchmaker(''keypressed_Callback'',gcbo,[],guidata(gcbo))');
+
+Buttonnumber = Buttonnumber+1;
 handles.masterno = uicontrol('units', 'normalized', ...
     'position', [axis_left_xpos+(Buttonnumber-1)*(button_L+button_x_spacing), y0, button_L/2, button_H2],...
     'Tooltip', 'Set which icecore to align to.',...
@@ -919,7 +926,12 @@ greentone_2 = 0.8 * [0.5 1 0.5];
 colors=[greytone; redtone; bluetone; greytone; bluetone; greentone; greentone];
 
 % collect current mp data
-mp = handles.mp{no1};
+if get(handles.stretchianize,'value')==1
+    mp = handles.mp_stretch{no1};
+else
+    mp = handles.mp{no1};
+end
+
 if isfield(handles,'mp_2')
     mp_2=handles.mp_2{no1};
 end
@@ -971,6 +983,8 @@ if ~isempty(symbol)
             print(handles.fig, '-dpsc2', '-noui', '-r300', 'matchmaker.eps');
         case {'a','A'}    %a,A
             accordianize_Callback(hObject, handles);
+        case {'c',' C'}  %y, Y
+            stretchianize_Callback(hObject,handles,1);
         case {'e',' E'}  %e, E
             edit_marks_callback(hObject,handles,1);
         case {'h',' H'}  %h, H
@@ -997,6 +1011,7 @@ if ~isempty(symbol)
                 '<- = move selected core one frame back and accordianize'
                 '-> = move selected core one frame forward and accordianize'
                 'A  = Accordianize'
+                'C  = Stretchianize'
                 'E  =  "Edit mps"  on/off'              
                 'R  =  "Reference mps"  on/off'
                  'T  =  "Thin mps"  on/off'
@@ -1057,6 +1072,88 @@ else
     end
     handles.multiple_opening_indicator=0;
 end
+guidata(handles.fig, handles); % Is it OK to have it outside the loop ???
+
+%---
+
+function stretchianize_Callback(~, handles)
+
+set(handles.stretchianize,'value',1)
+
+masterno = str2double(get(handles.masterno, 'string'));
+mastermp = handles.mp1_idx{masterno};
+
+if isempty(mastermp)
+    return
+end
+
+xlim = get(handles.bigax(masterno), 'xlim');
+
+try
+    mp_depth = handles.mp1_depth{masterno}([1 end]);
+catch
+    return 
+end
+
+frac = (mp_depth-xlim(1))./(xlim(2)-xlim(1));
+
+if length(mastermp) == 1 %accordianize like normally
+    handles.multiple_opening_indicator=1;
+    for i = setdiff(1:handles.N, masterno)
+        mpi = handles.mp{i};
+        if length(mpi)>=max(mastermp)
+            mpi134 = mpi(ismember(mpi(:,2),[1,3,4]),1);
+            newxlim = round(1000*(mpi134(mastermp)+[-frac(1) (1-frac(1))]*(xlim(2)-xlim(1))))/1000;
+            set([handles.bigax(i) handles.bigax2(i) handles.plotax{i,:} handles.tickax{i,:}], 'xlim', newxlim);
+            
+            plotcurve(handles, i, 0);
+            set(handles.minx(i), 'string', num2str(newxlim(1)));
+            set(handles.maxx(i), 'string', num2str(newxlim(2)));
+            handles = plotmp(handles, i);
+        end
+    end
+    handles.multiple_opening_indicator=0;
+elseif length(mastermp) > 1 %stretchianize
+
+    mp_134_master=handles.mp{masterno}(mastermp);
+
+    handles.multiple_opening_indicator=1;
+    for i = setdiff(1:handles.N, masterno)
+        mpi = handles.mp{i};
+        
+        if length(mpi)>=max(mastermp)
+            mpi134 = mpi(ismember(mpi(:,2),[1,3,4]),1);
+
+            mpi134_accordnan = mpi134(mastermp);
+            
+            depth = handles.depth{i}{handles.depth_no{i}(handles.selectedspecs{i})};
+            N=min(length(mpi134_accordnan),length(mp_134_master));
+
+            f_stretch=griddedInterpolant(mpi134_accordnan(1:N),mp_134_master(1:N),'linear','linear');
+
+            
+            handles.depth_stretch{i}{handles.depth_no{i}(handles.selectedspecs{i})}=f_stretch(handles.depth{i}{handles.depth_no{i}(handles.selectedspecs{i})});
+            handles.mp_stretch{i}=handles.mp{i};
+            handles.mp_stretch{i}(:,1)=f_stretch(handles.mp{i}(:,1));
+
+            mpi134_depth = f_stretch(mpi134(mastermp([1 end])));
+            newwidth = diff(mpi134_depth)/(frac(2)-frac(1));
+            newxlim = round(100*(mpi134_depth(1)-frac(1)*newwidth + [0 newwidth]))/100;
+            % newxlim = f_stretch(newxlim);
+
+            set([handles.bigax(i) handles.bigax2(i) handles.plotax{i,:} handles.tickax{i,:}], 'xlim', newxlim);
+
+            plotcurveStretch(handles, i, 0);
+            
+            handles = plotmp(handles, i);
+            set(handles.minx(i), 'string', num2str(newxlim(1)));
+            set(handles.maxx(i), 'string', num2str(newxlim(2)));
+        end
+    end
+    handles.multiple_opening_indicator=0;
+end
+
+set(handles.stretchianize,'value',0)
 guidata(handles.fig, handles); % Is it OK to have it outside the loop ???
 
 %---
