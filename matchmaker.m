@@ -936,6 +936,58 @@ for j = no2
     
 end
 
+%--
+function plotcurveStretch(handles, no1, no2)
+if no2 == 0
+    no2 = 1:handles.N_species(no1);
+end
+xlim = get(handles.bigax(no1), 'xlim');
+for j = no2
+    offset = str2double(get(handles.offset{no1, j}, 'String'));
+    offsetxlim = xlim - offset;
+    try
+        depth = handles.depth_stretch{no1}{handles.depth_no{no1}(handles.selectedspecs{no1}(j))};
+    catch
+        depth = handles.depth{no1}{handles.depth_no{no1}(handles.selectedspecs{no1}(j))};
+    end
+    data = handles.data{no1}{handles.selectedspecs{no1}(j)};
+    
+    startIdx = find(depth >= offsetxlim(1), 1, 'first');
+    endIdx   = find(depth <= offsetxlim(2), 1, 'last');
+    
+    % Handle cases where limits are outside the depth range
+    if isempty(startIdx)
+        startIdx = 1;
+    else
+        startIdx = max(1, startIdx - 1);
+    end
+    
+    if isempty(endIdx)
+        endIdx = length(data);
+    else
+        endIdx = min(length(data), endIdx + 1);
+    end
+    
+    % Final index range
+    idx = startIdx:endIdx;
+    if isempty(idx)
+        plot(0, 0, 'parent', handles.plotax{no1,j}, 'hittest', 'off');
+    else
+        plotdepth = depth(idx);
+        plotdata = data(idx);
+        plot(offset+plotdepth, plotdata,...
+            'color', handles.colours{no1}(handles.selectedspecs{no1}(j),:),...
+            'linewidth', 1.5, 'parent', handles.plotax{no1,j},...
+            'hittest', 'off', 'PickableParts','none');
+    end
+    % uncomment this line if you would like the text to change color
+    % depending on the species
+    % set([handles.spec{no1, j} handles.color_change{no1, j} handles.offset{no1, j} handles.autoy{no1, j} handles.logy{no1, j} handles.miny{no1, j} handles.maxy{no1, j}], 'Foregroundcolor', handles.colours{no1}(handles.selectedspecs{no1}(j),:));
+    set([ handles.color_change{no1, j} handles.offset{no1, j} handles.autoy{no1, j} handles.logy{no1, j} handles.miny{no1, j} handles.maxy{no1, j}], 'Foregroundcolor', handles.colours{no1}(handles.selectedspecs{no1}(j),:));
+    set(handles.tickax{no1, j}, 'ycolor', handles.colours{no1}(handles.selectedspecs{no1}(j),:));
+    
+end
+
 %--- Plot the mps, in the current viewing window between depth_min and depth_max
 
 function handles = plotmp(handles, no1)
