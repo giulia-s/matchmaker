@@ -1,16 +1,30 @@
-cff-version: 1.0
-message: "If you use this software, please cite it as below."
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: Matchmaker
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
 authors:
   - family-names: Rasmussen
     given-names: Sune Olander
-    orcid: https://orcid.org/0000-0002-4177-3611
-  - family-names: Sinnl
-    given-names: Giulia
-    orcid: https://orcid.org/0000-0003-1590-315X
-title: "Matchmaker"
-version: 2.0
-identifiers:
-  - type: doi
-  - value: TBD
-date-released: 2026/02/26
-url: "https://github.com/giulia-s/matchmaker"
+    orcid: 'https://orcid.org/0000-0002-4177-3611'
+    affiliation: Copenhagen University
+    email: sune.rasmussen@nbi.ku.dk
+  - given-names: Giulia
+    family-names: Sinnl
+    orcid: 'https://orcid.org/0000-0003-1590-315X'
+    affiliation: British Antarctic Survey
+repository-code: 'https://github.com/giulia-s/matchmaker'
+abstract: >-
+  Matchmaker is a collection of MATLAB scripts that form an
+  application aiming at facilitating efficient and
+  quality-checked matching of time series from different
+  records. It has been designed for use with ice core
+  profiles, and some design choices clearly reflect this,
+  but can essentially be used with any type of time-series
+  data.
+version: '2.0'
+date-released: '2026-02-26'
