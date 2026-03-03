@@ -6,7 +6,7 @@ Matchmaker : A MATLAB tool for manual matching of (palaeoclimate) time series
 
 **Refer to the User's guide pdf**, provided in this release, before starting to use the program.
 
-**Please cite the current release** you are using in your academic publications. You can cite all versions by using the DOI [**10.5281/zenodo.18851015**](https://doi.org/10.5281/zenodo.18851015) or find the DOI of the latest release on the Zenodo page.
+**Please cite the current release** you are using in your academic publications. You can cite all versions by using the DOI [**10.5281/zenodo.18851015**](https://doi.org/10.5281/zenodo.18851015) or find the DOI of a specific release on the Zenodo page.
 
 **The original release of this script was published in**: Rasmussen, S., Seierstad, I., Andersen, K. K., Bigler, M., Dahl-Jensen, D., and Johnsen, S.: Synchronization of the NGRIP, GRIP, and GISP2 ice cores across MIS 2 and palaeoclimatic implications, Quaternary Sci. Rev., 27, 18–28, [**https://doi.org/10.1016/j.quascirev.2007.01.016**](https://doi.org/10.1016/j.quascirev.2007.01.016), 2008.
 
