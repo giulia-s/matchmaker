@@ -20,7 +20,7 @@ depth{1} = 0:0.01:10;
 depth_no = [1 1];  % Because both data series 1 and 2 share the same depth scale (number 1)
 species = {'Series 1' 'Series 2'};
 colours = [0 1 0; 1 0 0];
-save('core1_data.mat',  'data', 'depth', 'depth_no', 'species', 'colours');
+save('data/core1_data.mat',  'data', 'depth', 'depth_no', 'species', 'colours');
 
 clear;
 % -------------------------------------------------------------------------
@@ -32,9 +32,9 @@ data{3} = cos(-2:0.001:7).^2+0.5*rand(1,9001);
 depth{1} = 0:0.01:10;
 depth{2} = 0:0.001:9; 
 depth_no = [1 1 2];  % Data series 1 and 2 share the same depth scale (number 1), and data series 3 corresponds to depth scale 2.
-species = {'Ser1' 'Ser2' 'Ser2'};
+species = {'Ser1' 'Ser2' 'Ser3'};
 colours = [0 0 1; 0 1 0; 1 1 0];
-save('core2_data.mat',  'data', 'depth', 'depth_no', 'species', 'colours');
+save('data/core2_data.mat',  'data', 'depth', 'depth_no', 'species', 'colours');
 
 clear;
 % -------------------------------------------------------------------------
@@ -45,4 +45,4 @@ depth{1} = 0:0.001:5;
 depth_no = [1];  % Data series 1 and 2 share the same depth scale (number 1), and data series 3 corresponds to depth scale 2.
 species = {'The only one'};
 colours = [0.3 0.3 0.3];
-save('core3_data.mat',  'data', 'depth', 'depth_no', 'species', 'colours');
+save('data/core3_data.mat',  'data', 'depth', 'depth_no', 'species', 'colours');

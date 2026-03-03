@@ -110,7 +110,7 @@ disp(' ');
 % disp(' ');
 disp(['Figure TITLE will be in the format STRING_date' ]);
 disp(' ');
-title_str = input('>>> Insert title [with quotation marks!!]:');
+title_str = input('>>> Insert title:','s');
 disp(' ');
 title_str=[title_str '_' date ];
 

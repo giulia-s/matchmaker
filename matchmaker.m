@@ -1304,6 +1304,7 @@ handles.multiple_opening_indicator=1;
 for i = 1:handles.N
     handles = plotmp(handles, i);
 
+
 end
 
 handles.multiple_opening_indicator=0;
@@ -1673,8 +1674,20 @@ else
 end
 
 too_many_mp_green=0; %reset
-    N_max_MP=100; %set an arbitrary max number of mp that is possible to display
-    N_max_mp_green=200; %set an arbitrary max number of green mp that is possible to display
+
+set(handles.bigax(no1), 'Units','inch')
+axpos = get(handles.bigax(no1), 'Position');
+
+delta_ax=axpos(3);
+
+rel_dx_mp=delta_ax/(6*1/72); % how many mp of linewidth 6 fit on the screen
+N_max_MP=floor(rel_dx_mp/2); %set a max number of mp that is possible to display
+
+rel_dx_green=delta_ax/(2*1/72); % how many mp of linewidth 2 fit on the screen
+N_max_mp_green=floor(rel_dx_green/2.5); %set an max number of green mp that is possible to display
+
+set(handles.bigax(no1), 'Units','normalized');
+
 
 if ~isempty(mp)
     
@@ -1688,7 +1701,7 @@ if ~isempty(mp)
     mptypes_reference=[1,3,4];
     mp_reference = mp(ismember(mp(:,2),mptypes_reference),1);
     depth_subset_reference = find(mp_reference>=xlim(1) & mp_reference<=xlim(2));
-    
+   
     if length(depth_subset_reference)>N_max_MP %arbitrary limit of mp to display, prevents loading too slowly
         text( xlim(1), (bar_height(1)+bar_height(1)/15), 'The amount of matchpoints to display is very large. Please set x-limits to be smaller.', 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'left', 'VerticalAlignment', 'top', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'fontangle', 'italic', 'color', 'k', 'BackgroundColor', [1 1 1]);
         set(handles.edit, 'Enable', 'off');
@@ -1750,11 +1763,15 @@ if ~isempty(mp)
             
         end
     end
-    
+
     %plot the warning messages and the numbers for the green bars only
     if 1-get(handles.hide_minor_mp,'Value') % if the minor mps are visible
+            
+            
         switch too_many_mp_green
+
             case 0 %label all bars with all numbers
+
                 text(mp_green(depth_subset_green), (bar_height(end)+bar_height(1)/15)*ones(length(depth_subset_green),1), ...
                     num2str((1:length(depth_subset_green))'), 'parent', handles.bigax2(no1), 'HorizontalAlignment', 'center', 'VerticalAlignment', 'top ', 'fontsize', get(handles.tickax{1,1}, 'fontsize'), 'color', colors(6,:));
                 if strcmp(get(handles.edit, 'Enable'), 'on') & get(handles.edit, 'Value')==1
