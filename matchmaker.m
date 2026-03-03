@@ -989,7 +989,7 @@ function keypressed_Callback(hObject, handles) % Translate keypress to appropria
 event=getappdata(0, 'LastKeyEvent');
 symbol=event.Key;
 
-if ~isempty(symbol)
+if ~isempty(symbol) & ~strcmp(symbol, 'alt') & ~strcmp(symbol, 'control')
     
     switch symbol
         case {'leftarrow'}  

@@ -6,28 +6,28 @@ files.core{1} = 'Core1';
 files.datafile{1} = 'core1_data.mat';
 files.matchfile{1} = 'CORE1_core123match.mat';
 % optional, secondary mp file:
-% files.matchfile_secondary{1} = 'CORE1_core123match_secondary.mat';
+files.matchfile_secondary{1} = 'CORE1_core123match_secondary.mat';
 
 files.core{2} = 'Core2';
 files.datafile{2} = 'core2_data.mat';
 files.matchfile{2} = 'CORE2_core123match.mat';
 % optional, secondary mp file:
-% files.matchfile_secondary{2} = 'CORE2_core123match_secondary.mat';
+files.matchfile_secondary{2} = 'CORE2_core123match_secondary.mat';
 
 files.core{3} = 'Core3';
 files.datafile{3} = 'core3_data.mat';
 files.matchfile{3} = 'CORE3_core123match.mat';
 % optional, secondary mp file:
-% files.matchfile_secondary{3} = 'CORE3_core123match_secondary.mat';
+files.matchfile_secondary{3} = 'CORE3_core123match_secondary.mat';
 
 % FILL IN THE RIGHT NAMES, for example:
 % files.core{4} = 'NGRIP2';
-% files.datafile{4} = 'ngrip2_data.mat';
-% files.matchfile{4} = 'ngrip2_test.mat';
+% files.datafile{4} = 'NGRIP2_data.mat';
+% files.matchfile{4} = 'NGRIP2_match_project_NGRIPvsGISP.mat';
 % 
 % files.core{5} = 'GISP2';
-% files.datafile{5} = 'gisp2_data.mat';
-% files.matchfile{5} = 'gisp2_test.mat';
+% files.datafile{5} = 'GISP2_data.mat';
+% files.matchfile{5} = 'GISP2_match_project_NGRIPvsGISP.mat';
 
 
 % NOTE the matchfile names used. There has to be a file for each core, but
