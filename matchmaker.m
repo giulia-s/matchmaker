@@ -697,6 +697,7 @@ if get(handles.edit, 'Value') == 1 & strcmp(get(handles.edit, 'Enable'),'on') %i
         pos=get(parent,'CurrentPoint'); %click x-pos in data units (m)
     else
         disp('unhandled object type');
+        return;
     end
     % check if clicked spot is on an existing mp
     mp = handles.mp{no1}; %all mps of this ice core
@@ -718,7 +719,8 @@ if get(handles.edit, 'Value') == 1 & strcmp(get(handles.edit, 'Enable'),'on') %i
         del_idx=[];
     end
     
-    if ~isempty(del_idx)
+    % if there are mps in the vicinity but they aren't hidden
+    if ~isempty(del_idx)  & strcmp(type,'axes')~=1 
         mpclick_Callback(click_pos_object, handles, no1);
         return;
     end
@@ -788,6 +790,7 @@ end
 %deleting an mp found in proximity
 
 function mpclick_Callback(hObject, handles, no1)
+
 if get(handles.edit, 'Value') == 1 & strcmp(get(handles.edit, 'Enable'),'on') %if editing is legal
     
     try %if clicking on mp
@@ -803,6 +806,7 @@ if get(handles.edit, 'Value') == 1 & strcmp(get(handles.edit, 'Enable'),'on') %i
         ypos=get(gcf,'currentpoint');
         ypos_true=ypos(1,2);
     end
+    
     % --- update memory of saved moves ---
     try %  if any memory is available
         saved_moves=handles.saved_moves;
@@ -825,6 +829,7 @@ if get(handles.edit, 'Value') == 1 & strcmp(get(handles.edit, 'Enable'),'on') %i
     handles.lastmove{ handles.saved_moves,1}=pos(1,1); % pos of mp
     handles.lastmove{ handles.saved_moves,2}='removed'; %removed mp: because the mp_callback was activated by removing an existing mp
     handles.lastmove{ handles.saved_moves,3}=no1; %which icecore
+
     try
         userdata = get(hObject,'UserData');
     catch
