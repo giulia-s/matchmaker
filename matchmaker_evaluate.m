@@ -164,7 +164,6 @@ end
 %---
 
 function exit_Callback(hObject, handles)
-length({'evaluate_Callback',hObject,[], handles, 'closing_evaluate'})
 matchmaker('evaluate_Callback',hObject,[], handles, 'closing_evaluate');
 figure(handles.matchmakerfighandle)
 delete(handles.fig)
@@ -250,7 +249,7 @@ cla(handles.ax(2));
 h_lgd = legend(handles.ax(1));
 set(h_lgd, 'box', 'off');
 
-colours = [{'b'} {'g'} {'r'} {'c'} {'m'} {'k'}];
+colours = jet(handles.N);
 
 mp_master = handles.mp{handles.masterno};
 mp_master_thick = mp_master(ismember(mp_master(:,2),[1,3,4]),:);
@@ -350,10 +349,10 @@ for i = setdiff(1:handles.N, handles.masterno) % all cores, excluding master_no
 %             %right-side plot
 % 
             plot(deltadepth{i}(:,1), deltadepth{i}(:,2), 'DisplayName',handles.core{i},...
-                'color', colours{i}, 'linewidth', 2, 'parent', handles.ax(2));
+                'color', colours(i,:), 'linewidth', 2, 'parent', handles.ax(2));
             if secondary_set_flag %right plot
 %                 plot(deltadepth_2{i}(:,1), deltadepth_2{i}(:,2),'-.' ,'DisplayName',[handles.core{i} ' others'],...
-%                     'color', colours{i}, 'linewidth', 1, 'parent', handles.ax(2));
+%                     'color', colours(i,:), 'linewidth', 1, 'parent', handles.ax(2));
             end
 %             
 %             %left-side plot
@@ -370,15 +369,15 @@ for i = setdiff(1:handles.N, handles.masterno) % all cores, excluding master_no
             
             l1=plot(mp_master_thick(idx_sure, 1), mp_thick(idx_sure, 1)-plotdiff*(mp_master_thick(idx_sure, 1)+offset),'-',...
                 'DisplayName',handles.core{i},...
-                'marker','o','MarkerFaceColor',colours{i}, 'color', colours{i}, 'Linewidth', 2, 'parent', handles.ax(1));
-            l2=plot(mp_master_thick(idx_display, 1), mp_thick(idx_display, 1)-plotdiff*(mp_master_thick(idx_display, 1)+offset),'o:', 'color', colours{i},...
+                'marker','o','MarkerFaceColor',colours(i,:), 'color', colours(i,:), 'Linewidth', 2, 'parent', handles.ax(1));
+            l2=plot(mp_master_thick(idx_display, 1), mp_thick(idx_display, 1)-plotdiff*(mp_master_thick(idx_display, 1)+offset),'o:', 'color', colours(i,:),...
                 'DisplayName', [handles.core{i} ' (blue mps)'],...
                 'handlevisibility','on','parent', handles.ax(1));
 
             for j=1:length(idx_display)
                 p=scatter(mp_master_thick(idx_display(j), 1), mp_thick(idx_display(j), 1)-plotdiff*(mp_master_thick(idx_display(j), 1)+offset),...%problem:handlevisibility makes is also invisible to cla!
                  'handlevisibility','on',...
-                 'marker','o','MarkerFaceColor','none', 'MarkerEdgeColor', colours{i},  'parent', handles.ax(1),...
+                 'marker','o','MarkerFaceColor','none', 'MarkerEdgeColor', colours(i,:),  'parent', handles.ax(1),...
                  'ButtonDownFcn', 'matchmaker_evaluate(''mpclick_Callback'',gcbo,[],guidata(gcbo))','Tag', num2str(idx_display(j)));
             end
             %set legend items
@@ -390,10 +389,10 @@ for i = setdiff(1:handles.N, handles.masterno) % all cores, excluding master_no
                 offset_2 = mean(mp_thick_2(idx2, 1) - mp_master_thick_2(idx2, 1));
 %                 plot(mp_master_thick_2(i2, 1), mp_thick_2(i2, 1)-plotdiff*(mp_master_thick_2(i2, 1)+offset_2),...
 %                  'DisplayName', [handles.core{i} ' (blue mps)'],...
-%                     'marker','o','MarkerFaceColor','none', 'color', colours{i}, 'Linewidth', 1, 'parent', handles.ax(1), 'hittest', 'on');
+%                     'marker','o','MarkerFaceColor','none', 'color', colours(i,:), 'Linewidth', 1, 'parent', handles.ax(1), 'hittest', 'on');
                 plot(mp_master_thick_2(idx_sure_2, 1), mp_thick_2(idx_sure_2, 1)-plotdiff*(mp_master_thick_2(idx_sure_2, 1)+offset_2),'-.',...
                     'DisplayName',[handles.core{i} ' secondary set'],...
-                    'marker','o','MarkerFaceColor',colours{i},'color', colours{i}, 'markersize',3,'Linewidth', 1, 'parent', handles.ax(1), 'hittest', 'on');
+                    'marker','o','MarkerFaceColor',colours(i,:),'color', colours(i,:), 'markersize',3,'Linewidth', 1, 'parent', handles.ax(1), 'hittest', 'on');
                 h_lgd.String{n_lgd*k_lgd - (n_lgd-3)}=[handles.core{i} ' secondary set'];
             end   
         end
