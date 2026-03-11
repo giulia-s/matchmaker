@@ -72,13 +72,17 @@ for i = 1:N
     waitbar(0.2*i, h_wait,...
         ['Please be patient ... loading data file no. ' num2str(i)]); % Wait window is launched
     try
-        load(['data' filesep files.datafile{fileno(i)}]); %#ok<*LOAD>
+        load(['data' filesep files.datafile{fileno(i)}]); %load from data folder
     catch
-        disp(['Data file of record ' num2str(fileno(i)) ' not found']);
-        disp(['Missing file name: ' 'data' filesep files.datafile{fileno(i)}]);
-        delete(handles.fig);
-        delete(h_wait);
-        return
+        try
+            load([files.datafile{fileno(i)}]); %load from path
+        catch
+            disp(['Data file of record ' num2str(fileno(i)) ' not found']);
+            disp(['Missing file name: ' 'data' filesep files.datafile{fileno(i)}]);
+            delete(handles.fig);
+            delete(h_wait);
+            return
+        end
     end
     handles.data{i} = data;
     handles.depth{i} = depth;
