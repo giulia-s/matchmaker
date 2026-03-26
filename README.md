@@ -14,4 +14,4 @@ Matchmaker requires a MATLAB licence and has been tested on **MATLAB R2020b and 
 
 To open in **Matlab Online**: https://matlab.mathworks.com/open/github/v1?repo=giulia-s/matchmaker
 
-If you encounter a bug, please let us know! You can post an issue under *Issues>create new issue*, or send an email to sune.rasmussen@nbi.ku.dk. Remember to include as much information as possible in your issue report.
+If you encounter a bug, please let us know! You can post an issue under *Issues>create new issue*, or send an email to Giulia Sinnl <giulia.sinnl@bas.ac.uk>. Remember to include as much information as possible in your issue report.
